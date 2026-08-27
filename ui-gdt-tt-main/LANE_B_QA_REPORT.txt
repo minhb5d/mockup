@@ -1,0 +1,29 @@
+LANE B QA REPORT
+================
+Scope: user-approved LANE_B_CASES_SOURCE.md
+Source baseline: direct GĐ,KT SRS files on Google Drive
+
+TypeScript/TSX syntax parse:
+- Files scanned: 93
+- Parse failures: 0
+
+Semantic assertions checked before packaging:
+- Nhận đơn labels/filter/reset
+- Giao THS default tab
+- TBGQ Loại-Số-Ngày
+- TTV action by assignment mode
+- TP breadcrumb / deterministic active-case display
+- HSKN no-selection guards / no hardcoded ID 102
+- QĐKN effective -> HSKN outgoing handoff event
+- Death penalty multi-select / CTN values / upload / receiver dependency
+- Công văn default outgoing / Trình tiếp
+- TPTC unrestricted TPB3 input / signer fields split
+- Duplicate GiaoTieuHoSoView removed
+Result: PASS
+
+Blocked by SRS conflict:
+- HSKN tab naming (do not auto-fix; ask Lead)
+
+Full Vite build:
+- Not verified in packaging environment because temporary node_modules is incomplete and lacks Vite executable files.
+- Run `npm ci && npm run build` in a clean development environment.
