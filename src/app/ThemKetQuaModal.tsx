@@ -772,7 +772,7 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
                   </div>
 
                   <div>
-                    <label style={lblSt}>Lý do xếp đơn</label>
+                    <label style={lblSt}>Ghi chú</label>
                     <textarea
                       value={noiDung}
                       onChange={e => setNoiDung(e.target.value)}

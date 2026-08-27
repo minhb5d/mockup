@@ -127,7 +127,7 @@ export default function App() {
     if (tabMap[v]) setActiveTab(tabMap[v]);
   };
 
-  const [selectedVuAnTab, setSelectedVuAnTab] = useState<ChiTietTab>("danh-sach-don");
+  const [selectedVuAnTab, setSelectedVuAnTab] = useState<ChiTietTab>("thong-tin");
 
   const handleSelectVuAn = (id: string, tab: ChiTietTab = "danh-sach-don") => {
     setSelectedVuAnId(id);

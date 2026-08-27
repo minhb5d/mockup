@@ -59,6 +59,8 @@ export interface VuAnFilterValues {
   soBA: string;
   ngayBA: string;
   biCao: string;
+  nguyenDon: string;
+  biDon: string;
   soThuLy: string;
   lanhDaoVu: string;
   thamTraVien: string;
@@ -96,6 +98,8 @@ export const INITIAL_FILTER_VALUES: VuAnFilterValues = {
   soBA: "",
   ngayBA: "",
   biCao: "",
+  nguyenDon: "",
+  biDon: "",
   soThuLy: "",
   lanhDaoVu: "",
   thamTraVien: "",
@@ -126,7 +130,9 @@ export const FILTER_LABELS: Record<keyof VuAnFilterValues, string> = {
   toaRaBA: "Tòa ra BA/QĐ",
   soBA: "Số BA/QĐ",
   ngayBA: "Ngày BA/QĐ",
-  biCao: "Bị cáo/Đương sự",
+  biCao: "Bị cáo",
+  nguyenDon: "Nguyên đơn",
+  biDon: "Bị đơn",
   soThuLy: "Số thụ lý",
   lanhDaoVu: "Lãnh đạo phụ trách",
   thamTraVien: "Cán bộ giải quyết",
@@ -264,10 +270,36 @@ export function VuAnSearchFilterPanel({
             </div>
           </div>
 
-          {/* 5. Bị cáo / Đương sự */}
+          {/* 5. Bị cáo */}
+
           <div>
-            <label style={labelStyle}>Bị cáo / Đương sự</label>
-            <input placeholder="Nhập tên bị cáo/đương sự" value={filters.biCao} onChange={(e) => handleChange("biCao", e.target.value)} style={inputStyle} />
+
+            <label style={labelStyle}>Bị cáo</label>
+
+            <input placeholder="Nhập tên bị cáo" value={filters.biCao} onChange={(e) => handleChange("biCao", e.target.value)} style={inputStyle} />
+
+          </div>
+
+
+          {/* 5b. Nguyên đơn */}
+
+          <div>
+
+            <label style={labelStyle}>Nguyên đơn</label>
+
+            <input placeholder="Nhập tên nguyên đơn" value={filters.nguyenDon} onChange={(e) => handleChange("nguyenDon", e.target.value)} style={inputStyle} />
+
+          </div>
+
+
+          {/* 5c. Bị đơn */}
+
+          <div>
+
+            <label style={labelStyle}>Bị đơn</label>
+
+            <input placeholder="Nhập tên bị đơn" value={filters.biDon} onChange={(e) => handleChange("biDon", e.target.value)} style={inputStyle} />
+
           </div>
 
           {/* 6. Số thụ lý */}
@@ -316,7 +348,7 @@ export function VuAnSearchFilterPanel({
               <option value="">– Tất cả –</option>
               <option value="Án Quốc hội">Án Quốc hội</option>
               <option value="Án chỉ đạo">Án chỉ đạo</option>
-              <option value="Án TVTN">Án TVTN</option>
+              <option value="Người chưa thành niên">Người chưa thành niên</option>
               <option value="Án tử hình">Án tử hình</option>
             </select>
           </div>
@@ -326,9 +358,12 @@ export function VuAnSearchFilterPanel({
             <label style={labelStyle}>Án thời hiệu</label>
             <select value={filters.thoiHieu} onChange={(e) => handleChange("thoiHieu", e.target.value)} style={selectStyle}>
               <option value="">– Tất cả –</option>
-              <option value="Không có thời hiệu giải quyết">Không có thời hiệu giải quyết</option>
-              <option value="Còn thời hiệu">Còn thời hiệu</option>
-              <option value="Hết thời hiệu">Hết thời hiệu</option>
+              <option value="Đã hết thời hiệu">Đã hết thời hiệu</option>
+              <option value="Còn thời hiệu dưới một tháng">Còn thời hiệu dưới một tháng</option>
+              <option value="Còn thời hiệu dưới hai tháng">Còn thời hiệu dưới hai tháng</option>
+              <option value="Còn thời hiệu dưới ba tháng">Còn thời hiệu dưới ba tháng</option>
+              <option value="Còn thời hiệu dưới sáu tháng">Còn thời hiệu dưới sáu tháng</option>
+              <option value="Còn thời hiệu dưới 1 năm">Còn thời hiệu dưới 1 năm</option>
             </select>
           </div>
 
@@ -351,11 +386,11 @@ export function VuAnSearchFilterPanel({
               <label style={labelStyle}>Trạng thái hồ sơ</label>
               <select value={filters.trangThaiHoSo} onChange={(e) => handleChange("trangThaiHoSo", e.target.value)} style={selectStyle}>
                 <option value="">– Tất cả –</option>
-                <option value="Chưa có hồ sơ">Chưa có hồ sơ</option>
-                <option value="Đang mượn hồ sơ">Đang mượn hồ sơ</option>
                 <option value="Đã có hồ sơ">Đã có hồ sơ</option>
-                <option value="Đã trả hồ sơ">Đã trả hồ sơ</option>
-                <option value="Đã chuyển hồ sơ">Đã chuyển hồ sơ</option>
+                <optgroup label="Chưa có hồ sơ">
+                  <option value="Chưa có hồ sơ - Đã có phiếu mượn">Đã có phiếu mượn</option>
+                  <option value="Chưa có hồ sơ - Chưa có phiếu mượn">Chưa có phiếu mượn</option>
+                </optgroup>
               </select>
             </div>
             {/* Thụ lý từ ngày – Đến ngày (Gộp 2 cột thành 1 ô khoảng thời gian) */}
@@ -386,11 +421,9 @@ export function VuAnSearchFilterPanel({
               <label style={labelStyle}>Tờ trình lãnh đạo</label>
               <select value={filters.toTrinhLanhDao} onChange={(e) => handleChange("toTrinhLanhDao", e.target.value)} style={selectStyle}>
                 <option value="">– Tất cả –</option>
-                <option value="Trình Thẩm phán">Trình Thẩm phán</option>
-                <option value="Trình Vụ trưởng">Trình Vụ trưởng</option>
-                <option value="Trình Phó Chánh án">Trình Phó Chánh án</option>
-                <option value="Trình Chánh án">Trình Chánh án</option>
-                <option value="Trình HĐTP">Trình HĐTP</option>
+                <option value="Chưa có tờ trình">Chưa có tờ trình</option>
+                <option value="Đã có tờ trình">Đã có tờ trình</option>
+                <option value="Đã có tờ trình lần 1">Đã có tờ trình lần 1</option>
               </select>
             </div>
             <div>
@@ -418,10 +451,14 @@ export function VuAnSearchFilterPanel({
               <label style={labelStyle}>Ý kiến tờ trình</label>
               <select value={filters.yKienToTrinh} onChange={(e) => handleChange("yKienToTrinh", e.target.value)} style={selectStyle}>
                 <option value="">– Tất cả –</option>
-                <option value="Trả lời đơn">Trả lời đơn</option>
-                <option value="Kháng nghị">Kháng nghị</option>
-                <option value="Xếp đơn">Xếp đơn</option>
-                <option value="VKS đang giải quyết">VKS đang giải quyết</option>
+                <option value="Chưa có ý kiến">Chưa có ý kiến</option>
+                <optgroup label="Đã có ý kiến">
+                  <option value="Trả lời đơn">Trả lời đơn</option>
+                  <option value="Kháng nghị">Kháng nghị</option>
+                  <option value="Xếp đơn">Xếp đơn</option>
+                  <option value="Nghiên cứu xác minh, bổ sung">Nghiên cứu xác minh, bổ sung</option>
+                  <option value="Yêu cầu trình tiếp">Yêu cầu trình tiếp</option>
+                </optgroup>
               </select>
             </div>
             <div>
@@ -429,9 +466,18 @@ export function VuAnSearchFilterPanel({
               <select value={filters.yeuCauTrinhTiep} onChange={(e) => handleChange("yeuCauTrinhTiep", e.target.value)} style={selectStyle}>
                 <option value="">– Tất cả –</option>
                 <option value="Trình Thẩm phán">Trình Thẩm phán</option>
-                <option value="Trình Vụ trưởng">Trình Vụ trưởng</option>
                 <option value="Trình Phó Chánh án">Trình Phó Chánh án</option>
                 <option value="Trình Chánh án">Trình Chánh án</option>
+                <option value="Báo cáo Tổ Thẩm phán">Báo cáo Tổ Thẩm phán</option>
+                <option value="Báo cáo Ủy ban thẩm phán">Báo cáo Ủy ban thẩm phán</option>
+                <option value="Trình dự thảo trả lời đơn">Trình dự thảo trả lời đơn</option>
+                <option value="Trình dự thảo kháng nghị">Trình dự thảo kháng nghị</option>
+                <option value="Trả lời đơn">Trả lời đơn</option>
+                <option value="Kháng nghị">Kháng nghị</option>
+                <option value="Thụ lý xét xử GĐT,TT">Thụ lý xét xử GĐT,TT</option>
+                <option value="Xếp đơn">Xếp đơn</option>
+                <option value="Xử lý khác">Xử lý khác</option>
+                <option value="VKS đang GQ">VKS đang GQ</option>
               </select>
             </div>
 
@@ -440,9 +486,16 @@ export function VuAnSearchFilterPanel({
               <label style={labelStyle}>Kết quả giải quyết</label>
               <select value={filters.ketQuaGiaiQuyet} onChange={(e) => handleChange("ketQuaGiaiQuyet", e.target.value)} style={selectStyle}>
                 <option value="">– Tất cả –</option>
-                <option value="Trả lời đơn">Trả lời đơn</option>
-                <option value="Kháng nghị">Kháng nghị</option>
-                <option value="Xếp đơn">Xếp đơn</option>
+                <option value="Chưa có kết quả">Chưa có kết quả</option>
+                <optgroup label="Đã có kết quả">
+                  <option value="Trả lời đơn">Trả lời đơn</option>
+                  <option value="Kháng nghị (CA + VKS)">Kháng nghị (CA + VKS)</option>
+                  <option value="Kháng nghị (CA)">Kháng nghị (CA)</option>
+                  <option value="Kháng nghị (VKS)">Kháng nghị (VKS)</option>
+                  <option value="Xếp đơn">Xếp đơn</option>
+                  <option value="VKS đang nghiên cứu">VKS đang nghiên cứu</option>
+                  <option value="Xử lý khác">Xử lý khác</option>
+                </optgroup>
               </select>
             </div>
             <div>
@@ -467,6 +520,8 @@ export function VuAnSearchFilterPanel({
               <label style={labelStyle}>Cấp xét xử</label>
               <select value={filters.capXetXu} onChange={(e) => handleChange("capXetXu", e.target.value)} style={selectStyle}>
                 <option value="">– Tất cả –</option>
+                <option value="Sơ thẩm">Sơ thẩm</option>
+                <option value="Phúc thẩm">Phúc thẩm</option>
                 <option value="Giám đốc thẩm">Giám đốc thẩm</option>
                 <option value="Tái thẩm">Tái thẩm</option>
               </select>

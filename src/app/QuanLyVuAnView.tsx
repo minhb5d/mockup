@@ -903,7 +903,7 @@ export default function QuanLyVuAnView({
           + Thêm mới
         </button>
         <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
-          <Printer size={13} /> In biểu đồ
+          <Printer size={13} /> In danh sách
         </button>
       </div>
 
@@ -1382,7 +1382,7 @@ function TabDanhSachDon({ detail }: { detail: VuAnDetailData }) {
           <h3 style={{ fontSize: 14, fontWeight: 700, color: TEXT, fontFamily: F, margin: 0 }}>Danh sách đơn</h3>
           <div style={{ flex: 1 }} />
           <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
-            Tách vụ kiện
+            Tách vụ án
           </button>
           <button style={{ marginLeft: 8, display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer" }}>
             <RefreshCw size={12} color={MUTED} />
@@ -1397,7 +1397,7 @@ function TabDanhSachDon({ detail }: { detail: VuAnDetailData }) {
           </colgroup>
           <thead>
             <tr>
-              {["STT", "Mã đơn", "Thông tin giải quyết đơn", "Ngày nhận đơn", "Người dùng đơn", "Phân loại", "Nội dung", "Thao tác"].map((h) => (
+              {["STT", "Mã đơn", "Thông tin giải quyết đơn", "Ngày nhận đơn", "Người đứng đơn", "Phân loại", "Nội dung", "Thao tác"].map((h) => (
                 <th key={h} style={TH_STYLE}>{h}</th>
               ))}
             </tr>
@@ -2433,7 +2433,7 @@ export function ChiTietVuAnView({
   vuAnId,
   userRole,
   onBack,
-  initialTab = "danh-sach-don",
+  initialTab = "thong-tin",
   moduleLabel = "Quản lý vụ án",
   detailLabel = "Chi tiết vụ án",
   entityWord = "Vụ án"
@@ -2459,12 +2459,12 @@ export function ChiTietVuAnView({
   };
 
   const tabs: Array<{ id: ChiTietTab; label: string; count?: number }> = [
-    { id: "thong-tin", label: "Thông tin chung" },
+    { id: "thong-tin", label: "Thông tin vụ án" },
     { id: "danh-sach-don", label: "Danh sách đơn", count: detail?.danhSachDon?.length || 3 },
     { id: "phan-cong", label: "Phân công" },
-    { id: "muon-tra-ho-so", label: "Mượn/trả hồ sơ", count: detail?.muonTraHoSo?.length || 2 },
+    { id: "muon-tra-ho-so", label: "Hồ sơ", count: detail?.muonTraHoSo?.length || 2 },
     { id: "to-trinh", label: "Tờ trình", count: 3 },
-    { id: "giai-quyet-vb", label: "Giải quyết văn bản", count: 3 },
+    { id: "giai-quyet-vb", label: "Giải quyết văn bản đề nghị", count: 3 },
     { id: "tai-lieu", label: "Tài liệu vụ án", count: 4 },
     { id: "ho-so-luu-tru", label: "Hồ sơ lưu trữ" },
   ];
