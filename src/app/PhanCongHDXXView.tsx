@@ -1820,6 +1820,8 @@ function ThemBieuMauModal({
                   <option>Quyết định đưa vụ án ra xét xử</option>
                   <option>Quyết định thay đổi thành viên Hội đồng xét xử</option>
                   <option>Thông báo mở phiên tòa xét xử</option>
+                  {/* THIẾU [Cao] – SRS Phân công HĐXX mục 2.2.D.2 & mục 7 */}
+                  <option>Thông báo cho VKSNDTC tham gia phiên tòa (Thư mời VKS)</option>
                 </select>
               </div>
 

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { PrintReportModal, BIEU_MAU_VU_XET_XU } from "./PrintReportModal";
 import { Search, RotateCcw, ChevronDown, ChevronUp, MoreVertical, X, Eye, Pencil, Printer, FileText, Trash2, Calendar, Save, Send } from "lucide-react";
 import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge, TaiKhoanPhanQuyenBar, type UserRoleType } from "./shared";
 import { formatSoBA } from "./AppHelpers";
@@ -431,6 +432,7 @@ const paginBtn: React.CSSProperties = { padding: "4px 10px", border: `1px solid 
 const DETAIL_TABS: { key: DetailTab; label: string }[] = [
   { key: "thong-tin", label: "Thông tin vụ án" },
   { key: "thu-ly", label: "Thụ lý" },
+  { key: "don-gdt-tt", label: "Đơn GĐT,TT" },
   { key: "to-trinh", label: "Tờ trình" },
   { key: "phan-cong", label: "Phân công" },
   { key: "qd-bi-cao", label: "Quyết định bị cáo" },
@@ -664,10 +666,221 @@ function TabThongTin({ row, userRole }: { row: VuXetXuRow; userRole?: UserRoleTy
   );
 }
 
+// ── Popup Sửa tội danh / hình phạt (THIẾU [Cao] – SRS Xét xử GĐT,TT) ──────────
+
+const NHOM_TOI_DANH: { nhom: string; options: string[] }[] = [
+  { nhom: "Giữ nguyên", options: ["Giữ nguyên tội danh", "Giữ nguyên hình phạt chính", "Giữ nguyên hình phạt bổ sung", "Giữ nguyên hình phạt tổng hợp", "Giữ nguyên trách nhiệm dân sự"] },
+  { nhom: "Thay đổi", options: ["Đổi tội danh", "Đổi khoản/điểm", "Tăng hình phạt", "Giảm hình phạt", "Đổi hình phạt chính", "Đổi hình phạt bổ sung"] },
+  { nhom: "Hủy / Đình chỉ", options: ["Hủy để điều tra lại", "Hủy để xét xử lại", "Đình chỉ vụ án", "Đình chỉ đối với bị cáo", "Miễn trách nhiệm hình sự"] },
+];
+const NAM_BO_LUAT_OPTIONS = ["1985", "1999", "2015", "2015 (sửa đổi 2017)"];
+
+function SuaToiDanhModal({ onClose, tenBiCao }: { onClose: () => void; tenBiCao: string }) {
+  const [anPhi, setAnPhi] = useState("");
+  const [ngayNhanBA, setNgayNhanBA] = useState("");
+  const [ngayHieuLuc, setNgayHieuLuc] = useState("");
+  const [lyDo, setLyDo] = useState("");
+  const [dieuChinh, setDieuChinh] = useState<string[]>([]);
+  const [namBoLuat, setNamBoLuat] = useState("2015");
+  const [dieuLuat, setDieuLuat] = useState("");
+  const [khoan, setKhoan] = useState("");
+  const [toiDanhChinh, setToiDanhChinh] = useState(true);
+
+  // SRS: hệ thống TỰ TÍCH "Xét xử lại" / "Đổi hình phạt" theo lựa chọn điều chỉnh
+  const autoXetXuLai = dieuChinh.some(d => d.includes("xét xử lại") || d.includes("điều tra lại"));
+  const autoDoiHinhPhat = dieuChinh.some(d => d.includes("hình phạt") && !d.startsWith("Giữ nguyên"));
+
+  const toggle = (opt: string) =>
+    setDieuChinh(prev => (prev.includes(opt) ? prev.filter(x => x !== opt) : [...prev, opt]));
+
+  const inp: React.CSSProperties = { width: "100%", padding: "6px 9px", fontSize: 12, fontFamily: F, border: `1px solid ${BORDER}`, borderRadius: 4, outline: "none", boxSizing: "border-box" as const, background: "#fff" };
+  const lbl: React.CSSProperties = { display: "block", fontSize: 11, fontWeight: 600, color: MUTED, marginBottom: 4, fontFamily: F };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 2100, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: F }}>
+      <div style={{ background: "#fff", borderRadius: 6, width: 900, maxHeight: "90vh", display: "flex", flexDirection: "column", boxShadow: "0 10px 34px rgba(0,0,0,0.22)" }}>
+        <div style={{ padding: "12px 18px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: RED }}>Sửa tội danh / hình phạt – {tenBiCao}</span>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 4, display: "flex" }}><X size={17} /></button>
+        </div>
+
+        <div style={{ padding: "14px 18px", overflowY: "auto", display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* Hàng thông tin chung */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+            <div><label style={lbl}>Án phí</label><input value={anPhi} onChange={e => setAnPhi(e.target.value)} placeholder="Nhập án phí" style={inp} /></div>
+            <div><label style={lbl}>Ngày nhận bản án</label><input type="date" value={ngayNhanBA} onChange={e => setNgayNhanBA(e.target.value)} style={inp} /></div>
+            <div><label style={lbl}>Ngày hiệu lực</label><input type="date" value={ngayHieuLuc} onChange={e => setNgayHieuLuc(e.target.value)} style={inp} /></div>
+          </div>
+          <div><label style={lbl}>Lý do</label><textarea value={lyDo} onChange={e => setLyDo(e.target.value)} rows={2} placeholder="Nhập lý do sửa tội danh / hình phạt" style={{ ...inp, resize: "vertical" as const }} /></div>
+
+          {/* Đối chiếu so sánh */}
+          <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, overflow: "hidden" }}>
+            <div style={{ padding: "8px 12px", background: BG, borderBottom: `1px solid ${BORDER}`, fontSize: 11, fontWeight: 700, color: TEXT, textTransform: "uppercase" as const }}>Đối chiếu so sánh</div>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead><tr>{["Nội dung", "Bản án / Quyết định", "Cáo trạng"].map(h => <th key={h} style={{ ...TH_STYLE, fontSize: 11, padding: "8px 10px" }}>{h}</th>)}</tr></thead>
+              <tbody>
+                {[
+                  ["Tội danh", "Tội che giấu tội phạm", "Tội che giấu tội phạm"],
+                  ["Điều luật", "Điều 389 – Khoản 1 – Điểm a", "Điều 389 – Khoản 1"],
+                  ["Hình phạt chính", "Tù có thời hạn – 15 năm 6 tháng", "Đề nghị 14–16 năm"],
+                  ["Hình phạt bổ sung", "Phạt tiền – 2.000.000 VNĐ", "–"],
+                ].map((r, i) => (
+                  <tr key={r[0]} style={{ background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
+                    <td style={{ ...TD_STYLE, fontSize: 12, fontWeight: 600 }}>{r[0]}</td>
+                    <td style={{ ...TD_STYLE, fontSize: 12 }}>{r[1]}</td>
+                    <td style={{ ...TD_STYLE, fontSize: 12, color: MUTED }}>{r[2]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Điều chỉnh tội danh */}
+          <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, overflow: "hidden" }}>
+            <div style={{ padding: "8px 12px", background: BG, borderBottom: `1px solid ${BORDER}`, fontSize: 11, fontWeight: 700, color: TEXT, textTransform: "uppercase" as const }}>Điều chỉnh tội danh</div>
+            <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+              {NHOM_TOI_DANH.map(g => (
+                <div key={g.nhom}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: RED, marginBottom: 5 }}>{g.nhom}</div>
+                  <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "6px 16px" }}>
+                    {g.options.map(o => (
+                      <label key={o} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: TEXT, cursor: "pointer" }}>
+                        <input type="checkbox" checked={dieuChinh.includes(o)} onChange={() => toggle(o)} style={{ accentColor: RED, width: 14, height: 14 }} />
+                        {o}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Căn cứ pháp lý + tội danh chính */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, alignItems: "end" }}>
+            <div>
+              <label style={lbl}>Năm bộ luật</label>
+              <select value={namBoLuat} onChange={e => setNamBoLuat(e.target.value)} style={{ ...inp, cursor: "pointer" }}>
+                {NAM_BO_LUAT_OPTIONS.map(o => <option key={o}>{o}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Điều luật</label><input value={dieuLuat} onChange={e => setDieuLuat(e.target.value)} placeholder="VD: Điều 389" style={inp} /></div>
+            <div><label style={lbl}>Khoản</label><input value={khoan} onChange={e => setKhoan(e.target.value)} placeholder="VD: 1" style={inp} /></div>
+            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: TEXT, cursor: "pointer", paddingBottom: 7 }}>
+              <input type="checkbox" checked={toiDanhChinh} onChange={e => setToiDanhChinh(e.target.checked)} style={{ accentColor: RED, width: 15, height: 15 }} />
+              Tội danh chính
+            </label>
+          </div>
+
+          {/* Kết quả tự tích (SRS) */}
+          <div style={{ padding: "10px 12px", background: "#f9fafb", border: `1px dashed ${BORDER}`, borderRadius: 4, display: "flex", gap: 20, fontSize: 12, color: TEXT }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <input type="checkbox" readOnly checked={autoXetXuLai} style={{ accentColor: RED, width: 14, height: 14 }} /> Xét xử lại <span style={{ color: MUTED, fontSize: 11 }}>(hệ thống tự tích)</span>
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <input type="checkbox" readOnly checked={autoDoiHinhPhat} style={{ accentColor: RED, width: 14, height: 14 }} /> Đổi hình phạt <span style={{ color: MUTED, fontSize: 11 }}>(hệ thống tự tích)</span>
+            </label>
+          </div>
+        </div>
+
+        <div style={{ padding: "12px 18px", borderTop: `1px solid ${BORDER}`, display: "flex", justifyContent: "flex-end", gap: 8, flexShrink: 0 }}>
+          <button onClick={onClose} style={{ padding: "7px 18px", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>Đóng</button>
+          <button onClick={onClose} style={{ padding: "7px 20px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F }}>Lưu</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Tab: Đơn GĐT,TT (THIẾU [Cao] – SRS Xem chi tiết vụ XX) ────────────────────
+
+type DonGDTRow = {
+  maDon: string;
+  thongTinGQ: "Thụ lý mới" | "TLM trùng TP" | "Đã thụ lý";
+  nguoiDungDon: string;
+  phanLoai: "Đơn chính" | "Đơn trùng" | "Thụ lý đi kèm";
+  ghiChuPhanLoai?: string;
+  kqgq?: string;
+  coQDKhangNghi: boolean;
+};
+
+const DON_GDT_TT_ROWS: DonGDTRow[] = [
+  { maDon: "09D732899", thongTinGQ: "Thụ lý mới", nguoiDungDon: "Nguyễn Văn Minh", phanLoai: "Đơn chính", ghiChuPhanLoai: "Án chỉ đạo", kqgq: "Kháng nghị", coQDKhangNghi: true },
+  { maDon: "09D732901", thongTinGQ: "TLM trùng TP", nguoiDungDon: "Trần Thị Hường", phanLoai: "Đơn trùng", kqgq: "", coQDKhangNghi: false },
+  { maDon: "09D733010", thongTinGQ: "Đã thụ lý", nguoiDungDon: "Lê Văn Hòa", phanLoai: "Thụ lý đi kèm", ghiChuPhanLoai: "Án QH", kqgq: "", coQDKhangNghi: false },
+];
+
+function TabDonGDTTT({ row }: { row: VuXetXuRow }) {
+  const TH: React.CSSProperties = { ...TH_STYLE, fontSize: 11, padding: "9px 12px" };
+  const TD: React.CSSProperties = { ...TD_STYLE, fontSize: 12, padding: "9px 12px", verticalAlign: "top" as const };
+
+  return (
+    <div>
+      <ThongTinChungBlock row={row} />
+      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, overflow: "hidden" }}>
+        <div style={{ padding: "10px 14px", background: BG, borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: RED, textTransform: "uppercase" as const, fontFamily: F }}>
+            Danh sách đơn GĐT, TT
+          </span>
+          <span style={{ fontSize: 11, color: MUTED, fontFamily: F }}>{DON_GDT_TT_ROWS.length} đơn</span>
+        </div>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              {["Mã đơn", "Thông tin giải quyết đơn", "Người đứng đơn", "Phân loại", "KQGQ đơn", "Thao tác"].map(h => (
+                <th key={h} style={TH}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {DON_GDT_TT_ROWS.map((d, i) => (
+              <tr key={d.maDon} style={{ background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
+                <td style={{ ...TD, fontWeight: 600, color: "#2563eb" }}>{d.maDon}</td>
+                <td style={TD}>{d.thongTinGQ}</td>
+                <td style={TD}>{d.nguoiDungDon}</td>
+                <td style={TD}>
+                  <div>{d.phanLoai}</div>
+                  {d.ghiChuPhanLoai && (
+                    <span style={{ display: "inline-block", marginTop: 3, padding: "1px 7px", background: "#fefce8", color: "#854d0e", border: "1px solid #fef08a", borderRadius: 3, fontSize: 10, fontWeight: 600, fontFamily: F }}>
+                      {d.ghiChuPhanLoai}
+                    </span>
+                  )}
+                </td>
+                {/* SRS: KQGQ đơn chỉ hiển thị với đơn đã có QĐ kháng nghị */}
+                <td style={TD}>{d.coQDKhangNghi ? (d.kqgq || "–") : <span style={{ color: MUTED }}>–</span>}</td>
+                <td style={{ ...TD, textAlign: "center" as const }}>
+                  <button title="Xem đơn scan" style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}>
+                    <Eye size={14} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ── Tab: Thụ lý ───────────────────────────────────────────────────────────────
 
 function TabThuLy({ row }: { row: VuXetXuRow }) {
   const [ketQuaOpen, setKetQuaOpen] = useState(true);
+  // THIẾU [Cao]: luồng nhập & Lưu Số/Ngày thụ lý xét xử (SRS Thụ lý B.1, B.2, B.5)
+  const [soThuLyXX, setSoThuLyXX] = useState(row.soThuLy || "");
+  const [ngayThuLyXX, setNgayThuLyXX] = useState(row.ngayThuLy || "");
+  const [quaHanLuatDinh, setQuaHanLuatDinh] = useState("Không"); // THIẾU [Cao] SRS Thụ lý B.3
+  const [daLuuThuLy, setDaLuuThuLy] = useState(Boolean(row.soThuLy && row.ngayThuLy));
+  const [loiThuLy, setLoiThuLy] = useState("");
+  const SO_TRONG_GAN_NHAT = "54682699"; // SRS: gợi ý số trống gần nhất
+  const handleLuuThuLy = () => {
+    if (!soThuLyXX.trim() || !ngayThuLyXX.trim()) {
+      setLoiThuLy("Số thụ lý và Ngày thụ lý xét xử là bắt buộc.");
+      return;
+    }
+    setLoiThuLy("");
+    setDaLuuThuLy(true);
+  };
+  const inpTL: React.CSSProperties = { padding: "5px 8px", fontSize: 12, fontFamily: F, border: `1px solid ${BORDER}`, borderRadius: 4, outline: "none" };
   const TH: React.CSSProperties = { ...TH_STYLE, fontSize: 11, padding: "9px 12px" };
   const TD: React.CSSProperties = { ...TD_STYLE, fontSize: 12, padding: "9px 12px", verticalAlign: "top" as const };
 
@@ -682,12 +895,42 @@ function TabThuLy({ row }: { row: VuXetXuRow }) {
           </div>
         </div>
         <div style={{ padding: "14px 16px" }}>
-          <div style={{ display: "flex", gap: 32, flexWrap: "wrap" as const, fontSize: 12, fontFamily: F }}>
-            <span><b style={{ color: MUTED }}>* Số thụ lý GĐT, TT:</b> <b style={{ color: TEXT }}>54682698</b></span>
-            <span><b style={{ color: MUTED }}>* Ngày thụ lý:</b> <b style={{ color: TEXT }}>27/07/2026</b></span>
-            {/* <span><b style={{ color: MUTED }}>Người kháng nghị:</b> <span style={{ color: TEXT }}>Viện trưởng viện kiểm sát nhân dân tối cao</span></span> */}
-            <span><b style={{ color: MUTED }}>Chuyển thẩm quyền xét xử:</b> <span style={{ color: TEXT }}>Không</span></span>
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" as const, fontSize: 12, fontFamily: F, alignItems: "flex-end" }}>
+            <div>
+              <div style={{ color: MUTED, fontWeight: 700, marginBottom: 4 }}><span style={{ color: RED }}>*</span> Số thụ lý GĐT, TT</div>
+              <input value={soThuLyXX} onChange={e => { setSoThuLyXX(e.target.value); setLoiThuLy(""); }} placeholder="Nhập số thụ lý" style={{ ...inpTL, width: 150 }} />
+              <div style={{ fontSize: 10, color: MUTED, marginTop: 3 }}>
+                Số trống gần nhất: <button onClick={() => setSoThuLyXX(SO_TRONG_GAN_NHAT)} style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", padding: 0, fontSize: 10, fontFamily: F }}>{SO_TRONG_GAN_NHAT}</button>
+              </div>
+            </div>
+            <div>
+              <div style={{ color: MUTED, fontWeight: 700, marginBottom: 4 }}><span style={{ color: RED }}>*</span> Ngày thụ lý</div>
+              <input value={ngayThuLyXX} onChange={e => { setNgayThuLyXX(e.target.value); setLoiThuLy(""); }} placeholder="dd/mm/yyyy" style={{ ...inpTL, width: 130 }} />
+            </div>
+            <div>
+              <div style={{ color: MUTED, fontWeight: 700, marginBottom: 4 }}>Quá hạn luật định</div>
+              <select value={quaHanLuatDinh} onChange={e => setQuaHanLuatDinh(e.target.value)} style={{ ...inpTL, width: 180, cursor: "pointer", background: "#fff" }}>
+                <option>Không</option>
+                <option>Quá hạn chủ quan</option>
+                <option>Quá hạn khách quan</option>
+              </select>
+            </div>
+            <div>
+              <div style={{ color: MUTED, fontWeight: 700, marginBottom: 4 }}>Chuyển thẩm quyền xét xử</div>
+              <span style={{ color: TEXT, display: "inline-block", padding: "5px 0" }}>Không</span>
+            </div>
+            <button onClick={handleLuuThuLy} style={{ padding: "6px 18px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F }}>
+              Lưu
+            </button>
           </div>
+          {loiThuLy && (
+            <div style={{ marginTop: 10, padding: "8px 10px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 4, fontSize: 12, color: "#991b1b", fontFamily: F }}>⚠ {loiThuLy}</div>
+          )}
+          {!daLuuThuLy && (
+            <div style={{ marginTop: 10, padding: "8px 10px", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 4, fontSize: 12, color: "#92400e", fontFamily: F }}>
+              Chưa có số thụ lý xét xử – các tab sau (Phân công, Quyết định, Kết quả xét xử) sẽ bị ẩn cho đến khi lưu số thụ lý.
+            </div>
+          )}
         </div>
       </div>
       <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, overflow: "hidden" }}>
@@ -4380,7 +4623,11 @@ function ChiTietVuXetXuView({ row, userRole, onBack }: { row: VuXetXuRow; userRo
     (row?.loaiAn === "Hình sự") ||
     (!row?.loaiAn && !userRole);
 
-  const activeDetailTabs = DETAIL_TABS.filter(t => isHinhSuDetail || t.key !== "qd-bi-cao");
+  // THIẾU [Cao]: tab "Đơn GĐT,TT" – ẩn khi vụ XX là Hồ sơ kháng nghị (SRS Xem chi tiết vụ XX)
+  const laHoSoKhangNghi = (row as any)?.laHoSoKhangNghi === true || row.trangThai === "rut-khang-nghi";
+  const activeDetailTabs = DETAIL_TABS.filter(
+    t => (isHinhSuDetail || t.key !== "qd-bi-cao") && (t.key !== "don-gdt-tt" || !laHoSoKhangNghi)
+  );
 
   return (
     <div style={{ flex: 1, overflow: "auto", background: "#f9fafb", display: "flex", flexDirection: "column" }}>
@@ -4406,6 +4653,7 @@ function ChiTietVuXetXuView({ row, userRole, onBack }: { row: VuXetXuRow; userRo
       <div style={{ flex: 1, overflow: "auto", padding: 20 }}>
         {tab === "thong-tin" && <TabThongTin row={row} userRole={userRole} />}
         {tab === "thu-ly" && <TabThuLy row={row} />}
+        {tab === "don-gdt-tt" && !laHoSoKhangNghi && <TabDonGDTTT row={row} />}
         {tab === "to-trinh" && <TabToTrinhXX row={row} />}
         {tab === "phan-cong" && <TabPhanCong row={row} />}
         {tab === "qd-bi-cao" && isHinhSuDetail && <TabQuyetDinhBiCao row={row} />}
@@ -4447,8 +4695,26 @@ function KqSelect({ placeholder: ph }: { placeholder: string }) {
   );
 }
 
+// THIẾU [Cao] – SRS mục B.12: bảng Điều luật nhiều dòng
+type DieuLuatRow = { id: number; boLuat: string; dieuLuat: string[]; khoan: string; diem: string };
+const BO_LUAT_OPTIONS = ["Bộ luật Hình sự 2015", "Bộ luật Dân sự 2015", "Bộ luật Tố tụng hình sự 2015", "Bộ luật Tố tụng dân sự 2015", "Luật Tố tụng hành chính 2015"];
+const DIEU_LUAT_OPTIONS = ["Điều 371", "Điều 372", "Điều 388", "Điều 391", "Điều 393", "Điều 398", "Điều 400"];
+
 function TabKetQua({ row }: { row: VuXetXuRow }) {
   const [apAnLe, setApAnLe] = useState<"khong" | "co">("khong");
+  const [toaXetXuLai, setToaXetXuLai] = useState(""); // THIẾU [Cao] – SRS mục B.11
+  const [suaToiDanh, setSuaToiDanh] = useState<string | null>(null); // THIẾU [Cao] – popup sửa tội danh
+  const [dieuLuatRows, setDieuLuatRows] = useState<DieuLuatRow[]>([
+    { id: 1, boLuat: "Bộ luật Tố tụng hình sự 2015", dieuLuat: ["Điều 388"], khoan: "1", diem: "a" },
+  ]);
+  const [dlEditId, setDlEditId] = useState<number | null>(null);
+  const [dlDraft, setDlDraft] = useState<DieuLuatRow>({ id: 0, boLuat: BO_LUAT_OPTIONS[0], dieuLuat: [], khoan: "", diem: "" });
+  const batDauThemDL = () => { setDlDraft({ id: Date.now(), boLuat: BO_LUAT_OPTIONS[0], dieuLuat: [], khoan: "", diem: "" }); setDlEditId(-1); };
+  const luuDL = () => {
+    if (!dlDraft.dieuLuat.length) return;
+    setDieuLuatRows(prev => dlEditId && dlEditId > 0 ? prev.map(r => r.id === dlEditId ? { ...dlDraft, id: dlEditId } : r) : [...prev, dlDraft]);
+    setDlEditId(null);
+  };
   const [congBoBA, setCongBoBA] = useState<"co" | "khong">("co");
   const [noiNhan, setNoiNhan] = useState<NoiNhanRow[]>([
     { id: 1, noi: "Viện kiểm sát", noiCT: "VKSNDTC", ghiChu: "Kèm hồ sơ vụ án", editing: false },
@@ -4511,12 +4777,68 @@ function TabKetQua({ row }: { row: VuXetXuRow }) {
                 <Calendar size={14} color={MUTED} style={{ marginRight: 8, flexShrink: 0 }} />
               </div>
             </KqField>
-            <KqField label="Điều luật">
-              <KqSelect placeholder="Chọn căn cứ điều luật" />
+            <KqField label="Tòa án xét xử lại" required={false}>
+              <input value={toaXetXuLai} onChange={e => setToaXetXuLai(e.target.value)} placeholder="Nhập tòa án xét xử lại" style={kqInpSt} />
             </KqField>
-            <KqField label="Khoản">
-              <KqSelect placeholder="Chọn điều khoản" />
-            </KqField>
+            <div />
+          </div>
+
+          {/* THIẾU [Cao] – SRS mục B.12: bảng Điều luật nhiều dòng */}
+          <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, overflow: "hidden" }}>
+            <div style={{ padding: "8px 12px", background: BG, borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: TEXT, textTransform: "uppercase" as const, fontFamily: F }}>Căn cứ điều luật</span>
+              <button onClick={batDauThemDL} style={{ padding: "4px 12px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 11, fontFamily: F, color: TEXT }}>+ Thêm dòng</button>
+            </div>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>{["Bộ luật", "Điều luật", "Khoản", "Điểm", "Thao tác"].map(h => (
+                  <th key={h} style={{ ...TH_STYLE, fontSize: 11, padding: "8px 10px" }}>{h}</th>
+                ))}</tr>
+              </thead>
+              <tbody>
+                {dieuLuatRows.map((r, i) => (
+                  <tr key={r.id} style={{ background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
+                    <td style={{ ...TD_STYLE, fontSize: 12 }}>{r.boLuat}</td>
+                    <td style={{ ...TD_STYLE, fontSize: 12 }}>{r.dieuLuat.join(", ")}</td>
+                    <td style={{ ...TD_STYLE, fontSize: 12 }}>{r.khoan || "–"}</td>
+                    <td style={{ ...TD_STYLE, fontSize: 12 }}>{r.diem || "–"}</td>
+                    <td style={{ ...TD_STYLE, textAlign: "center" as const, whiteSpace: "nowrap" as const }}>
+                      <button title="Sửa" onClick={() => { setDlDraft(r); setDlEditId(r.id); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#2563eb", marginRight: 6 }}><Pencil size={13} /></button>
+                      <button title="Xóa" onClick={() => setDieuLuatRows(prev => prev.filter(x => x.id !== r.id))} style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444" }}><Trash2 size={13} /></button>
+                    </td>
+                  </tr>
+                ))}
+                {dlEditId !== null && (
+                  <tr style={{ background: "#fffbeb" }}>
+                    <td style={{ ...TD_STYLE }}>
+                      <select value={dlDraft.boLuat} onChange={e => setDlDraft(d => ({ ...d, boLuat: e.target.value }))} style={{ ...kqInpSt, cursor: "pointer" }}>
+                        {BO_LUAT_OPTIONS.map(o => <option key={o}>{o}</option>)}
+                      </select>
+                    </td>
+                    <td style={{ ...TD_STYLE }}>
+                      <select
+                        multiple
+                        value={dlDraft.dieuLuat}
+                        onChange={e => setDlDraft(d => ({ ...d, dieuLuat: Array.from(e.target.selectedOptions).map(o => o.value) }))}
+                        style={{ ...kqInpSt, height: 66, cursor: "pointer" }}
+                      >
+                        {DIEU_LUAT_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    </td>
+                    <td style={{ ...TD_STYLE }}>
+                      <input value={dlDraft.khoan} onChange={e => setDlDraft(d => ({ ...d, khoan: e.target.value }))} placeholder="Khoản" style={kqInpSt} />
+                    </td>
+                    <td style={{ ...TD_STYLE }}>
+                      <input value={dlDraft.diem} onChange={e => setDlDraft(d => ({ ...d, diem: e.target.value }))} placeholder="Điểm" style={kqInpSt} />
+                    </td>
+                    <td style={{ ...TD_STYLE, textAlign: "center" as const, whiteSpace: "nowrap" as const }}>
+                      <button onClick={luuDL} style={{ padding: "4px 10px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 11, fontFamily: F, marginRight: 5 }}>Lưu</button>
+                      <button onClick={() => setDlEditId(null)} style={{ padding: "4px 10px", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 11, fontFamily: F }}>Hủy</button>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
           {/* Row 3 */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
@@ -4629,7 +4951,7 @@ function TabKetQua({ row }: { row: VuXetXuRow }) {
                 <td style={{ ...TD, borderRight: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, fontSize: 11 }}>Phạt tiền, khi không áp dụng hình phạt là phạt chính – 2.000.000 VNĐ</td>
                 <td style={{ ...TD, borderRight: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, fontSize: 11 }}>Từ có thời hạn – 15 năm 6 tháng: Phạt tiền, khi không áp dụng hình phạt là phạt chính – 2.000.000 VNĐ</td>
                 <td style={{ ...TD, textAlign: "center" as const, borderBottom: `1px solid ${BORDER}` }}>
-                  <button style={{ background: "none", border: "none", cursor: "pointer", color: "#2563eb", fontSize: 12, fontFamily: F, display: "flex", alignItems: "center", gap: 3 }}><Pencil size={12} /> Sửa</button>
+                  <button onClick={() => setSuaToiDanh("Trần Phi Hùng")} style={{ background: "none", border: "none", cursor: "pointer", color: "#2563eb", fontSize: 12, fontFamily: F, display: "flex", alignItems: "center", gap: 3 }}><Pencil size={12} /> Sửa</button>
                 </td>
               </tr>
             </tbody>
@@ -4680,6 +5002,8 @@ function TabKetQua({ row }: { row: VuXetXuRow }) {
         <button style={{ padding: "7px 22px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: F }}>Trình ký</button>
         <button style={{ padding: "7px 22px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F }}>Xem biểu mẫu</button>
       </div>
+
+      {suaToiDanh && <SuaToiDanhModal tenBiCao={suaToiDanh} onClose={() => setSuaToiDanh(null)} />}
     </div>
   );
 }
@@ -5856,6 +6180,7 @@ export default function QuanLyVuXetXuView({
   const [fLanhDaoVu, setFLanhDaoVu] = useState("");
   const [fTTV, setFTTV] = useState("");
   const [fQuaHanXX, setFQuaHanXX] = useState("");
+  const [showInBaoCao, setShowInBaoCao] = useState(false);
   // THIẾU [Cao]: 12/21 trường tìm kiếm theo SRS Quản lý vụ XX mục A
   const [fNguyenDonBiDon, setFNguyenDonBiDon] = useState("");
   const [fSoThuLyXX, setFSoThuLyXX] = useState("");
@@ -6253,6 +6578,11 @@ export default function QuanLyVuXetXuView({
           <button onClick={() => setShowThemModal(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F }}>
             Tạo danh sách vụ xét xử
           </button>
+          {/* THIẾU [Cao]: In báo cáo (2 biểu mẫu + hộp tiêu chí in + tiêu đề BC tự sinh) */}
+          <button onClick={() => setShowInBaoCao(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
+            <Printer size={13} /> In báo cáo
+          </button>
+          {/* THỪA so với SRS – giữ lại, chờ Lead xác nhận */}
           <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
             <Printer size={13} /> Xuất Excel
           </button>
@@ -6438,6 +6768,14 @@ export default function QuanLyVuXetXuView({
           </div>
         </div>
       </div>
+
+      {showInBaoCao && (
+        <PrintReportModal
+          onClose={() => setShowInBaoCao(false)}
+          bieuMauList={BIEU_MAU_VU_XET_XU}
+          tieuDeMan="In báo cáo – Quản lý vụ xét xử GĐT, TT"
+        />
+      )}
     </>
   );
 }
