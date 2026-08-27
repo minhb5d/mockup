@@ -333,6 +333,7 @@ export const KHIEU_NAI_LIST: VuAnGroup[] = [
 ];
 
 export interface VuAnDetailData {
+  id?: string;
   maVuAn: string; tenVuAn: string;
   loaiBienAn: string; namGiaiQuyet: string;
   soNgayBanAn: string; loaiAn: string; toaXetXu: string;
@@ -1313,7 +1314,7 @@ export default function QuanLyVuAnView({
 
 // ── Sub-components for ChiTietVuAn ──────────────────────────────────────────
 
-function ThongTinChungVuAnCard({ detail }: { detail?: VuAnDetailData }) {
+export function ThongTinChungVuAnCard({ detail }: { detail?: VuAnDetailData }) {
   return (
     <div style={{ background: "#fff", borderRadius: 8, border: `1px solid ${BORDER}`, marginBottom: 16, overflow: "hidden" }}>
       <div style={{ padding: "11px 16px", borderBottom: `1px solid ${BORDER}` }}>

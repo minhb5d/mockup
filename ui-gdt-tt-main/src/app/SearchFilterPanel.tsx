@@ -41,14 +41,14 @@ const SEARCH_ROWS: RowCell[][] = [
     { label: "Số thụ lý", type: "input", placeholder: "Số thụ lý" },
   ],
   [
-    { label: "Thụ lý đơn", type: "select", placeholder: "--Tất cả--" },
+    { label: "Thụ lý đơn", type: "select", placeholder: "--Tất cả--", options: ["Thụ lý mới", "Đã thụ lý"] },
     { label: "Số CV chuyển", type: "input", placeholder: "Số CV chuyển" },
     { label: "Ngày CV chuyển", type: "date" },
   ],
   [
     { label: "Thẩm tra viên", type: "select", placeholder: "--- Tất cả ---" },
     { label: "Loại án", type: "select", placeholder: "--- Tất cả ---", options: [...LOAI_AN_OPTIONS] },
-    { label: "Giao THS", type: "select", placeholder: "--Tất cả--" },
+    { label: "Giao THS", type: "select", placeholder: "--Tất cả--", options: ["Đơn đã giao TTV", "Đơn chưa giao TTV", "Đơn đã nhận từ VP HCTP", "Đơn chưa nhận từ VP HCTP"] },
   ],
   [
     "trangThai",
@@ -57,8 +57,8 @@ const SEARCH_ROWS: RowCell[][] = [
   ],
   [
     "thoiHieu",
-    null,
-    null,
+    { label: "Số tờ trình phân công", type: "input", placeholder: "Số tờ trình phân công" },
+    { label: "Ngày tờ trình phân công", type: "date" },
   ],
 ];
 

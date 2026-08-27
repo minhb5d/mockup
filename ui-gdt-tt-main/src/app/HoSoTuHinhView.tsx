@@ -127,6 +127,7 @@ function HoSoInfoGrid() {
           </tr>
         </tbody>
       </table>
+      <div style={{padding:12,borderTop:`1px solid ${BORDER}`}}><b style={{fontSize:12}}>Danh sách bản án/quyết định liên quan</b><table style={{width:"100%",borderCollapse:"collapse",marginTop:8}}><thead><tr>{["STT","Số & ngày BA/QĐ","Tòa xét xử","Thao tác"].map(h=><th key={h} style={TH_STYLE}>{h}</th>)}</tr></thead><tbody>{[{so:"125/2023/HS-ST",ngay:"15/10/2023",toa:"TAND tỉnh Long An"},{so:"44/2025/HS-PT",ngay:"10/03/2025",toa:"TAND cấp cao tại TP.HCM"}].map((r,i)=><tr key={r.so}><td style={TD_STYLE}>{i+1}</td><td style={{...TD_STYLE,color:"#2563eb",textDecoration:"underline",cursor:"pointer"}}>{r.so} - {r.ngay}</td><td style={TD_STYLE}>{r.toa}</td><td style={TD_STYLE}><button title="Xem bản án"><Eye size={14}/></button></td></tr>)}</tbody></table></div>
     </div>
   );
 }
@@ -606,13 +607,13 @@ function HSTHTabPhanCong() {
               <col style={{ width: "22%" }} />
             </colgroup>
             <thead>
-              <tr>{["STT", "HỌ VÀ TÊN THẨM PHÁN", "CHỨC DANH", "NGÀY PHÂN CÔNG", "NGƯỜI THAO TÁC", "GHI CHÚ"].map(h => <th key={h} style={TH_STYLE}>{h}</th>)}</tr>
+              <tr>{["STT", "GIAI ĐOẠN", "HỌ VÀ TÊN THẨM PHÁN", "CHỨC DANH", "NGÀY PHÂN CÔNG", "NGƯỜI THAO TÁC", "GHI CHÚ"].map(h => <th key={h} style={TH_STYLE}>{h}</th>)}</tr>
             </thead>
             <tbody>
               {thamPhanRows.map((r, idx) => (
                 <tr key={r.stt} style={{ background: idx % 2 === 0 ? "#fff" : "#fafafa" }}>
                   <td style={{ ...TD_STYLE, textAlign: "center", color: MUTED, fontSize: 12 }}>{r.stt}</td>
-                  {/* <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT }}>{r.giaiDoan}</td> */}
+                  <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT }}>{r.giaiDoan}</td>
                   <td style={{ ...TD_STYLE, fontSize: 11, fontWeight: 600, color: TEXT }}>{r.hoTen}</td>
                   <td style={{ ...TD_STYLE, fontSize: 11, textAlign: "center" }}><Badge color="#1e40af" bg="#dbeafe">{r.chucDanh}</Badge></td>
                   <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT, textAlign: "center" }}>{r.ngayPC}</td>
@@ -643,13 +644,13 @@ function HSTHTabPhanCong() {
               <col style={{ width: "15%" }} />
             </colgroup>
             <thead>
-              <tr>{["STT", "HỌ VÀ TÊN TTV", "CHỨC DANH TTV", "NGÀY PHÂN CÔNG TTV", "HỌ VÀ TÊN LĐ", "TÊN CHỨC VỤ LĐ", "NGÀY PHÂN CÔNG LĐ"].map(h => <th key={h} style={TH_STYLE}>{h}</th>)}</tr>
+              <tr>{["STT", "GIAI ĐOẠN", "HỌ VÀ TÊN TTV", "CHỨC DANH TTV", "NGÀY PHÂN CÔNG TTV", "HỌ VÀ TÊN LĐ", "TÊN CHỨC VỤ LĐ", "NGÀY PHÂN CÔNG LĐ"].map(h => <th key={h} style={TH_STYLE}>{h}</th>)}</tr>
             </thead>
             <tbody>
               {ttvRows.map((r, idx) => (
                 <tr key={r.stt} style={{ background: idx % 2 === 0 ? "#fff" : "#fafafa" }}>
                   <td style={{ ...TD_STYLE, textAlign: "center", color: MUTED, fontSize: 12 }}>{r.stt}</td>
-                  {/* <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT }}>{r.giaiDoan}</td> */}
+                  <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT }}>{r.giaiDoan}</td>
                   <td style={{ ...TD_STYLE, fontSize: 11, fontWeight: 600, color: TEXT }}>{r.hoTenTTV}</td>
                   <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT }}>{r.chucDanhTTV}</td>
                   <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT, textAlign: "center" }}>{r.ngayPCTTV}</td>
@@ -1251,7 +1252,7 @@ function ModalQDKhongKhangNghi({ onClose }: { onClose: () => void }) {
       </div>
       <label style={{...lbl, marginTop:12}}>Nội dung vụ án *<textarea style={{...inp,minHeight:100}} placeholder="Nhập nội dung vụ án"/></label>
       <QDNoiNhanTable rows={[{id:1,noiNhan:"TAND",chiTiet:"TAND tối cao",ghiChu:"",editing:false}]} setRows={()=>{}} />
-      <div style={{display:"flex",justifyContent:"flex-end",gap:8,marginTop:14}}><button onClick={onClose}>Đóng</button><button style={{background:RED,color:"#fff",border:0,borderRadius:4,padding:"7px 18px"}}>Lưu</button></div>
+      <div style={{display:"flex",justifyContent:"flex-end",gap:8,marginTop:14}}><button onClick={onClose}>Đóng</button><button onClick={()=>alert("Đã trình duyệt quyết định")}>Trình duyệt</button><button style={{background:RED,color:"#fff",border:0,borderRadius:4,padding:"7px 18px"}}>Lưu</button></div>
     </div>
   </div>;
 }
@@ -1278,6 +1279,7 @@ function VKSQDModal({ title, onClose }: { title: string; onClose: () => void }) 
             <label style={lbl}>Ngày quyết định</label>
             <input type="date" style={inp} />
           </div>
+          <div><label style={lbl}>Bị án *</label><select style={inp} required><option>Chu Văn An</option><option>Nguyễn Văn A</option><option>Trần Thị B</option></select></div>
           <div>
             <label style={lbl}>Viện trưởng VKS *</label>
             <input style={inp} placeholder="Nhập họ tên Viện trưởng VKS" required />
@@ -1296,7 +1298,7 @@ function VKSQDModal({ title, onClose }: { title: string; onClose: () => void }) 
         {/* Footer */}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, padding: "16px 20px", borderTop: `1px solid ${BORDER}` }}>
           <button onClick={onClose} style={{ padding: "8px 24px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 6, cursor: "pointer", fontSize: 13, fontFamily: F, color: TEXT }}>Đóng</button>
-          <button style={{ padding: "8px 24px", background: RED, color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13, fontFamily: F, fontWeight: 700 }}>Lưu</button>
+          <button onClick={()=>alert("Đã trình duyệt") } style={{padding:"8px 18px",border:`1px solid ${RED}`,color:RED,background:"#fff",borderRadius:6}}>Trình duyệt</button><button style={{ padding: "8px 24px", background: RED, color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13, fontFamily: F, fontWeight: 700 }}>Lưu</button>
         </div>
       </div>
     </div>
@@ -1353,10 +1355,10 @@ function VKSSubTab() {
         </div>
         <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
           <colgroup>
-            <col style={{ width: 36 }} /><col style={{ width: "22%" }} /><col style={{ width: "18%" }} /><col style={{ width: "12%" }} /><col style={{ width: "14%" }} /><col style={{ width: "10%" }} /><col style={{ width: "16%" }} /><col style={{ width: 72 }} />
+            <col style={{ width: 36 }} /><col style={{ width: "18%" }} /><col style={{ width: "14%" }} /><col style={{ width: "11%" }} /><col style={{ width: "13%" }} /><col style={{ width: "12%" }} /><col style={{ width: "9%" }} /><col style={{ width: "15%" }} /><col style={{ width: 72 }} />
           </colgroup>
           <thead>
-            <tr>{["TT", "TÊN QUYẾT ĐỊNH", "SỐ QĐ", "NGÀY RA QĐ", "NGƯỜI KÝ", "TRẠNG THÁI", "NGƯỜI TẠO", "THAO TÁC"].map(h => <th key={h} style={TH}>{h}</th>)}</tr>
+            <tr>{["TT", "TÊN QUYẾT ĐỊNH", "SỐ QĐ", "NGÀY RA QĐ", "NGƯỜI KÝ", "BỊ ÁN", "TRẠNG THÁI", "NGƯỜI TẠO", "THAO TÁC"].map(h => <th key={h} style={TH}>{h}</th>)}</tr>
           </thead>
           <tbody>
             <tr style={{ background: "#fff" }}>
@@ -1365,6 +1367,7 @@ function VKSSubTab() {
               <td style={TD}>12/2026/VKS-KN</td>
               <td style={TD}>20/07/2026</td>
               <td style={TD}>Nguyễn Văn Hiển</td>
+              <td style={TD}>Chu Văn An</td>
               <td style={TD}><Badge color="#065f46" bg="#d1fae5">Đã ký</Badge></td>
               <td style={TD}>
                 <div style={{ fontSize: 12, color: TEXT }}>Nguyễn Văn Hiển</div>
@@ -1563,10 +1566,10 @@ function CTNSubTab() {
           </div>
           <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
             <colgroup>
-              <col style={{ width: 40 }} /><col style={{ width: "13%" }} /><col style={{ width: "14%" }} /><col style={{ width: "14%" }} /><col style={{ width: "13%" }} /><col style={{ width: "16%" }} /><col style={{ width: "16%" }} /><col style={{ width: 80 }} />
+              <col style={{ width: 40 }} /><col style={{ width: "12%" }} /><col style={{ width: "12%" }} /><col style={{ width: "12%" }} /><col style={{ width: "12%" }} /><col style={{ width: "12%" }} /><col style={{ width: "14%" }} /><col style={{ width: "14%" }} /><col style={{ width: 80 }} />
             </colgroup>
             <thead>
-              <tr>{["STT", "SỐ QUYẾT ĐỊNH", "NGÀY QUYẾT ĐỊNH", "NGÀY PHÁT HÀNH", "NGƯỜI KÝ", "NGƯỜI TẠO", "TRẠNG THÁI", "THAO TÁC"].map(h => <th key={h} style={TH}>{h}</th>)}</tr>
+              <tr>{["STT", "SỐ QUYẾT ĐỊNH", "NGÀY QUYẾT ĐỊNH", "NGÀY PHÁT HÀNH", "NGƯỜI KÝ", "BỊ ÁN", "NGƯỜI TẠO", "TRẠNG THÁI", "THAO TÁC"].map(h => <th key={h} style={TH}>{h}</th>)}</tr>
             </thead>
             <tbody>
               <tr style={{ background: "#fff" }}>
@@ -1575,6 +1578,7 @@ function CTNSubTab() {
                 <td style={{ ...TD, color: MUTED }}>Chưa cập nhật</td>
                 <td style={{ ...TD, color: MUTED }}>Chưa cập nhật</td>
                 <td style={TD}>Nguyễn Thị Bình</td>
+                <td style={TD}>Chu Văn An</td>
                 <td style={TD}>
                   <div style={{ fontSize: 12, color: TEXT }}>Nguyễn Tường Linh</div>
                   <div style={{ fontSize: 10, color: MUTED }}>23/07/2026 09:30:09</div>
@@ -1643,6 +1647,8 @@ function CTNSubTab() {
 // ── Tab Thông tin xác minh ────────────────────────────────────────────────────
 // ── Modal: Tạo công văn xác minh ─────────────────────────────────────────────
 function TaoCongVanModal({ onClose }: { onClose: () => void }) {
+  const [noiNhanLoai, setNoiNhanLoai] = useState("");
+  const [donViNhan, setDonViNhan] = useState("");
   const [noiNhanRows, setNoiNhanRows] = useState<QDNoiNhanRow[]>([
     { id: 1, noiNhan: "Viện kiểm sát", chiTiet: "VKSNDTC", ghiChu: "Kèm hồ sơ vụ án", editing: false },
     { id: 2, noiNhan: "", chiTiet: "", ghiChu: "", editing: true },
@@ -1783,6 +1789,7 @@ function TaoCongVanModal({ onClose }: { onClose: () => void }) {
 function XacMinhSubTab() {
   const [showTaoCV, setShowTaoCV] = useState(false);
   const [ghiChu, setGhiChu] = useState("");
+  const [transferHistory,setTransferHistory]=useState([{id:1,nguoi:"Nguyễn Văn Hiển",nguoiNhan:"Trần Văn B",donVi:"Phòng lưu trữ",ngay:"20/07/2026",ghiChu:"Bàn giao lần 1"}]);
   const TH: React.CSSProperties = { ...TH_STYLE, fontSize: 11, padding: "8px 10px" };
   const TD: React.CSSProperties = { ...TD_STYLE, fontSize: 12, padding: "10px 10px", verticalAlign: "top" };
   const inp: React.CSSProperties = { padding: "8px 10px", fontSize: 12, border: `1px solid ${BORDER}`, borderRadius: 4, fontFamily: F, outline: "none", width: "100%", boxSizing: "border-box", background: "#fff" };
@@ -1902,6 +1909,8 @@ function XacMinhSubTab() {
             <textarea value={ghiChu} onChange={e => setGhiChu(e.target.value)} placeholder="Nhập ghi chú" maxLength={500} style={{ ...inp, minHeight: 80, resize: "vertical" }} />
             <div style={{ textAlign: "right", fontSize: 11, color: MUTED, fontFamily: F, marginTop: 2 }}>{ghiChu.length} / 500</div>
           </div>
+          <div style={{textAlign:"right",marginTop:10}}><button onClick={()=>setTransferHistory(v=>[...v,{id:Date.now(),nguoi:"Nguyễn Văn Hiển",nguoiNhan:"Người nhận mới",donVi:"Đơn vị nhận",ngay:new Date().toLocaleDateString("vi-VN"),ghiChu}])} style={{background:RED,color:"#fff",border:0,borderRadius:4,padding:"7px 14px"}}>Lưu lần bàn giao</button></div>
+          <div style={{marginTop:16}}><b style={{fontSize:12}}>Lịch sử bàn giao/chuyển hồ sơ</b><table style={{width:"100%",borderCollapse:"collapse",marginTop:8}}><thead><tr>{["Lần","Người chuyển","Người nhận","Đơn vị nhận","Ngày chuyển","Ghi chú"].map(h=><th key={h} style={TH_STYLE}>{h}</th>)}</tr></thead><tbody>{transferHistory.map((r,i)=><tr key={r.id}><td style={TD_STYLE}>{i+1}</td><td style={TD_STYLE}>{r.nguoi}</td><td style={TD_STYLE}>{r.nguoiNhan}</td><td style={TD_STYLE}>{r.donVi}</td><td style={TD_STYLE}>{r.ngay}</td><td style={TD_STYLE}>{r.ghiChu}</td></tr>)}</tbody></table></div>
         </div>
       </div>
     </>
@@ -1915,6 +1924,7 @@ export function ModalThemMoiToTrinh({ onClose }: { onClose: () => void }) {
 
 
 function HoSoTuHinhDetailView({ id, onBack }: { id: string; onBack: () => void }) {
+  const [hasDonXinAnGiam,setHasDonXinAnGiam]=useState(true);
   const [tab, setTab] = useState<HSDetailTab>("thong-tin");
   const [kqSubTab, setKqSubTab] = useState<KetQuaSubTab>("toa-an");
   const [showQDDrop, setShowQDDrop] = useState(false);
@@ -2230,7 +2240,7 @@ function HoSoTuHinhDetailView({ id, onBack }: { id: string; onBack: () => void }
                     <tr>{["STT", "MÃ ĐƠN", "NGÀY NHẬN ĐƠN", "NGƯỜI ĐỨNG ĐƠN", "PHÂN LOẠI", "NỘI DUNG", "BỊ ÁN", "THAO TÁC"].map(h => <th key={h} style={TH}>{h}</th>)}</tr>
                   </thead>
                   <tbody>
-                    {[
+                    {hasDonXinAnGiam ? [
                       { stt: 1, maDon: "6549", ngayNhan: "09/07/2026", nguoi: "Đứng đơn chín, Đứng đơn chín hai", phanLoai: "Đơn đề nghị GĐT, TT", noiDung: "Đơn xin ân giảm + kêu oan", biAn: "Đặng Thìn Dương" },
                       { stt: 2, maDon: "6564", ngayNhan: "09/07/2026", nguoi: "Đứng đơn chín hai", phanLoai: "Đơn đề nghị GĐT, TT", noiDung: "Xin thi hành án", biAn: "Chu Văn An" },
                     ].map((r, i) => (
@@ -2248,7 +2258,7 @@ function HoSoTuHinhDetailView({ id, onBack }: { id: string; onBack: () => void }
                           </button>
                         </td>
                       </tr>
-                    ))}
+                    )) : <tr><td colSpan={8} style={{...TD,textAlign:"center",padding:24,color:MUTED}}>Không có đơn xin ân giảm</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -2321,10 +2331,10 @@ function HoSoTuHinhDetailView({ id, onBack }: { id: string; onBack: () => void }
                 </div>
                 <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
                   <colgroup>
-                    <col style={{ width: 36 }} /><col style={{ width: "22%" }} /><col style={{ width: "18%" }} /><col style={{ width: "12%" }} /><col style={{ width: "14%" }} /><col style={{ width: "10%" }} /><col style={{ width: "16%" }} /><col style={{ width: 72 }} />
+                    <col style={{ width: 36 }} /><col style={{ width: "18%" }} /><col style={{ width: "14%" }} /><col style={{ width: "11%" }} /><col style={{ width: "13%" }} /><col style={{ width: "12%" }} /><col style={{ width: "9%" }} /><col style={{ width: "15%" }} /><col style={{ width: 72 }} />
                   </colgroup>
                   <thead>
-                    <tr>{["TT", "TÊN QUYẾT ĐỊNH", "SỐ QĐ", "NGÀY RA QĐ", "NGƯỜI KÝ", "TRẠNG THÁI", "NGƯỜI TẠO", "THAO TÁC"].map(h => <th key={h} style={TH}>{h}</th>)}</tr>
+                    <tr>{["TT", "TÊN QUYẾT ĐỊNH", "SỐ QĐ", "NGÀY RA QĐ", "NGƯỜI KÝ", "BỊ ÁN", "TRẠNG THÁI", "NGƯỜI TẠO", "THAO TÁC"].map(h => <th key={h} style={TH}>{h}</th>)}</tr>
                   </thead>
                   <tbody>
                     <tr style={{ background: "#fff" }}>
@@ -2333,6 +2343,7 @@ function HoSoTuHinhDetailView({ id, onBack }: { id: string; onBack: () => void }
                       <td style={TD}>44/2026/QDXXST-HS</td>
                       <td style={TD}>22/07/2026</td>
                       <td style={TD}>Dương Văn Hải</td>
+                      <td style={TD}>Chu Văn An</td>
                       <td style={TD}><Badge color="#065f46" bg="#d1fae5">Đã ký</Badge></td>
                       <td style={TD}>
                         <div style={{ fontSize: 12, color: TEXT }}>Dương Văn Hải</div>
@@ -2341,9 +2352,9 @@ function HoSoTuHinhDetailView({ id, onBack }: { id: string; onBack: () => void }
                       <td style={{ ...TD, textAlign: "center" }}>
                         <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
                           <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Xem"><Eye size={14} color="#0e7490" /></button>
-                          <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Tải xuống">
+                          {(true /* đã có file */ && true /* có quyền */) && <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Tải xuống">
                             <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M14 10v2.667A1.333 1.333 0 0 1 12.667 14H3.333A1.333 1.333 0 0 1 2 12.667V10M5.333 6.667 8 9.333m0 0 2.667-2.666M8 9.333V2" stroke="#9CA3AF" strokeWidth="1.33" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                          </button>
+                          </button>}
                         </div>
                       </td>
                     </tr>
@@ -2804,6 +2815,9 @@ const DON_XIN_AN_GIAM_ROWS = [
   },
 ];
 
+
+function ThemMoiHoSoTuHinhModal({onClose}:{onClose:()=>void}){ const [found,setFound]=useState(false); const [selected,setSelected]=useState(0); const [convicts,setConvicts]=useState([{name:"Chu Văn An",dob:"02/02/1980",gender:"Nam",crime:"Giết người",sentence:"Tử hình"}]); const st:React.CSSProperties={padding:7,border:`1px solid ${BORDER}`,borderRadius:4,width:"100%",boxSizing:"border-box"}; return <div style={{position:"fixed",inset:0,zIndex:1500,background:"rgba(0,0,0,.5)",display:"flex",justifyContent:"center",alignItems:"center",padding:20}}><div style={{width:1000,maxHeight:"92vh",overflow:"auto",background:"#fff",borderRadius:8,padding:18,fontFamily:F}}><div style={{display:"flex"}}><h3 style={{flex:1}}>Thêm mới hồ sơ tử hình</h3><button onClick={onClose}><X size={16}/></button></div><h4>A. Thông tin tra cứu bản án</h4><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr auto",gap:10}}><input placeholder="Số BA/QĐ" style={st}/><input type="date" style={st}/><input placeholder="Tòa xét xử" style={st}/><button onClick={()=>setFound(true)}>Tìm kiếm</button></div>{found&&<><h4>B. Danh sách bản án</h4><table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr><th style={TH_STYLE}></th><th style={TH_STYLE}>Số & ngày BA/QĐ</th><th style={TH_STYLE}>Tòa xét xử</th><th style={TH_STYLE}>Hình phạt</th></tr></thead><tbody><tr><td style={TD_STYLE}><input type="radio" checked={selected===0} onChange={()=>setSelected(0)}/></td><td style={TD_STYLE}>125/2023/HS-ST - 15/10/2023</td><td style={TD_STYLE}>TAND tỉnh Long An</td><td style={TD_STYLE}>Có bị án tử hình</td></tr></tbody></table><h4>C. Danh sách bị án</h4><table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr>{["STT","Họ tên","Ngày sinh","Giới tính","Tội danh","Hình phạt","Thao tác"].map(x=><th key={x} style={TH_STYLE}>{x}</th>)}</tr></thead><tbody>{convicts.map((c,i)=><tr key={i}><td style={TD_STYLE}>{i+1}</td><td style={TD_STYLE}><input value={c.name} onChange={e=>setConvicts(v=>v.map((x,j)=>j===i?{...x,name:e.target.value}:x))}/></td><td style={TD_STYLE}>{c.dob}</td><td style={TD_STYLE}>{c.gender}</td><td style={TD_STYLE}>{c.crime}</td><td style={TD_STYLE}>{c.sentence}</td><td style={TD_STYLE}><button onClick={()=>setConvicts(v=>v.filter((_,j)=>j!==i))}>Xóa</button></td></tr>)}</tbody></table><button onClick={()=>setConvicts(v=>[...v,{name:"",dob:"",gender:"Nam",crime:"",sentence:"Tử hình"}])}>+ Thêm bị án</button></>}<div style={{textAlign:"right",marginTop:16}}><button onClick={onClose}>Hủy</button> <button onClick={()=>{if(!found||!convicts.length){alert("Vui lòng tra cứu bản án và bổ sung bị án");return;}alert("Lưu hồ sơ tử hình thành công");onClose();}} style={{background:RED,color:"#fff",border:0,padding:"7px 16px"}}>Lưu</button></div></div></div> }
+function HsProgress({row}:{row:any}){ const items=[["Trình",row.trangThai||"Chưa trình"],["KQGQ đơn","Đã có"],["KQGQ Chánh án","Chưa có"],["KQGQ VKS","Chưa có"],["KQGQ Chủ tịch nước","Chưa có"],["Xác minh","Đang xác minh"]]; return <div style={{display:"grid",gap:2,textAlign:"left"}}>{items.map(([k,v])=><div key={k} style={{fontSize:10}}><span style={{color:MUTED}}>{k}: </span><b>{v}</b></div>)}</div> }
 export default function HoSoTuHinhView({
   initialTab = "ho-so-tu-hinh",
   userRole,
@@ -2816,6 +2830,7 @@ export default function HoSoTuHinhView({
   const [activeTab, setActiveTab] = useState<TuHinhTabId>(initialTab);
   const [detail, setDetail] = useState<string | null>(null);
   const [filterExpanded, setFilterExpanded] = useState(true);
+  const [showAddHoSo, setShowAddHoSo] = useState(false);
 
   const [nguoiDungDon, setNguoiDungDon] = useState("");
   const [soBanAn, setSoBanAn] = useState("");
@@ -2966,7 +2981,8 @@ export default function HoSoTuHinhView({
           </div>
         </div>
       </div>
-      <div style={{ display: "flex", justifyContent: "flex-end", padding: "8px 20px 4px", background: "#fff", flexShrink: 0 }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap:8, padding: "8px 20px 4px", background: "#fff", flexShrink: 0 }}>
+        {activeTab === "ho-so-tu-hinh" && <button onClick={()=>setShowAddHoSo(true)} style={{background:RED,color:"#fff",border:0,borderRadius:4,padding:"6px 12px"}}>+ Thêm mới hồ sơ tử hình</button>}
         <button style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, padding: "5px 8px", cursor: "pointer", display: "flex", alignItems: "center" }} title="Tải lại danh sách"><RefreshCw size={13} color={MUTED} /></button>
       </div>
       <div style={{ flex: 1, overflow: "auto", padding: "0 20px 12px" }}>
@@ -3115,12 +3131,12 @@ export default function HoSoTuHinhView({
                         <div style={{ lineHeight: 1.6 }}>
                           <div><span style={{ color: MUTED }}>Số BA/QĐ: </span><strong>{row.soBA}</strong></div>
                           <div><span style={{ color: MUTED }}>Ngày BA/QĐ: </span><span>{row.ngayBA}</span></div>
-                          <div><span style={{ color: MUTED }}>Tại: </span><span>{row.toaBA}</span></div>
+                          <div><span style={{ color: MUTED }}>Tại: </span><span>{row.toaBA}</span></div><div><span style={{color:MUTED}}>Trạng thái lưu hồ sơ: </span><b style={{color:idx%2===0?"#047857":"#b45309"}}>{idx%2===0?"Đã lưu":"Chưa lưu"}</b></div>
                         </div>
 
                       </td>
                       <td style={TD_COL}>
-                        <div style={{ lineHeight: 1.6 }}>
+                        <div style={{fontSize:10,color:"#7c3aed",marginBottom:4}}>Đơn xin ân giảm + kêu oan: 1 · Xin ân giảm: 1 · Xin thi hành án: 0</div><div style={{ lineHeight: 1.6 }}>
                           {row.biAnList.map((biAn, bIdx) => (
                             <div key={bIdx} style={{ marginBottom: bIdx < row.biAnList.length - 1 ? 6 : 0, paddingBottom: bIdx < row.biAnList.length - 1 ? 4 : 0, borderBottom: bIdx < row.biAnList.length - 1 ? "1px dashed #f3f4f6" : "none" }}>
                               <div>
@@ -3148,7 +3164,7 @@ export default function HoSoTuHinhView({
                         </div>
                       </td>
                       <td style={{ ...TD_COL, textAlign: "center", whiteSpace: "nowrap" }}>
-                        <HSTrangThaiChip status={row.trangThai} />
+                        <HsProgress row={row}/>
                       </td>
                       <td style={{ ...TD_COL, textAlign: "center", whiteSpace: "nowrap" }}>
                         <button onClick={() => setDetail(detailIdForSoBA(row.soBA))} style={{ background: "none", border: "none", cursor: "pointer", padding: 3 }} title="Xem chi tiết hồ sơ tử hình"><Eye size={15} color="#059669" /></button>
@@ -3173,6 +3189,7 @@ export default function HoSoTuHinhView({
           )}
         </div>
       </div>
+      {showAddHoSo && <ThemMoiHoSoTuHinhModal onClose={()=>setShowAddHoSo(false)}/>} 
     </div>
   );
 }

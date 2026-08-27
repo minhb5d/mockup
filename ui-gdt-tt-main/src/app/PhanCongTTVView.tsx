@@ -35,6 +35,23 @@ const DANH_SACH_LANH_DAO = [
   "Nguyễn Văn Cường - 30/09/1976 / Phó Vụ trưởng, Thẩm phán",
 ];
 
+const TODAY_ISO = new Date().toISOString().slice(0, 10);
+const LD_BY_TTV: Record<string, string> = {
+  "Nguyễn Thị Thúy Hường": DANH_SACH_LANH_DAO[0],
+  "Vũ Xuân Hiền": DANH_SACH_LANH_DAO[1],
+  "Nguyễn Thị Hường": DANH_SACH_LANH_DAO[2],
+  "Nguyễn Đức Thiện": DANH_SACH_LANH_DAO[2],
+  "Vũ Diệu Thúy": DANH_SACH_LANH_DAO[3],
+  "Đặng Thị Mai": DANH_SACH_LANH_DAO[0],
+};
+const getName = (v: string) => v.split(" - ")[0];
+const toInputDate = (v: string) => {
+  if (!v || v === "-") return TODAY_ISO;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  const m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  return m ? `${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}` : TODAY_ISO;
+};
+
 interface CaseRow {
   id: number;
   soThuLy: string;
@@ -52,6 +69,12 @@ interface CaseRow {
   ttv: string;
   ngayPCLD: string;
   lanhDao: string;
+  hasVuGiaiQuyet?: boolean;
+  donChoPheDuyet?: boolean;
+  previousTTV?: string;
+  previousLD?: string;
+  canhBaoThoiHieu?: string;
+  isKhieuNai?: boolean;
 }
 
 const INITIAL_CHUA_PHAN_CONG: CaseRow[] = [
@@ -163,7 +186,15 @@ const INITIAL_CHUA_PHAN_CONG: CaseRow[] = [
     ngayPCLD: "-",
     lanhDao: "-",
   },
-];
+].map((r, i) => ({
+  ...r,
+  hasVuGiaiQuyet: i % 2 === 0,
+  donChoPheDuyet: i % 3 === 1,
+  previousTTV: i % 2 === 0 ? DANH_SACH_TTV[(i + 1) % DANH_SACH_TTV.length] : undefined,
+  previousLD: i % 2 === 0 ? DANH_SACH_LANH_DAO[i % DANH_SACH_LANH_DAO.length] : undefined,
+  canhBaoThoiHieu: i === 0 ? "Còn 18 ngày" : i === 2 ? "Còn 27 ngày" : undefined,
+  isKhieuNai: i === 3,
+}));
 
 const INITIAL_DA_PHAN_CONG: CaseRow[] = [
   {
@@ -274,7 +305,7 @@ const INITIAL_DA_PHAN_CONG: CaseRow[] = [
     ngayPCLD: "30/06/2026",
     lanhDao: "Phạm Thị Bích Ngọc - Phó Vụ trưởng",
   },
-];
+].map((r, i) => ({ ...r, hasVuGiaiQuyet: i % 2 === 0, previousTTV: r.ttv, previousLD: r.lanhDao, canhBaoThoiHieu: i === 1 ? "Còn 22 ngày" : undefined }));
 
 export function PhanCongTTVView() {
   const [activeTab, setActiveTab] = useState<"chua-phan-cong" | "da-phan-cong">("chua-phan-cong");
@@ -298,6 +329,8 @@ export function PhanCongTTVView() {
   // Table row data
   const [chuaPCRows, setChuaPCRows] = useState<CaseRow[]>(INITIAL_CHUA_PHAN_CONG);
   const [daPCRows, setDaPCRows] = useState<CaseRow[]>(INITIAL_DA_PHAN_CONG);
+  const [dirtyIds, setDirtyIds] = useState<number[]>([]);
+  const [filterApplied, setFilterApplied] = useState(false);
 
   // Selected row checkbox IDs
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -309,6 +342,12 @@ export function PhanCongTTVView() {
   // Modal assign inputs
   const [assignTTV, setAssignTTV] = useState(DANH_SACH_TTV[0]);
   const [assignLD, setAssignLD] = useState(DANH_SACH_LANH_DAO[0]);
+
+  const updateRow = (id: number, patch: Partial<CaseRow>) => {
+    const setter = activeTab === "chua-phan-cong" ? setChuaPCRows : setDaPCRows;
+    setter((rows) => rows.map((r) => r.id === id ? { ...r, ...patch } : r));
+    setDirtyIds((ids) => ids.includes(id) ? ids : [...ids, id]);
+  };
 
   const handleResetFilters = () => {
     setFNgayTLTu("");
@@ -323,6 +362,7 @@ export function PhanCongTTVView() {
     setFBiDon("");
     setFTTV("");
     setFLanhDao("");
+    setFilterApplied(false);
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>, list: CaseRow[]) => {
@@ -340,70 +380,63 @@ export function PhanCongTTVView() {
   };
 
   const handleExecutePhanCong = () => {
-    if (selectedIds.length === 0) {
-      alert("Vui lòng tích chọn ít nhất 1 vụ án để phân công TTV!");
+    const idsToAssign = phanCongMode === "ngau-nhien" ? chuaPCRows.map(r => r.id) : selectedIds;
+    if (idsToAssign.length === 0) {
+      alert("Không có vụ việc được Phân công TTV/LĐ");
       return;
     }
-
     if (phanCongMode === "ngau-nhien") {
-      const assignedRows: CaseRow[] = [];
-      const remainingRows: CaseRow[] = [];
-
-      chuaPCRows.forEach((r) => {
-        if (selectedIds.includes(r.id)) {
-          const randTTV = DANH_SACH_TTV[Math.floor(Math.random() * DANH_SACH_TTV.length)];
-          const randLD = DANH_SACH_LANH_DAO[Math.floor(Math.random() * DANH_SACH_LANH_DAO.length)];
-          assignedRows.push({
-            ...r,
-            giaiDoanPC: "GĐ Xét xử GĐT, TT",
-            ngayPCTTV: "26/06/2026",
-            ttv: randTTV,
-            ngayPCLD: "26/06/2026",
-            lanhDao: randLD,
-          });
-        } else {
-          remainingRows.push(r);
-        }
+      const assignedRows = chuaPCRows.map((r, i) => {
+        const ttv = DANH_SACH_TTV[(r.id + i) % DANH_SACH_TTV.length];
+        const ld = LD_BY_TTV[getName(ttv)] || DANH_SACH_LANH_DAO[(r.id + i) % DANH_SACH_LANH_DAO.length];
+        return { ...r, giaiDoanPC: r.isKhieuNai ? "Giải quyết khiếu nại" : "Giai đoạn giải quyết đơn", ngayPCTTV: TODAY_ISO, ttv, ngayPCLD: TODAY_ISO, lanhDao: ld };
       });
-
-      setChuaPCRows(remainingRows);
-      setDaPCRows((prev) => [...assignedRows, ...prev]);
-      setSelectedIds([]);
-      alert(`Đã phân công ngẫu nhiên thành công ${assignedRows.length} vụ án cho Thẩm tra viên!`);
-      setActiveTab("da-phan-cong");
-    } else {
-      setShowAssignModal(true);
+      setChuaPCRows([]); setDaPCRows(prev => [...assignedRows, ...prev]); setSelectedIds([]); setDirtyIds([]);
+      try { localStorage.setItem("gdt-phan-cong-ttv", JSON.stringify(assignedRows)); } catch {}
+      alert("Phân công TTV/LĐ thành công"); setActiveTab("da-phan-cong"); return;
     }
+    // Chỉ định: cho phép chỉnh từng dòng trước khi lưu; nếu chưa chỉnh thì mở modal hỗ trợ.
+    setShowAssignModal(true);
   };
 
   const handleConfirmChiDinh = () => {
-    const assignedRows: CaseRow[] = [];
-    const remainingRows: CaseRow[] = [];
-
+    if (!selectedIds.length) { alert("Không có vụ việc được Phân công TTV/LĐ"); return; }
+    const ldAuto = LD_BY_TTV[getName(assignTTV)] || assignLD;
+    const assignedRows: CaseRow[] = []; const remainingRows: CaseRow[] = [];
     chuaPCRows.forEach((r) => {
       if (selectedIds.includes(r.id)) {
-        assignedRows.push({
-          ...r,
-          giaiDoanPC: "GĐ Xét xử GĐT, TT",
-          ngayPCTTV: "26/06/2026",
-          ttv: assignTTV,
-          ngayPCLD: "26/06/2026",
-          lanhDao: assignLD,
-        });
-      } else {
-        remainingRows.push(r);
-      }
+        const allowedTTV = r.hasVuGiaiQuyet && r.previousTTV ? r.previousTTV : assignTTV;
+        assignedRows.push({ ...r, giaiDoanPC: r.isKhieuNai ? "Giải quyết khiếu nại" : "Giai đoạn giải quyết đơn", ngayPCTTV: TODAY_ISO, ttv: allowedTTV, ngayPCLD: TODAY_ISO, lanhDao: allowedTTV === assignTTV ? ldAuto : (r.previousLD || ldAuto) });
+      } else remainingRows.push(r);
     });
-
-    setChuaPCRows(remainingRows);
-    setDaPCRows((prev) => [...assignedRows, ...prev]);
-    setSelectedIds([]);
-    setShowAssignModal(false);
-    alert(`Đã phân công chỉ định thành công cho Thẩm tra viên: ${assignTTV} và Lãnh đạo: ${assignLD}!`);
-    setActiveTab("da-phan-cong");
+    if (assignedRows.some(r => !r.ngayPCTTV || !r.ttv || !r.ngayPCLD || !r.lanhDao || [r.ngayPCTTV,r.ttv,r.ngayPCLD,r.lanhDao].includes("-"))) { alert("Điền đầy đủ thông tin trước khi lưu phân công"); return; }
+    setChuaPCRows(remainingRows); setDaPCRows(prev => [...assignedRows, ...prev]); setSelectedIds([]); setShowAssignModal(false); setDirtyIds([]);
+    try { localStorage.setItem("gdt-phan-cong-ttv", JSON.stringify(assignedRows)); } catch {}
+    alert("Phân công TTV/LĐ thành công"); setActiveTab("da-phan-cong");
   };
 
-  const currentRows = activeTab === "chua-phan-cong" ? chuaPCRows : daPCRows;
+  const saveInlineAssignments = () => {
+    const rows = activeTab === "chua-phan-cong" ? chuaPCRows.filter(r => dirtyIds.includes(r.id)) : daPCRows.filter(r => dirtyIds.includes(r.id));
+    if (!rows.length) { alert("Không có vụ việc được Phân công TTV/LĐ"); return; }
+    const invalid = rows.find(r => !r.ngayPCTTV || !r.ttv || !r.ngayPCLD || !r.lanhDao || [r.ngayPCTTV,r.ttv,r.ngayPCLD,r.lanhDao].includes("-"));
+    if (invalid) { alert("Điền đầy đủ thông tin trước khi lưu phân công"); return; }
+    if (activeTab === "chua-phan-cong") {
+      setChuaPCRows(prev => prev.filter(r => !dirtyIds.includes(r.id)));
+      setDaPCRows(prev => [...rows, ...prev]);
+      setActiveTab("da-phan-cong");
+    }
+    try { localStorage.setItem("gdt-phan-cong-ttv", JSON.stringify(rows)); } catch {}
+    setDirtyIds([]); alert("Phân công TTV/LĐ thành công");
+  };
+
+  const currentRowsRaw = activeTab === "chua-phan-cong" ? chuaPCRows : daPCRows;
+  const currentRows = [...currentRowsRaw].filter(r => {
+    if (!filterApplied) return true;
+    return (!fSoTL || r.soThuLy.toLowerCase().includes(fSoTL.toLowerCase())) && (!fSoBA || r.soBA.toLowerCase().includes(fSoBA.toLowerCase())) && (!fNguoiKN || r.ndkn.toLowerCase().includes(fNguoiKN.toLowerCase())) && (!fBiDon || r.nbk.toLowerCase().includes(fBiDon.toLowerCase())) && (!fTTV || r.ttv.includes(getName(fTTV))) && (!fLanhDao || r.lanhDao.includes(getName(fLanhDao)));
+  }).sort((a,b) => {
+    const parse = (v:string) => { const m=v.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? new Date(+m[3],+m[2]-1,+m[1]).getTime() : 0; };
+    return parse(b.ngayThuLy) - parse(a.ngayThuLy);
+  });
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
@@ -439,6 +472,16 @@ export function PhanCongTTVView() {
     whiteSpace: "nowrap",
   };
 
+  React.useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => { if (dirtyIds.length) { e.preventDefault(); e.returnValue = "Bạn chưa lưu thay đổi phân công"; } };
+    window.addEventListener("beforeunload", handler); return () => window.removeEventListener("beforeunload", handler);
+  }, [dirtyIds]);
+
+  const requestTabChange = (next: "chua-phan-cong" | "da-phan-cong") => {
+    if (dirtyIds.length && !confirm("Chưa Lưu phân công. Bạn có muốn Thoát mà không lưu?")) return;
+    setDirtyIds([]); setActiveTab(next); setSelectedIds([]);
+  };
+
   const TD_CUSTOM: React.CSSProperties = {
     ...TD_STYLE,
     padding: "10px 12px",
@@ -466,8 +509,7 @@ export function PhanCongTTVView() {
         <div style={{ display: "flex", gap: 24, borderBottom: `1px solid ${BORDER}`, background: "transparent" }}>
           <button
             onClick={() => {
-              setActiveTab("chua-phan-cong");
-              setSelectedIds([]);
+              requestTabChange("chua-phan-cong");
             }}
             style={{
               padding: "8px 4px 12px",
@@ -485,8 +527,7 @@ export function PhanCongTTVView() {
           </button>
           <button
             onClick={() => {
-              setActiveTab("da-phan-cong");
-              setSelectedIds([]);
+              requestTabChange("da-phan-cong");
             }}
             style={{
               padding: "8px 4px 12px",
@@ -717,7 +758,7 @@ export function PhanCongTTVView() {
 
             <div style={{ display: "flex", gap: 10 }}>
               <button
-                onClick={() => alert("Đang lọc danh sách phân công TTV...")}
+                onClick={() => setFilterApplied(true)}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -762,7 +803,7 @@ export function PhanCongTTVView() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
           {activeTab === "chua-phan-cong" ? (
             <button
-              onClick={handleExecutePhanCong}
+              onClick={phanCongMode === "ngau-nhien" ? handleExecutePhanCong : saveInlineAssignments}
               style={{
                 padding: "7px 18px",
                 background: RED,
@@ -775,11 +816,11 @@ export function PhanCongTTVView() {
                 fontFamily: F,
               }}
             >
-              {phanCongMode === "ngau-nhien" ? "Lưu phân công" : "Phân công"}
+              {phanCongMode === "ngau-nhien" ? "Phân công ngẫu nhiên" : "Lưu phân công"}
             </button>
           ) : (
             <button
-              onClick={() => alert("Đã lưu thông tin phân công thành công!")}
+              onClick={saveInlineAssignments}
               style={{
                 padding: "7px 16px",
                 background: "#fff",
@@ -843,12 +884,12 @@ export function PhanCongTTVView() {
               <thead>
                 <tr>
                   <th style={{ ...TH_CUSTOM, width: 36, textAlign: "center" }}>
-                    <input
+                    {(activeTab === "da-phan-cong" || phanCongMode === "chi-dinh") && <input
                       type="checkbox"
                       checked={selectedIds.length === currentRows.length && currentRows.length > 0}
                       onChange={(e) => handleSelectAll(e, currentRows)}
                       style={{ cursor: "pointer" }}
-                    />
+                    />}
                   </th>
                   <th style={{ ...TH_CUSTOM, width: 44, textAlign: "center" }}>STT</th>
                   <th style={{ ...TH_CUSTOM, width: "12%" }}>Số & Ngày thụ lý</th>
@@ -881,25 +922,21 @@ export function PhanCongTTVView() {
                         }}
                       >
                         <td style={{ ...TD_CUSTOM, textAlign: "center" }}>
-                          <input
+                          {(activeTab === "da-phan-cong" || phanCongMode === "chi-dinh") && <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => handleToggleRow(r.id)}
                             style={{ cursor: "pointer" }}
-                          />
+                          />}
                         </td>
                         <td style={{ ...TD_CUSTOM, textAlign: "center", fontWeight: 600, color: MUTED }}>
                           {index + 1}
                         </td>
                         <td style={TD_CUSTOM}>
-                          {r.soThuLy !== "-" ? (
-                            <div>
-                              <div><b>Số:</b> {r.soThuLy}</div>
-                              <div style={{ color: MUTED, marginTop: 2, fontSize: 11 }}><b>Ngày TL:</b> {r.ngayThuLy}</div>
-                            </div>
-                          ) : (
-                            <span style={{ color: MUTED }}>-</span>
-                          )}
+                          {r.hasVuGiaiQuyet && <div style={{ marginBottom: 4 }}><span style={{ padding: "2px 6px", borderRadius: 10, background: "#dcfce7", color: "#166534", fontSize: 10, fontWeight: 700 }}>Đã có vụ giải quyết</span></div>}
+                          {r.donChoPheDuyet && <div style={{ marginBottom: 4 }}><span style={{ padding: "2px 6px", borderRadius: 10, background: "#fef3c7", color: "#92400e", fontSize: 10, fontWeight: 700 }}>Đơn chờ phê duyệt</span></div>}
+                          {r.soThuLy !== "-" ? <div><div><b>Số:</b> {r.soThuLy}</div><div style={{ color: MUTED, marginTop: 2, fontSize: 11 }}><b>Ngày TL:</b> {r.ngayThuLy}</div></div> : <span style={{ color: MUTED }}>-</span>}
+                          {r.canhBaoThoiHieu && <div style={{ marginTop: 5, color: "#b91c1c", fontSize: 10, fontWeight: 700 }}>⚠ Thời hiệu giải quyết: {r.canhBaoThoiHieu}</div>}
                         </td>
                         <td style={TD_CUSTOM}>
                           <div>
@@ -920,7 +957,7 @@ export function PhanCongTTVView() {
                           </div>
                         </td>
                         <td style={TD_CUSTOM}>
-                          {r.ndkn || r.nbk ? (
+                          {r.isKhieuNai ? <span style={{ color: MUTED }}>-</span> : (r.ndkn || r.nbk) ? (
                             <div style={{ fontSize: 11, lineHeight: 1.6 }}>
                               {r.ndkn && <div><b>NĐ/NKK:</b> {r.ndkn}</div>}
                               {r.nbk && <div><b>BĐ/NBK:</b> {r.nbk}</div>}
@@ -930,39 +967,32 @@ export function PhanCongTTVView() {
                           )}
                         </td>
                         <td style={TD_CUSTOM}>
-                          <span style={{ color: MUTED }}>{r.ngayNhanTHS}</span>
+                          <input type="date" value={toInputDate(r.ngayNhanTHS)} onChange={(e) => { updateRow(r.id, { ngayNhanTHS: e.target.value }); try { localStorage.setItem(`gdt-ngay-nhan-ths-${r.id}`, e.target.value); } catch {} }} style={{ ...inputStyle, fontSize: 11 }} />
                         </td>
                         <td style={TD_CUSTOM}>
-                          <div>
-                            <div style={{ fontSize: 11, fontWeight: 600, color: "#1e40af" }}>{r.giaiDoanPC}</div>
-                            <div style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>{r.ngayPCTTV}</div>
-                          </div>
+                          <div style={{ fontSize: 10, color: "#1e40af", fontWeight: 700, marginBottom: 4 }}>{r.isKhieuNai ? "Giải quyết khiếu nại" : r.giaiDoanPC}</div>
+                          <input type="date" value={toInputDate(r.ngayPCTTV)} onChange={(e) => updateRow(r.id, { ngayPCTTV: e.target.value })} style={{ ...inputStyle, fontSize: 11, borderColor: dirtyIds.includes(r.id) && (!r.ngayPCTTV || r.ngayPCTTV === "-") ? RED : BORDER }} />
                         </td>
                         <td style={TD_CUSTOM}>
-                          <div>
-                            <div style={{ fontSize: 11, fontWeight: 600, color: "#1e40af" }}>{r.giaiDoanPC}</div>
-                            <div style={{ fontSize: 11, fontWeight: r.ttv !== "-" ? 600 : 400, color: r.ttv !== "-" ? TEXT : MUTED, marginTop: 2 }}>
-                              {r.ttv}
-                            </div>
-                          </div>
+                          {r.previousTTV && <div onClick={() => { const ttv=r.previousTTV!; updateRow(r.id,{ttv,lanhDao:r.previousLD || LD_BY_TTV[getName(ttv)] || "-",ngayPCTTV:toInputDate(r.ngayPCTTV),ngayPCLD:toInputDate(r.ngayPCLD)}); }} style={{ fontSize: 10, color: MUTED, marginBottom: 4, cursor: "pointer" }} title="Click để chọn lại">Gợi ý lần trước: {getName(r.previousTTV)}</div>}
+                          <select value={r.ttv === "-" ? "" : r.ttv} onChange={(e) => { const ttv=e.target.value; updateRow(r.id,{ttv,lanhDao:LD_BY_TTV[getName(ttv)] || r.lanhDao,ngayPCTTV:toInputDate(r.ngayPCTTV),ngayPCLD:toInputDate(r.ngayPCLD)}); }} style={{ ...inputStyle, fontSize: 11 }} disabled={phanCongMode === "chi-dinh" && !!r.hasVuGiaiQuyet && !!r.previousTTV}>
+                            <option value="">-- Chọn TTV --</option>
+                            {(phanCongMode === "chi-dinh" && r.hasVuGiaiQuyet && r.previousTTV ? [r.previousTTV] : DANH_SACH_TTV).map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
                         </td>
                         <td style={TD_CUSTOM}>
-                          <div>
-                            <div style={{ fontSize: 11, fontWeight: 600, color: "#1e40af" }}>{r.giaiDoanPC}</div>
-                            <div style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>{r.ngayPCLD}</div>
-                          </div>
+                          <div style={{ fontSize: 10, color: "#1e40af", fontWeight: 700, marginBottom: 4 }}>{r.isKhieuNai ? "Giải quyết khiếu nại" : r.giaiDoanPC}</div>
+                          <input type="date" value={toInputDate(r.ngayPCLD)} onChange={(e) => updateRow(r.id, { ngayPCLD: e.target.value })} style={{ ...inputStyle, fontSize: 11 }} />
                         </td>
                         <td style={TD_CUSTOM}>
-                          <div>
-                            <div style={{ fontSize: 11, fontWeight: 600, color: "#1e40af" }}>{r.giaiDoanPC}</div>
-                            <div style={{ fontSize: 11, fontWeight: r.lanhDao !== "-" ? 600 : 400, color: r.lanhDao !== "-" ? TEXT : MUTED, marginTop: 2 }}>
-                              {r.lanhDao}
-                            </div>
-                          </div>
+                          {r.previousLD && <div style={{ fontSize: 10, color: MUTED, marginBottom: 4 }}>Gợi ý lần trước: {getName(r.previousLD)}</div>}
+                          <select value={r.lanhDao === "-" ? "" : r.lanhDao} onChange={(e) => updateRow(r.id,{lanhDao:e.target.value})} style={{ ...inputStyle, fontSize: 11 }}>
+                            <option value="">-- Chọn LĐV --</option>{DANH_SACH_LANH_DAO.map(l => <option key={l} value={l}>{l}</option>)}
+                          </select>
                         </td>
                         <td style={{ ...TD_CUSTOM, textAlign: "center", borderRight: "none" }}>
                           <button
-                            onClick={() => setShowDetailModal(r)}
+                            onClick={() => { alert(`Mở bản scan đơn/hồ sơ của bản ghi ${r.id}`); setShowDetailModal(r); }}
                             style={{
                               background: "none",
                               border: "none",
@@ -971,7 +1001,7 @@ export function PhanCongTTVView() {
                               padding: 4,
                               borderRadius: 4,
                             }}
-                            title="Xem chi tiết"
+                            title="Xem đơn scan"
                           >
                             <Eye size={16} />
                           </button>
@@ -1083,7 +1113,7 @@ export function PhanCongTTVView() {
           <div style={{ background: "#fff", borderRadius: 10, width: "100%", maxWidth: 640, boxShadow: "0 20px 50px rgba(0,0,0,0.25)", overflow: "hidden", fontFamily: F }}>
             <div style={{ padding: "14px 20px", background: "#f8fafc", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ fontWeight: 700, fontSize: 15, color: RED }}>
-                📄 Thông tin chi tiết vụ án
+                📄 Xem đơn scan / Thông tin hồ sơ
               </div>
               <button onClick={() => setShowDetailModal(null)} style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}>
                 <X size={20} />

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Search, Eye, ChevronDown, RotateCcw, X, Save,
-  FileText, CheckCircle2, Send, FileSpreadsheet, FolderCheck,
+  FileText, CheckCircle2, Send, FileSpreadsheet, FolderCheck, Printer, Upload,
 } from "lucide-react";
 import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge, type UserRoleType } from "./shared";
 import { TaiLieuHoSoView } from "./TaiLieuHoSoView";
@@ -466,6 +466,10 @@ function ModalNhanHoSoKhangNghi({
     trangThai: "Chờ nhận",
   };
 
+  const [nguoiGiao, setNguoiGiao] = useState("Nguyễn Văn Thư - 12/04/1984 / Cán bộ văn thư");
+  const [nguoiNhan, setNguoiNhan] = useState("Lý Thái Phúc - 02/02/1986 / Thẩm tra viên");
+  const ngayNhan = todayVi();
+
   const taiLieuList = [
     { stt: 1, ten: `Quyết định kháng nghị số ${rec.soKhangNghi || "08/2026/QĐKN"}`, loai: "Quyết định", ngay: rec.ngayKhangNghi || "03/07/2026", soTrang: 6, ghiChu: "Đã đóng dấu ký số" },
     { stt: 2, ten: `Bản án sơ thẩm/phúc thẩm số ${rec.soBA || "236/2026/HS-PT"}`, loai: "Bản án", ngay: rec.ngayBA || "03/07/2026", soTrang: 28, ghiChu: "Bản chính" },
@@ -488,6 +492,11 @@ function ModalNhanHoSoKhangNghi({
           </button>
         </div>
 
+        <div style={{padding:"12px 20px",borderBottom:`1px solid ${BORDER}`,display:"grid",gridTemplateColumns:"1fr 1fr 160px",gap:10}}>
+          <label style={{fontSize:11,color:MUTED}}>Người giao văn thư<select value={nguoiGiao} onChange={e=>setNguoiGiao(e.target.value)} style={{width:"100%",padding:7,marginTop:4}}><option>Nguyễn Văn Thư - 12/04/1984 / Cán bộ văn thư</option><option>Trần Thị Mai - 03/05/1987 / Văn thư viên</option></select></label>
+          <label style={{fontSize:11,color:MUTED}}>Người nhận Vụ<select value={nguoiNhan} onChange={e=>setNguoiNhan(e.target.value)} style={{width:"100%",padding:7,marginTop:4}}><option>Lý Thái Phúc - 02/02/1986 / Thẩm tra viên</option><option>Nguyễn Hải Nam - 11/09/1982 / Thẩm tra viên chính</option></select></label>
+          <label style={{fontSize:11,color:MUTED}}>Ngày nhận<input value={ngayNhan} readOnly style={{width:"100%",padding:7,marginTop:4,background:"#f8fafc"}}/></label>
+        </div>
         {/* Content - Chia 2 cột */}
         <div style={{ flex: 1, overflowY: "auto", padding: "20px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
 
@@ -1367,6 +1376,20 @@ export function ChonHoSoModal({
   );
 }
 
+
+function HsknProcessModal({record,onClose}:{record:any;onClose:()=>void}){
+ const [tab,setTab]=useState(0); const [scan,setScan]=useState<File|null>(null); const tabs=["Thông tin chung","Kháng nghị & chỉ đạo","Người tham gia tố tụng","Quá trình giải quyết","Bổ sung tài liệu","Quá trình chuyển đơn"];
+ const box:React.CSSProperties={padding:8,border:`1px solid ${BORDER}`,borderRadius:4,width:"100%",boxSizing:"border-box"};
+ return <div style={{position:"fixed",inset:0,zIndex:1500,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><div style={{width:"95vw",maxWidth:1150,maxHeight:"92vh",overflow:"auto",background:"#fff",borderRadius:8,fontFamily:F}}><div style={{display:"flex",padding:14,borderBottom:`1px solid ${BORDER}`}}><b style={{flex:1}}>Xử lý / nhập-sửa hồ sơ kháng nghị</b><button onClick={onClose}><X size={16}/></button></div><div style={{display:"flex",borderBottom:`1px solid ${BORDER}`}}>{tabs.map((t,i)=><button key={t} onClick={()=>setTab(i)} style={{padding:"10px 12px",border:0,borderBottom:tab===i?`2px solid ${RED}`:"2px solid transparent",background:"#fff",color:tab===i?RED:TEXT}}>{t}</button>)}</div><div style={{padding:18}}>
+ {tab===0&&<div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}><label>Hình thức đơn<input readOnly value="Hồ sơ kháng nghị GĐT/TT" style={box}/></label><label>Thủ tục giải quyết<select style={box}><option>Giám đốc thẩm</option><option>Tái thẩm</option></select></label><label>Loại QĐ/BA<select style={box}><option>Bản án</option><option>Quyết định</option><option>Quyết định kháng nghị</option></select></label><label>Loại án<select style={box}><option>{record?.loaiAn||"Hình sự"}</option><option>Dân sự</option><option>Hành chính</option></select></label><label>Số BA/QĐ<input defaultValue={record?.soBA} style={box}/></label><label>Ngày BA/QĐ<input type="date" style={box}/></label><label>Tòa xét xử<input defaultValue={record?.toaRaBanAn} style={box}/></label><label>Cấp xét xử<select style={box}><option>Sơ thẩm</option><option>Phúc thẩm</option><option>Giám đốc thẩm</option></select></label><label style={{gridColumn:"1/-1"}}><input type="checkbox"/> Không có nội dung GĐT-TT</label></div>}
+ {tab===1&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><label>Số QĐKN<input defaultValue={record?.soKhangNghi} style={box}/></label><label>Ngày QĐKN<input type="date" style={box}/></label><label>Người kháng nghị<input defaultValue={record?.nguoiKhangNghi} style={box}/></label><label>Ý kiến chỉ đạo<select style={box}><option>Đồng ý</option><option>Không đồng ý</option><option>Ý kiến khác</option></select></label><label style={{gridColumn:"1/-1"}}>Nội dung chỉ đạo<textarea style={{...box,minHeight:90}}/></label></div>}
+ {tab===2&&<table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr><th style={TH_STYLE}>Vai trò</th><th style={TH_STYLE}>Họ tên</th><th style={TH_STYLE}>Năm sinh</th><th style={TH_STYLE}>Địa chỉ</th><th style={TH_STYLE}>Nội dung</th></tr></thead><tbody><tr><td style={TD_STYLE}>{record?.loaiAn==="Hình sự"?"Bị cáo":"Nguyên đơn"}</td><td style={TD_STYLE}>{record?.nguoiKhieuNai||"Nguyễn Văn A"}</td><td style={TD_STYLE}>1985</td><td style={TD_STYLE}>Hà Nội</td><td style={TD_STYLE}>-</td></tr></tbody></table>}
+ {tab===3&&<div><b>Quá trình giải quyết</b><p>Số thụ lý xét xử: 01/2026/TL-GĐT · Thẩm quyền xét xử: TPTC</p></div>}
+ {tab===4&&<div><label style={{display:"inline-flex",alignItems:"center",gap:8,padding:12,border:`1px dashed ${BORDER}`,cursor:"pointer"}}><Upload size={16}/> Scan/đính kèm hồ sơ<input type="file" hidden onChange={e=>setScan(e.target.files?.[0]||null)}/></label><div style={{marginTop:8}}>{scan?.name||"Bắt buộc scan tài liệu Hồ sơ kháng nghị"}</div></div>}
+ {tab===5&&<table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr><th style={TH_STYLE}>Ngày</th><th style={TH_STYLE}>Đơn vị</th><th style={TH_STYLE}>Người chuyển</th><th style={TH_STYLE}>Ghi chú</th></tr></thead><tbody><tr><td style={TD_STYLE}>{todayVi()}</td><td style={TD_STYLE}>Vụ GĐ,KT</td><td style={TD_STYLE}>Tài khoản đang đăng nhập</td><td style={TD_STYLE}>Khởi tạo hồ sơ</td></tr></tbody></table>}
+ </div><div style={{padding:12,borderTop:`1px solid ${BORDER}`,textAlign:"right"}}><button onClick={onClose}>Đóng</button> <button onClick={()=>{if(!scan&&tab===4){alert("Bắt buộc scan tài liệu Hồ sơ kháng nghị");return;}alert("Lưu hồ sơ kháng nghị thành công")}} style={{background:RED,color:"#fff",border:0,padding:"7px 14px",borderRadius:4}}>Lưu</button></div></div></div>
+}
+function ChuyenHsknModal({records,onClose,onConfirm}:{records:any[];onClose:()=>void;onConfirm:(data:any)=>void}){ const [data,setData]=useState({ngay:todayVi(),butLuc:"",donVi:"TAND",chiTiet:"",ghiChu:"",dinhKem:true}); const options=data.donVi==="TAND"?["TAND tối cao","TAND cấp tỉnh","TAND cấp cao"]:data.donVi==="VKSND"?["VKSND tối cao","VKSND cấp tỉnh"]:[]; return <div style={{position:"fixed",inset:0,zIndex:1500,background:"rgba(0,0,0,.45)",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{background:"#fff",width:620,padding:18,borderRadius:8,fontFamily:F}}><h3>Xác nhận chuyển hồ sơ</h3><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><label>Ngày chuyển HSKN<input value={data.ngay} readOnly/></label><label>Số bút lục HSKN<input value={data.butLuc} onChange={e=>setData({...data,butLuc:e.target.value})}/></label><label>Đơn vị chuyển đến<select value={data.donVi} onChange={e=>setData({...data,donVi:e.target.value,chiTiet:""})}><option>TAND</option><option>VKSND</option><option>Khác</option></select></label><label>Đơn vị chi tiết{data.donVi==="Khác"?<input value={data.chiTiet} onChange={e=>setData({...data,chiTiet:e.target.value})}/>:<select value={data.chiTiet} onChange={e=>setData({...data,chiTiet:e.target.value})}><option value="">Chọn đơn vị</option>{options.map(x=><option key={x}>{x}</option>)}</select>}</label><label style={{gridColumn:"1/-1"}}>Ghi chú<textarea value={data.ghiChu} onChange={e=>setData({...data,ghiChu:e.target.value})}/></label><label style={{gridColumn:"1/-1"}}><input type="checkbox" checked={data.dinhKem} onChange={e=>setData({...data,dinhKem:e.target.checked})}/> Đính kèm hồ sơ, tài liệu</label></div><p>Tổng số hồ sơ: {records.length}</p><div style={{textAlign:"right"}}><button onClick={onClose}>Đóng</button> <button onClick={()=>{if(!data.butLuc||!data.chiTiet){alert("Vui lòng nhập Số bút lục và Đơn vị chi tiết");return;}onConfirm(data)}} style={{marginLeft:8,background:RED,color:"#fff",border:0,padding:"7px 14px"}}>Chuyển hồ sơ</button></div></div></div> }
 // ── Component Hồ sơ kháng nghị View ──────────────────────────────────────────
 export function HoSoKhangNghiView({ userRole, onTaoCongVan }: { userRole?: UserRoleType; onTaoCongVan?: (config?: any) => void }) {
   const [activeSubTab, setActiveSubTab] = useState<"di" | "den">("di");
@@ -1376,6 +1399,8 @@ export function HoSoKhangNghiView({ userRole, onTaoCongVan }: { userRole?: UserR
   const [showNhanHoSoModal, setShowNhanHoSoModal] = useState(false);
   const [showTaoCongVanModal, setShowTaoCongVanModal] = useState(false);
   const [showChonHoSoModal, setShowChonHoSoModal] = useState(false);
+  const [showProcess, setShowProcess] = useState(false);
+  const [showChuyenConfirm, setShowChuyenConfirm] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [appliedFilters, setAppliedFilters] = useState<HsknFilterValues>({});
@@ -1417,7 +1442,8 @@ export function HoSoKhangNghiView({ userRole, onTaoCongVan }: { userRole?: UserR
       donViNhan: "Tòa án nhân dân TP Hà Nội",
       ngayChuyen: "25/07/2026",
       soCVChuyen: "CV-2026/092",
-      trangThai: "Chờ chuyển",
+      trangThai: "Đã trả",
+      soVanThuTra: "VT-TRA-2026/11", ngayTra: "12/08/2026", nguoiNhanVu: "Lý Thái Phúc",
     },
     {
       id: 3,
@@ -1536,24 +1562,12 @@ export function HoSoKhangNghiView({ userRole, onTaoCongVan }: { userRole?: UserR
   ]);
 
   const handleChuyenHoSoDi = () => {
-    if (selectedItems.length === 0) {
-      alert("Không có thông tin hồ sơ cần chuyển");
-      return;
-    }
-    const selectedRecords = listDi.filter(item => selectedItems.includes(item.id));
-    if (selectedRecords.some(item => item.trangThai === "Đã chuyển")) {
-      alert("Không thể chuyển các hồ sơ đã chuyển");
-      return;
-    }
-    const missingCVRecord = selectedRecords.find(item => !item.soCVChuyen || item.soCVChuyen === "---" || item.soCVChuyen.trim() === "");
-    if (missingCVRecord) {
-      alert(`Hồ sơ "${missingCVRecord.soKhangNghi || missingCVRecord.maDon}" chưa có công văn chuyển. Vui lòng tạo công văn chuyển trước khi chuyển hồ sơ!`);
-      return;
-    }
-    setListDi(prev => prev.map(item => selectedItems.includes(item.id) ? { ...item, trangThai: "Đã chuyển" } : item));
-    alert(`Hoàn thành chuyển ${selectedRecords.length} Hồ sơ`);
-    setSelectedItems([]);
+    const selectedRecords=listDi.filter(item=>selectedItems.includes(item.id));
+    if(selectedRecords.length===0){alert("Không có thông tin hồ sơ cần chuyển");return;}
+    if(selectedRecords.some(r=>r.trangThai==="Đã chuyển")){alert("Không thể chuyển các hồ sơ đã chuyển");return;}
+    setShowChuyenConfirm(true);
   };
+  const confirmChuyenHskn=(data:any)=>{ const ids=[...selectedItems]; setListDi(prev=>prev.map(r=>ids.includes(r.id)?{...r,trangThai:"Đã chuyển",ngayChuyen:data.ngay,soButLuc:data.butLuc,donViNhan:data.chiTiet,nguoiChuyen:"Tài khoản đang đăng nhập",soCVChuyen:r.soCVChuyen||`CV-${Date.now().toString().slice(-4)}`}:r)); setShowChuyenConfirm(false);setSelectedItems([]);alert(`Hoàn thành chuyển ${ids.length} Hồ sơ`); };
 
   const handleOpenTaoCongVan = (rowTarget?: any) => {
     let target = rowTarget;
@@ -1787,18 +1801,14 @@ export function HoSoKhangNghiView({ userRole, onTaoCongVan }: { userRole?: UserR
 
   const handleOpenNhanHoSo = (rowTarget?: any) => {
     const targetIds = rowTarget?.id ? [rowTarget.id] : selectedItems;
-    if (targetIds.length === 0) {
-      alert("Không có thông tin hồ sơ nhận");
-      return;
-    }
-    const ngayNhan = todayVi();
-    setListDen(prevList => prevList.map(item =>
-      targetIds.includes(item.id)
-        ? { ...item, trangThai: "Đã nhận", nguoiNhan: "Lý Thái Phúc", ngayNhan, nguonNhan: item.trangThai === "Đã trả" ? "VKS trả về" : "Văn thư đến" }
-        : item
-    ));
-    setSelectedItems([]);
-    alert(`Đã nhận ${targetIds.length} hồ sơ kháng nghị thành công!`);
+    if (targetIds.length === 0) { alert("Không có thông tin hồ sơ nhận"); return; }
+    setSelectedRecord(rowTarget || listDen.find(x=>targetIds.includes(x.id)));
+    setShowNhanHoSoModal(true);
+  };
+  const confirmNhanHoSo = () => {
+    const targetIds = selectedRecord?.id ? [selectedRecord.id] : selectedItems; const ngayNhan=todayVi();
+    setListDen(prev=>prev.map(item=>targetIds.includes(item.id)?{...item,trangThai:"Đã nhận",nguoiNhan:"Lý Thái Phúc",ngayNhan,soVanThuDen:item.maVanThuDen,ngayTiepNhan:ngayNhan,nguonNhan:item.trangThai==="Đã trả"?"VKS trả về":"Văn thư đến"}:item));
+    setShowNhanHoSoModal(false);setSelectedRecord(null);setSelectedItems([]);alert(`Đã nhận ${targetIds.length} hồ sơ kháng nghị thành công!`);
   };
 
   const handleConfirmTraHoSo = (lyDo: string) => {
@@ -1976,8 +1986,8 @@ export function HoSoKhangNghiView({ userRole, onTaoCongVan }: { userRole?: UserR
             </>
           )}
 
-          <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
-            <FileSpreadsheet size={14} color="#16a34a" /> Xuất Excel
+          <button onClick={()=>window.print()} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
+            <Printer size={14} color="#16a34a" /> In danh sách
           </button>
         </div>
       </div>
@@ -1994,7 +2004,7 @@ export function HoSoKhangNghiView({ userRole, onTaoCongVan }: { userRole?: UserR
                 }} />
               </th>
               <th style={{ ...TH_STYLE, width: 45, textAlign: "center" }}>STT</th>
-              <th style={{ ...TH_STYLE, width: 145 }}>MÃ VĂN THƯ ĐẾN</th>
+              <th style={{ ...TH_STYLE, width: 165 }}>{activeSubTab === "di" ? "THÔNG TIN VĂN THƯ ĐI" : "MÃ VĂN THƯ ĐẾN"}</th>
               <th style={{ ...TH_STYLE, width: 160 }}>THÔNG TIN KHÁNG NGHỊ</th>
               <th style={{ ...TH_STYLE, width: 145 }}>SỐ BẢN ÁN / QĐ</th>
               <th style={{ ...TH_STYLE, width: 210 }}>{activeSubTab === "di" ? "ĐƠN VỊ NHẬN / CÔNG VĂN CHUYỂN" : "ĐƠN VỊ GỬI / NGƯỜI NHẬN"}</th>
@@ -2023,8 +2033,7 @@ export function HoSoKhangNghiView({ userRole, onTaoCongVan }: { userRole?: UserR
                 <td style={{ ...TD_STYLE, textAlign: "center", color: MUTED, fontSize: 12, fontFamily: F }}>{idx + 1}</td>
 
                 <td style={{ ...TD_STYLE, fontFamily: F, fontSize: 12 }}>
-                  <div style={{ color: "#0f766e", fontWeight: 600 }}><span style={{ color: MUTED, fontWeight: 400 }}>Mã VT: </span>{(row as any).maVanThuDen || "VT-2026/0582"}</div>
-                  <div style={{ fontSize: 11, color: TEXT, fontFamily: F, marginTop: 2 }}><span style={{ color: MUTED }}>Ngày VT: </span>{(row as any).ngayVanThuDen || "20/07/2026"}</div>
+                  {activeSubTab === "di" ? <><div style={{color:"#0f766e",fontWeight:600}}>Mã VT đi: {(row as any).maVanThuDi || (row as any).soCVChuyen || "Chưa cấp"}</div><div style={{fontSize:11}}>Ngày VT đi: {(row as any).ngayVanThuDi || (row as any).ngayChuyen || "-"}</div><div style={{fontSize:11}}>Người phát hành: {(row as any).nguoiChuyen || "-"}</div></> : <><div style={{ color: "#0f766e", fontWeight: 600 }}><span style={{ color: MUTED, fontWeight: 400 }}>Mã VT: </span>{(row as any).maVanThuDen || "VT-2026/0582"}</div><div style={{ fontSize: 11, color: TEXT, fontFamily: F, marginTop: 2 }}><span style={{ color: MUTED }}>Ngày VT: </span>{(row as any).ngayVanThuDen || "20/07/2026"}</div></>}
                 </td>
                 <td style={{ ...TD_STYLE, fontFamily: F, fontSize: 12 }}>
                   <div style={{ color: RED, fontWeight: 600 }}><span style={{ color: MUTED, fontWeight: 400 }}>Số KN: </span>{(row as any).soKhangNghi}</div>
@@ -2035,7 +2044,7 @@ export function HoSoKhangNghiView({ userRole, onTaoCongVan }: { userRole?: UserR
                 <td style={{ ...TD_STYLE, fontFamily: F, fontSize: 12 }}>
                   <div style={{ color: "#2563eb", fontWeight: 600 }}><span style={{ color: MUTED, fontWeight: 400 }}>Số BA/QĐ: </span>{row.soBA}</div>
                   <div style={{ fontSize: 11, color: TEXT, fontFamily: F, marginTop: 2 }}><span style={{ color: MUTED }}>Ngày bản án: </span>{row.ngayBA}</div>
-                  <div style={{ fontSize: 11, color: TEXT, fontFamily: F, marginTop: 2 }}><span style={{ color: MUTED }}>Tòa ra bản án: </span>{(row as any).toaRaBanAn}</div>
+                  <div style={{ fontSize: 11, color: TEXT, fontFamily: F, marginTop: 2 }}><span style={{ color: MUTED }}>Tòa ra bản án: </span>{(row as any).toaRaBanAn}</div><div style={{fontSize:11,color:"#b45309"}}>Thời hiệu: {(row as any).thoiHieu || "3 năm"}</div>
                 </td>
                 <td style={{ ...TD_STYLE, color: TEXT, fontSize: 11, fontFamily: F }}>
                   {activeSubTab === "di" ? (
@@ -2051,11 +2060,11 @@ export function HoSoKhangNghiView({ userRole, onTaoCongVan }: { userRole?: UserR
                           <span style={{ color: "#d97706", fontStyle: "italic" }}>Chưa có công văn</span>
                         )}
                       </div>
-                    </>
+                    <div><b>Thông tin phát hành:</b> {(row as any).soVanThuTra || "-"} / {(row as any).ngayTra || "-"} / {(row as any).nguoiNhanVu || "-"}</div></>
                   ) : (
                     <>
                       <div><b style={{ fontFamily: F }}>Đơn vị gửi:</b> {(row as any).donViGui}</div>
-                      <div><b style={{ fontFamily: F }}>Người nhận:</b> {(row as any).nguoiNhan} ({(row as any).ngayNhan})</div>
+                      <div><b style={{ fontFamily: F }}>Người nhận:</b> {(row as any).nguoiNhan} ({(row as any).ngayNhan})</div><div><b>Số văn thư đến:</b> {(row as any).maVanThuDen || "-"} · <b>Ngày tiếp nhận:</b> {(row as any).ngayTiepNhan || (row as any).ngayVanThuDen || "-"}</div>{(row as any).ngayTra && <div style={{color:"#b91c1c"}}>Ngày trả VKS: {(row as any).ngayTra} · Người trả: {(row as any).nguoiTra}</div>}
                     </>
                   )}
                 </td>
@@ -2083,11 +2092,13 @@ export function HoSoKhangNghiView({ userRole, onTaoCongVan }: { userRole?: UserR
                   <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
                     {activeSubTab === "di" ? (
                       <>
-                        <button onClick={() => onTaoCongVan?.(row)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Xem biểu mẫu"><FileText size={14} color="#0284c7" /></button>
-                        <button onClick={() => { setSelectedRecord(row); setShowTrinhKyModal(true); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Đi trình ký Lãnh đạo"><Send size={14} color={RED} /></button>
+                        <button onClick={() => {setSelectedRecord(row);setShowProcess(true);}} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Xem/sửa"><Eye size={14} color="#0284c7" /></button>
+                        <button onClick={() => {if(row.trangThai==="Đã chuyển"){alert("Không thể chuyển các hồ sơ đã chuyển");return;} setSelectedItems([row.id]);setShowChuyenConfirm(true);}} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Chuyển hồ sơ kháng nghị"><Send size={14} color={RED} /></button>
+                        <button onClick={() => handleOpenNhanHoSo(row)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Nhận HSKN CA sau khi VKS trả về"><CheckCircle2 size={14} color="#0f766e" /></button>
                       </>
                     ) : (
                       <>
+                        <button onClick={() => {setSelectedRecord(row);setShowProcess(true);}} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Xem/sửa"><Eye size={14} color="#2563eb" /></button>
                         <button onClick={() => handleOpenNhanHoSo(row)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Tiếp nhận hồ sơ"><CheckCircle2 size={14} color="#0f766e" /></button>
                         <button onClick={() => { setSelectedRecord(row); setShowTraHoSoModal(true); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Trả lại hồ sơ"><RotateCcw size={14} color={RED} /></button>
                       </>
@@ -2146,6 +2157,9 @@ export function HoSoKhangNghiView({ userRole, onTaoCongVan }: { userRole?: UserR
 
       {/* Modal Trả lại hồ sơ */}
       {showTraHoSoModal && <ModalTraHoSo onClose={() => setShowTraHoSoModal(false)} onConfirm={handleConfirmTraHoSo} />}
+      {showNhanHoSoModal && <ModalNhanHoSoKhangNghi record={selectedRecord} onClose={()=>setShowNhanHoSoModal(false)} onConfirm={confirmNhanHoSo}/>} 
+      {showProcess && <HsknProcessModal record={selectedRecord} onClose={()=>setShowProcess(false)}/>} 
+      {showChuyenConfirm && <ChuyenHsknModal records={listDi.filter(r=>selectedItems.includes(r.id))} onClose={()=>setShowChuyenConfirm(false)} onConfirm={confirmChuyenHskn}/>}
 
       {/* Modal Chọn hồ sơ kháng nghị để chuyển đi */}
       {showChonHoSoModal && (

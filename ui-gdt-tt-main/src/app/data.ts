@@ -68,8 +68,9 @@ export function getVuByLoaiAn(loaiAn: LoaiAn): VuPhuTrach {
 export interface LeaderOpinion {
   name: string;
   role: string;
-  decision: "thuy-moi" | "khong-thu-ly";
+  decision: "thuy-moi" | "khong-thu-ly" | "tra-lai";
   date: string;
+  reason?: string;
 }
 
 export interface DonCase {
@@ -85,6 +86,10 @@ export interface DonCase {
   ngayCV?: string;
   thuLyMoi?: string;
   daThuLy?: boolean;
+  soToTrinh?: string;
+  ngayToTrinh?: string;
+  donViGuiCongVan?: string;
+  diaChiNguoiDungDon?: string;
 
   // Thông tin đơn (type=hskn)
   maVanThuDen?: string;
@@ -118,6 +123,8 @@ export interface DonCase {
   maVuAn?: string;
   tenVuAn?: string;
   ttv?: string;
+  lanhDaoVu?: string;
+  trangThaiGiaoTHS?: "Chưa giao THS" | "Đã giao THS";
   trangThai: TrangThaiVuAn;
   trangThai2?: TrangThaiVuAn;
   vuAnActions?: VuAnAction[];
@@ -445,6 +452,12 @@ function buildCase(loaiIdx: number, recIdx: number, globalId: number): DonCase {
     toa,
     capXetXu: recIdx % 3 === 0 ? "Phúc thẩm" : "Sơ thẩm",
     thoiHieu,
+    soToTrinh: `${100 + globalId}/TT-PC`,
+    ngayToTrinh: `${10 + (recIdx % 9)}/07/2026`,
+    donViGuiCongVan: recIdx % 2 === 0 ? "TAND tỉnh Hà Nam" : "VKSND tối cao",
+    diaChiNguoiDungDon: recIdx % 2 === 0 ? "Phường Cửa Nam, TP Hà Nội" : "Phường Bến Thành, TP Hồ Chí Minh",
+    lanhDaoVu: recIdx % 2 === 0 ? "Phạm Thị Bích Ngọc" : "Lê Thị Thu Hiền",
+    trangThaiGiaoTHS: (recIdx % 2 === 0 ? "Chưa giao THS" : "Đã giao THS") as DonCase["trangThaiGiaoTHS"],
   };
 
   // Phân bổ trường hợp trình Lãnh đạo & Trạng thái để test Badge màu
@@ -452,7 +465,7 @@ function buildCase(loaiIdx: number, recIdx: number, globalId: number): DonCase {
     { name: "Nguyễn Hòa Bình", role: "Chánh án TANDTC", decision: "thuy-moi" as const, date: "10/07/2026" },
     { name: "Nguyễn Văn Tiến", role: "Phó Chánh án TANDTC", decision: "khong-thu-ly" as const, date: "11/07/2026" },
     { name: "Nguyễn Thị Bình", role: "Vụ trưởng Vụ GD, KT I", decision: "thuy-moi" as const, date: "12/07/2026" },
-    { name: "Trần Văn Hải", role: "Phó Vụ trưởng Vụ GD, KT I", decision: "khong-thu-ly" as const, date: "13/07/2026" },
+    { name: "Trần Văn Hải", role: "Phó Vụ trưởng Vụ GD, KT I", decision: "tra-lai" as const, date: "13/07/2026", reason: "Cần bổ sung tài liệu, chứng cứ trước khi tiếp tục trình." },
     { name: "Đỗ Tất Thống", role: "Thẩm phán TANDTC", decision: "thuy-moi" as const, date: "14/07/2026" },
   ];
 

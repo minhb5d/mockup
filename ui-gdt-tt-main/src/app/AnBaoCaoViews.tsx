@@ -20,6 +20,13 @@ import {
 } from "lucide-react";
 import { F, RED, BORDER, TEXT, MUTED, BG } from "./shared";
 
+const CURRENT_COURT = "TÒA ÁN NHÂN DÂN TỐI CAO";
+const CURRENT_UNIT = "VỤ GIÁM ĐỐC KIỂM TRA VỀ HÌNH SỰ";
+const LD_OPTIONS=["Nguyễn Như Thắng - Phó Vụ trưởng","Phạm Thị Bích Ngọc - Phó Vụ trưởng"];
+const TTV_OPTIONS=["Vũ Diệu Thúy - Thẩm tra viên","Võ Thị Thùy Giang - Thẩm tra viên","Đỗ Thị Thúy Hằng - Thẩm tra viên"];
+const TP_OPTIONS=["Hoàng Ngọc Chiêu - TPTC","Lê Thị Thu Hiền - TPB3"];
+const LOAI_AN=["Hình sự","Dân sự","Hành chính","Kinh doanh thương mại","Lao động","Hôn nhân và gia đình","Phá sản","Sở hữu trí tuệ"];
+
 // Common Form Controls Styling
 const inputStyle: React.CSSProperties = {
   width: "100%",
@@ -99,13 +106,15 @@ function FormInput({ label, value, defaultValue, placeholder, onChange }: {
   );
 }
 
-function FormDate({ label, placeholder = "Chọn ngày" }: { label: string; placeholder?: string }) {
+function FormDate({ label, placeholder = "Chọn ngày", value, onChange }: { label: string; placeholder?: string; value?: string; onChange?: (val:string)=>void }) {
   return (
     <div style={{ flex: 1, minWidth: 140 }}>
       <label style={labelStyle}>{label}</label>
       <div style={{ position: "relative" }}>
         <input
-          type="text"
+          type="date"
+          value={value || ""}
+          onChange={e=>onChange?.(e.target.value)}
           placeholder={placeholder}
           style={{ ...inputStyle, paddingRight: 28 }}
         />
@@ -298,6 +307,10 @@ export function AnQuocHoiView() {
   const [tieuDe, setTieuDe] = useState("Danh sách các vụ án quốc hội");
   const [isEditing, setIsEditing] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [fLD,setFLD]=useState(""); const [fTTV,setFTTV]=useState(""); const [fLoaiCV,setFLoaiCV]=useState(""); const [fKQ,setFKQ]=useState(""); const [fLoaiAn,setFLoaiAn]=useState(""); const [fTP,setFTP]=useState(""); const [fromDate,setFromDate]=useState(""); const [toDate,setToDate]=useState("");
+  const buildTitle=()=>`Danh sách vụ án Quốc hội${fLoaiAn?` (${fLoaiAn})`:""}${fTP?` (do ${fTP})`:""}${fLD?` (${fLD}) phụ trách`:""}${fKQ?` (${fKQ})`:""}`;
+  const doSearch=()=>{ setTieuDe(buildTitle()); };
+  const reset=()=>{setFLD("");setFTTV("");setFLoaiCV("");setFKQ("");setFLoaiAn("");setFTP("");setFromDate("");setToDate("");setTieuDe("Danh sách các vụ án quốc hội");};
 
   const [rows, setRows] = useState([
     {
@@ -447,37 +460,30 @@ export function AnQuocHoiView() {
         <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 6, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
           {/* Row 1 */}
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <FormInput label="Tiêu đề báo cáo" value={tieuDe} onChange={setTieuDe} />
+            <FormInput label="Tiêu đề báo cáo" value={tieuDe} />
             <div style={{ display: "flex", flexDirection: "column", minWidth: 260 }}>
               <span style={{ fontSize: 11, color: MUTED, marginBottom: 4 }}>Giải quyết từ ngày - đến ngày</span>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <input type="date" style={{ width: 118, height: 34, border: `1px solid ${BORDER}`, borderRadius: 4, padding: "0 6px", fontFamily: F, fontSize: 11 }} />
+                <input type="date" value={fromDate} onChange={e=>setFromDate(e.target.value)} style={{ width: 118, height: 34, border: `1px solid ${BORDER}`, borderRadius: 4, padding: "0 6px", fontFamily: F, fontSize: 11 }} />
                 <span>–</span>
-                <input type="date" style={{ width: 118, height: 34, border: `1px solid ${BORDER}`, borderRadius: 4, padding: "0 6px", fontFamily: F, fontSize: 11 }} />
+                <input type="date" value={toDate} onChange={e=>setToDate(e.target.value)} style={{ width: 118, height: 34, border: `1px solid ${BORDER}`, borderRadius: 4, padding: "0 6px", fontFamily: F, fontSize: 11 }} />
               </div>
             </div>
-            <FormSelect label="Lãnh đạo phụ trách" />
-            <FormSelect label="Thẩm tra viên giải quyết đơn" />
-            <FormSelect label="Loại công văn" />
+            <FormSelect label="Lãnh đạo phụ trách" value={fLD} onChange={setFLD} options={LD_OPTIONS} />
+            <FormSelect label="Thẩm tra viên giải quyết đơn" value={fTTV} onChange={setFTTV} options={TTV_OPTIONS} />
+            <FormSelect label="Loại công văn" value={fLoaiCV} onChange={setFLoaiCV} options={["Công văn đến","Công văn đi"]} />
           </div>
 
           {/* Row 2 */}
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
-            <FormSelect label="Kết quả thụ lý" />
-            <FormSelect label="Loại án" />
-            <FormSelect label="Thẩm phán" />
+            <FormSelect label="Kết quả thụ lý" value={fKQ} onChange={setFKQ} options={["Chưa có kết quả","Đã có kết quả","Kháng nghị","Trả lời đơn","Thụ lý xét xử GĐT,TT"]} />
+            <FormSelect label="Loại án" value={fLoaiAn} onChange={setFLoaiAn} options={LOAI_AN} />
+            <FormSelect label="Thẩm phán" value={fTP} onChange={setFTP} options={TP_OPTIONS} />
             <FormInput label="Thông tin cơ quan chuyển đơn" placeholder="Nhập thông tin cơ quan chuyển đơn" />
             <div style={{ display: "flex", gap: 8, marginLeft: "auto", flexShrink: 0, marginTop: 4 }}>
-              <button
-                style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "0 16px", height: 34, background: RED, color: "#fff",
-                  border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F,
-                }}
-              >
-                <FileText size={14} /> Xem Báo cáo
-              </button>
-              <button
+              <button onClick={doSearch} style={{display:"flex",alignItems:"center",gap:6,padding:"0 16px",height:34,background:RED,color:"#fff",border:"none",borderRadius:4,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:F}}><Search size={14}/> Tìm kiếm</button>
+              <button onClick={doSearch} style={{display:"flex",alignItems:"center",gap:6,padding:"0 16px",height:34,background:"#7f1d1d",color:"#fff",border:"none",borderRadius:4,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:F}}><FileText size={14}/> Xem Báo cáo</button>
+              <button onClick={reset}
                 style={{
                   display: "flex", alignItems: "center", gap: 6,
                   padding: "0 16px", height: 34, background: "#fff", color: TEXT,
@@ -521,11 +527,11 @@ export function AnQuocHoiView() {
           >
             {/* Header document */}
             <div style={{ textAlign: "center", marginBottom: 20 }}>
-              <div style={{ fontWeight: 700, fontSize: 12, color: TEXT }}>TÒA ÁN NHÂN DÂN TỐI CAO</div>
-              <div style={{ fontWeight: 700, fontSize: 12, color: TEXT, marginBottom: 12 }}>VỤ GIÁM ĐỐC KIỂM TRA VỀ HÌNH SỰ</div>
+              <div style={{ fontWeight: 700, fontSize: 12, color: TEXT }}>{CURRENT_COURT}</div>
+              <div style={{ fontWeight: 700, fontSize: 12, color: TEXT, marginBottom: 12 }}>{CURRENT_UNIT}</div>
 
-              <div style={{ fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase" }}>DANH SÁCH CÁC VỤ ÁN QUỐC HỘI</div>
-              <div style={{ fontSize: 11, fontStyle: "italic", color: TEXT, marginTop: 2 }}>(Tính đến ngày 09/08/2026)</div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase" }}>{tieuDe}</div>
+              <div style={{ fontSize: 11, fontStyle: "italic", color: TEXT, marginTop: 2 }}>(Tính đến ngày {toDate ? toDate.split("-").reverse().join("/") : new Date().toLocaleDateString("vi-VN")})</div>
 
               <div style={{ textAlign: "left", fontWeight: 700, marginTop: 14, fontSize: 11 }}>Tổng: {rows.length} vụ án</div>
             </div>
@@ -573,6 +579,10 @@ export function AnThoiHieuView() {
   const [tieuDe, setTieuDe] = useState("Danh sách các vụ án thời hiệu");
   const [isEditing, setIsEditing] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [fLoaiAn,setFLoaiAn]=useState(""); const [fThoiHan,setFThoiHan]=useState(""); const [fLD,setFLD]=useState(""); const [fTTV,setFTTV]=useState(""); const [fTP,setFTP]=useState(""); const [fTinhTrang,setFTinhTrang]=useState(""); const [toDate,setToDate]=useState("");
+  const buildTitle=()=>`Danh sách vụ án thời hiệu${fLoaiAn?` (${fLoaiAn})`:""}${fTP?` (do ${fTP})`:""}${fLD?` (${fLD}) phụ trách`:""}${fThoiHan?` (có thời hiệu dưới ${fThoiHan})`:""}`;
+  const doSearch=()=>setTieuDe(buildTitle());
+  const reset=()=>{setFLoaiAn("");setFThoiHan("");setFLD("");setFTTV("");setFTP("");setFTinhTrang("");setToDate("");setTieuDe("Danh sách các vụ án thời hiệu");};
 
   const [rows, setRows] = useState([
     {
@@ -733,29 +743,22 @@ export function AnThoiHieuView() {
         <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 6, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
           {/* Row 1 */}
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <FormInput label="Tiêu đề báo cáo" value={tieuDe} onChange={setTieuDe} />
-            <FormSelect label="Loại án" />
-            <FormDate label="Đến ngày" />
-            <FormSelect label="Thời hạn giải quyết" />
-            <FormSelect label="Lãnh đạo phụ trách" />
-            <FormSelect label="Thẩm tra viên giải quyết đơn" />
+            <FormInput label="Tiêu đề báo cáo" value={tieuDe} />
+            <FormSelect label="Loại án" value={fLoaiAn} onChange={setFLoaiAn} options={LOAI_AN} />
+            <FormDate label="Đến ngày" value={toDate} onChange={setToDate} />
+            <FormSelect label="Thời hạn giải quyết" value={fThoiHan} onChange={setFThoiHan} options={["1 tháng","3 tháng","6 tháng","12 tháng"]} />
+            <FormSelect label="Lãnh đạo phụ trách" value={fLD} onChange={setFLD} options={LD_OPTIONS} />
+            <FormSelect label="Thẩm tra viên giải quyết đơn" value={fTTV} onChange={setFTTV} options={TTV_OPTIONS} />
           </div>
 
           {/* Row 2 */}
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
-            <FormSelect label="Thẩm phán" />
-            <FormSelect label="Tình trạng giải quyết" />
+            <FormSelect label="Thẩm phán" value={fTP} onChange={setFTP} options={TP_OPTIONS} />
+            <FormSelect label="Tình trạng giải quyết" value={fTinhTrang} onChange={setFTinhTrang} options={["Chưa có kết quả","Đã phân công TTV","Đang trình","Kháng nghị","Trả lời đơn","Thụ lý xét xử GĐT,TT"]} />
             <div style={{ display: "flex", gap: 8, marginLeft: "auto", flexShrink: 0, marginTop: 4 }}>
-              <button
-                style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "0 16px", height: 34, background: RED, color: "#fff",
-                  border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F,
-                }}
-              >
-                <FileText size={14} /> Xem Báo cáo
-              </button>
-              <button
+              <button onClick={doSearch} style={{display:"flex",alignItems:"center",gap:6,padding:"0 16px",height:34,background:RED,color:"#fff",border:"none",borderRadius:4,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:F}}><Search size={14}/> Tìm kiếm</button>
+              <button onClick={doSearch} style={{display:"flex",alignItems:"center",gap:6,padding:"0 16px",height:34,background:"#7f1d1d",color:"#fff",border:"none",borderRadius:4,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:F}}><FileText size={14}/> Xem Báo cáo</button>
+              <button onClick={reset}
                 style={{
                   display: "flex", alignItems: "center", gap: 6,
                   padding: "0 16px", height: 34, background: "#fff", color: TEXT,
@@ -799,11 +802,11 @@ export function AnThoiHieuView() {
           >
             {/* Header document */}
             <div style={{ textAlign: "center", marginBottom: 20 }}>
-              <div style={{ fontWeight: 700, fontSize: 12, color: TEXT }}>TÒA ÁN NHÂN DÂN TỐI CAO</div>
-              <div style={{ fontWeight: 700, fontSize: 12, color: TEXT, marginBottom: 12 }}>VỤ GIÁM ĐỐC KIỂM TRA VỀ HÌNH SỰ</div>
+              <div style={{ fontWeight: 700, fontSize: 12, color: TEXT }}>{CURRENT_COURT}</div>
+              <div style={{ fontWeight: 700, fontSize: 12, color: TEXT, marginBottom: 12 }}>{CURRENT_UNIT}</div>
 
-              <div style={{ fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase" }}>DANH SÁCH CÁC VỤ ÁN THỜI HIỆU</div>
-              <div style={{ fontSize: 11, fontStyle: "italic", color: TEXT, marginTop: 2 }}>(Tính đến ngày 09/08/2026)</div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase" }}>{tieuDe}</div>
+              <div style={{ fontSize: 11, fontStyle: "italic", color: TEXT, marginTop: 2 }}>(Tính đến ngày {toDate ? toDate.split("-").reverse().join("/") : new Date().toLocaleDateString("vi-VN")})</div>
 
               <div style={{ textAlign: "left", fontWeight: 700, marginTop: 14, fontSize: 11 }}>Tổng: {rows.length} vụ án</div>
             </div>

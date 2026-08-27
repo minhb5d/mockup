@@ -7,12 +7,11 @@ import {
 } from "lucide-react";
 import Sidebar, { type View } from "./Sidebar";
 import {
-  TAB_CONFIG, getCasesByTab, countByTab,
+  TAB_CONFIG, getCasesByTab, countByTab, LOAI_AN_OPTIONS,
   type DonCase, type TabId, type VuAnAction,
 } from "./data";
-import ThemHoSoScreen from "@/imports/ThemHồSơKnChiTiết";
 import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge, StatusBadge, VuAnBtn, Tag, CapXetXu, TaiKhoanPhanQuyenBar, type UserRoleType } from "./shared";
-import { formatSoBA } from "./AppHelpers";
+import { formatSoBA, TaoToTrinhModal, ThuHoiConfirmDialog } from "./AppHelpers";
 import { SectionCard, InfoGrid, TabThongTin } from "./TabThongTin";
 import { HoSoToTrinhModal, TrinhKyModal } from "./TrinhKyModal";
 import { TaoDuThaoModal } from "./TaoDuThaoModal";
@@ -32,8 +31,9 @@ import { AnQuocHoiView, AnThoiHieuView } from "./AnBaoCaoViews";
 import { QuanLyKhieuNaiView } from "./QuanLyKhieuNaiView";
 import { VuAnSearchFilterPanel } from "./VuAnSearchFilterPanel";
 import HoSoKhangNghiView, { WordEditorView } from "./HoSoKhangNghiView";
-import QuanLyVuAnView, { ChiTietVuAnView, filterVuAnListByRole, type ChiTietTab } from "./QuanLyVuAnView";
+import QuanLyVuAnView, { ChiTietVuAnView, filterVuAnListByRole, ThongTinChungVuAnCard, type ChiTietTab, type VuAnDetailData } from "./QuanLyVuAnView";
 import NhanDonTLVuAnView, { GiaoTieuHoSoView } from "./NhanDonTLVuAnView";
+import { ThemMoiVuAnScreen } from "./NhanDonModals";
 
 // ── Thông tin đơn cell ───────────────────────────────────────────────────────
 
@@ -308,10 +308,10 @@ function CellYKienLD({ c }: { c: DonCase }) {
       {c.yKienLD.map((y, i) => (
         <div key={i} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <Badge
-            color={y.decision === "thu-moi" ? "#065f46" : "#991b1b"}
-            bg={y.decision === "thu-moi" ? "#d1fae5" : "#fee2e2"}
+            color={y.decision === "thuy-moi" ? "#065f46" : "#991b1b"}
+            bg={y.decision === "thuy-moi" ? "#d1fae5" : "#fee2e2"}
           >
-            {y.decision === "thu-moi" ? "Thụ lý mới" : "Không thụ lý"}
+            {y.decision === "thuy-moi" ? "Thụ lý mới" : "Không thụ lý"}
           </Badge>
           <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
             {y.name} – {y.role}
@@ -727,7 +727,7 @@ const CAU_HINH_DATA = [
   { id: 14, hoTen: "Lê Thanh Tùng (TTV)", chucDanh: "Thẩm tra viên", nghiepVu: "Xử lý nghiệp vụ", lanhDao: "" },
 ];
 
-const NGHIEP_VU_OPTIONS = ["Giải quyết án", "Xử lý nghiệp vụ", "Báo cáo thống kê"];
+const NGHIEP_VU_OPTIONS = ["Giải quyết án", "Xử lý nghiệp vụ"];
 const LANH_DAO_OPTIONS = [
   { value: "Nguyễn Tiến Mạnh - Phó Vụ trưởng", label: "Nguyễn Tiến Mạnh - 18/02/1972 / Phó Vụ trưởng, Thẩm phán" },
   { value: "Nguyễn Văn Hiền - Phó Vụ trưởng", label: "Nguyễn Văn Hiền - 09/09/1971 / Phó Vụ trưởng, Thẩm phán" },
@@ -740,9 +740,16 @@ const TTV_BIRTHDATES: Record<number, string> = {
 };
 const cauHinhTTVLabel = (r: (typeof CAU_HINH_DATA)[number]) => `${r.hoTen} - ${TTV_BIRTHDATES[r.id] || "--/--/----"} / ${r.chucDanh}`;
 
-function CauHinhTTVView() {
+function CauHinhTTVCore() {
   const [showBanner, setShowBanner] = useState(false);
   const [rows, setRows] = useState(CAU_HINH_DATA.map((r) => ({ ...r })));
+  const [savedRows, setSavedRows] = useState(CAU_HINH_DATA.map((r) => ({ ...r })));
+  const [dirtyIds, setDirtyIds] = useState<Set<number>>(new Set());
+  const [filterLD, setFilterLD] = useState("");
+  const [filterTTV, setFilterTTV] = useState("");
+  const [applied, setApplied] = useState({ ld: "", ttv: "" });
+  const [audit, setAudit] = useState<Record<number, { user: string; time: string }>>({});
+  const isDirty = dirtyIds.size > 0;
 
   const selSt: React.CSSProperties = {
     width: "100%", padding: "5px 6px", fontSize: 11,
@@ -750,8 +757,22 @@ function CauHinhTTVView() {
     fontFamily: F, outline: "none", background: "#fff", cursor: "pointer",
   };
 
-  const update = (id: number, key: keyof typeof CAU_HINH_DATA[0], val: string) =>
+  const update = (id: number, key: keyof typeof CAU_HINH_DATA[0], val: string) => {
     setRows((prev) => prev.map((r) => r.id === id ? { ...r, [key]: val } : r));
+    setDirtyIds(prev => new Set(prev).add(id));
+    setShowBanner(false);
+  };
+  React.useEffect(() => {
+    const beforeUnload = (e: BeforeUnloadEvent) => { if (isDirty) { e.preventDefault(); e.returnValue = ""; } };
+    window.addEventListener("beforeunload", beforeUnload); return () => window.removeEventListener("beforeunload", beforeUnload);
+  }, [isDirty]);
+  const saveConfig = () => {
+    if (!isDirty) return;
+    const now = new Date().toLocaleString("vi-VN");
+    const nextAudit = { ...audit }; dirtyIds.forEach(id => nextAudit[id] = { user: "Tài khoản đang đăng nhập", time: now });
+    setAudit(nextAudit); setSavedRows(rows.map(r => ({...r}))); setDirtyIds(new Set()); setShowBanner(true);
+  };
+  const visibleRows = rows.filter(r => (!applied.ld || r.lanhDao === applied.ld) && (!applied.ttv || r.hoTen === applied.ttv));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
@@ -765,22 +786,22 @@ function CauHinhTTVView() {
         <div style={{ display: "flex", alignItems: "flex-end", gap: 10, flexWrap: "wrap" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 3, flex: 1, minWidth: 140 }}>
             <span style={{ fontSize: 11, color: MUTED, fontFamily: F }}>Lãnh đạo</span>
-            <select style={selSt}>
+            <select value={filterLD} onChange={e=>setFilterLD(e.target.value)} style={selSt}>
               <option value="">- Tất cả -</option>
               {LANH_DAO_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 3, flex: 1, minWidth: 140 }}>
             <span style={{ fontSize: 11, color: MUTED, fontFamily: F }}>Thẩm tra viên</span>
-            <select style={selSt}>
+            <select value={filterTTV} onChange={e=>setFilterTTV(e.target.value)} style={selSt}>
               <option value="">- Tất cả -</option>
               {CAU_HINH_DATA.map((r) => <option key={r.id} value={r.hoTen}>{cauHinhTTVLabel(r)}</option>)}
             </select>
           </div>
-          <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 16px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F }}>
+          <button onClick={()=>setApplied({ld:filterLD,ttv:filterTTV})} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 16px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F }}>
             <Search size={13} /> Tìm kiếm
           </button>
-          <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
+          <button onClick={()=>{ alert(`Preview biểu mẫu cấu hình: ${visibleRows.length} bản ghi`); window.print(); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
             <Printer size={13} /> In biểu mẫu
           </button>
         </div>
@@ -797,8 +818,9 @@ function CauHinhTTVView() {
         )}
         {!showBanner && <div style={{ flex: 1 }} />}
         <button
-          onClick={() => setShowBanner(true)}
-          style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 18px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F, flexShrink: 0 }}
+          onClick={saveConfig}
+          disabled={!isDirty}
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 18px", background: isDirty ? RED : "#cbd5e1", color: "#fff", border: "none", borderRadius: 4, cursor: isDirty ? "pointer" : "not-allowed", fontSize: 12, fontWeight: 600, fontFamily: F, flexShrink: 0 }}
         >
           <Save size={13} /> Lưu cấu hình
         </button>
@@ -826,7 +848,7 @@ function CauHinhTTVView() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r, idx) => (
+            {visibleRows.map((r, idx) => (
               <tr
                 key={r.id}
                 style={{ background: idx % 2 === 0 ? "#fff" : "#fafafa" }}
@@ -853,8 +875,8 @@ function CauHinhTTVView() {
                 </td>
                 <td style={TD_STYLE}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                    <span style={{ fontSize: 12, color: TEXT, fontFamily: F }}>Nguyễn Văn A</span>
-                    <span style={{ fontSize: 11, color: MUTED, fontFamily: F }}>11/06/2026</span>
+                    <span style={{ fontSize: 12, color: TEXT, fontFamily: F }}>{audit[r.id]?.user || "-"}</span>
+                    <span style={{ fontSize: 11, color: MUTED, fontFamily: F }}>{audit[r.id]?.time || "-"}</span>
                   </div>
                 </td>
               </tr>
@@ -864,7 +886,7 @@ function CauHinhTTVView() {
 
         {/* Pagination */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", borderTop: `1px solid ${BORDER}`, background: "#fff", fontSize: 12, color: MUTED, fontFamily: F }}>
-          <span>Hiển thị 1–{rows.length} trong tổng {rows.length} bản ghi</span>
+          <span>Hiển thị 1–{visibleRows.length} trong tổng {visibleRows.length} bản ghi</span>
           <div style={{ flex: 1 }} />
           <button style={paginBtn} disabled>‹</button>
           <button style={{ ...paginBtn, background: RED, color: "#fff", border: `1px solid ${RED}` }}>1</button>
@@ -877,6 +899,29 @@ function CauHinhTTVView() {
     </div>
   );
 }
+
+
+const modalOverlay: React.CSSProperties = { position:"fixed", inset:0, background:"rgba(0,0,0,.45)", zIndex:1300, display:"flex", alignItems:"center", justifyContent:"center", padding:20 };
+const modalCard: React.CSSProperties = { width:"100%", background:"#fff", borderRadius:8, padding:18, boxShadow:"0 20px 60px rgba(0,0,0,.25)", maxHeight:"90vh", overflow:"auto" };
+
+function ToNhomConfigView() {
+  const [groups,setGroups]=useState([
+    {id:1,ma:"TN-HS-01",ten:"Tổ hình sự 01",loaiAn:"Hình sự",loai:"Tổ",active:true,moTa:"Nhóm xử lý hồ sơ hình sự",members:["Nguyễn Văn A"]},
+    {id:2,ma:"TN-DS-01",ten:"Nhóm dân sự",loaiAn:"Dân sự",loai:"Nhóm",active:true,moTa:"",members:[]},
+  ]);
+  const [q,setQ]=useState(""); const [loaiAn,setLoaiAn]=useState(""); const [editing,setEditing]=useState<any>(null); const [assign,setAssign]=useState<any>(null);
+  const people=["Nguyễn Văn A - nva@toaan.vn","Trần Thị B - ttb@toaan.vn","Lê Văn C - lvc@toaan.vn"];
+  const save=()=>{ if(!editing?.ma?.trim()||!editing?.ten?.trim()){alert("Mã tổ và Tên tổ là bắt buộc");return;} if(editing.ten.length>255||editing.moTa?.length>500){alert("Tên tổ ≤255 ký tự, Mô tả ≤500 ký tự");return;} setGroups(g=>editing.id?g.map(x=>x.id===editing.id?editing:x):[...g,{...editing,id:Date.now(),members:[]}]); setEditing(null); };
+  const filtered=groups.filter(g=>(!q||g.ten.toLowerCase().includes(q.toLowerCase())||g.ma.toLowerCase().includes(q.toLowerCase()))&&(!loaiAn||g.loaiAn===loaiAn));
+  return <div style={{padding:16,fontFamily:F}}><div style={{display:"flex",gap:8,marginBottom:12}}><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Tên/Mã tổ" style={{padding:7,border:`1px solid ${BORDER}`,borderRadius:4}}/><select value={loaiAn} onChange={e=>setLoaiAn(e.target.value)}><option value="">Tất cả loại án</option>{LOAI_AN_OPTIONS.map(x=><option key={x}>{x}</option>)}</select><button onClick={()=>setEditing({ma:"",ten:"",loaiAn:"Hình sự",loai:"Tổ",active:true,moTa:""})} style={{background:RED,color:"#fff",border:0,borderRadius:4,padding:"7px 12px"}}>+ Thêm mới</button></div>
+  <table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr>{["Mã tổ","Tên tổ","Loại án","Loại tổ/nhóm","Trạng thái","Thành viên","Thao tác"].map(x=><th style={TH_STYLE} key={x}>{x}</th>)}</tr></thead><tbody>{filtered.map(g=><tr key={g.id}><td style={TD_STYLE}>{g.ma}</td><td style={TD_STYLE}>{g.ten}</td><td style={TD_STYLE}>{g.loaiAn}</td><td style={TD_STYLE}>{g.loai}</td><td style={TD_STYLE}><input type="checkbox" checked={g.active} onChange={()=>setGroups(v=>v.map(x=>x.id===g.id?{...x,active:!x.active}:x))}/></td><td style={TD_STYLE}>{g.members.length} người</td><td style={TD_STYLE}><button onClick={()=>setEditing({...g})}>Sửa</button> <button onClick={()=>setAssign(g)}>Gán thành viên</button> <button onClick={()=>confirm("Xóa tổ/nhóm này?")&&setGroups(v=>v.filter(x=>x.id!==g.id))}>Xóa</button></td></tr>)}</tbody></table>
+  {editing&&<div style={modalOverlay}><div style={{...modalCard,maxWidth:720}}><h3>Sửa/Thêm Tổ/Nhóm</h3><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><input value={editing.ma} onChange={e=>setEditing({...editing,ma:e.target.value})} placeholder="Mã tổ"/><input value={editing.ten} onChange={e=>setEditing({...editing,ten:e.target.value})} placeholder="Tên tổ ≤255"/><select value={editing.loaiAn} onChange={e=>setEditing({...editing,loaiAn:e.target.value})}>{LOAI_AN_OPTIONS.map(x=><option key={x}>{x}</option>)}</select><select value={editing.loai} onChange={e=>setEditing({...editing,loai:e.target.value})}><option>Tổ</option><option>Nhóm</option></select><textarea value={editing.moTa||""} onChange={e=>setEditing({...editing,moTa:e.target.value})} placeholder="Mô tả ≤500" style={{gridColumn:"1 / -1"}}/></div><div style={{marginTop:12,textAlign:"right"}}><button onClick={()=>setEditing(null)}>Đóng</button> <button onClick={save}>Lưu</button></div></div></div>}
+  {assign&&<div style={modalOverlay}><div style={{...modalCard,maxWidth:760}}><h3>Gán đối tượng – {assign.ten}</h3><div style={{display:"grid",gridTemplateColumns:"1fr 80px 1fr",gap:12}}><div><b>Chưa gán</b>{people.filter(p=>!assign.members.includes(p.split(" - ")[0])).map(p=><div key={p}><button onClick={()=>{const name=p.split(" - ")[0]; const next={...assign,members:[...assign.members,name]};setAssign(next);setGroups(v=>v.map(x=>x.id===next.id?next:x));}}>›</button> {p}</div>)}</div><div style={{textAlign:"center"}}>› / ‹</div><div><b>Đã gán</b>{assign.members.map((m:string)=><div key={m}><button onClick={()=>{const next={...assign,members:assign.members.filter((x:string)=>x!==m)};setAssign(next);setGroups(v=>v.map(x=>x.id===next.id?next:x));}}>‹</button> {m}</div>)}</div></div><div style={{marginTop:12,textAlign:"right"}}><button onClick={()=>setAssign(null)}>Đóng</button> <button onClick={()=>setAssign(null)}>Cập nhật tổ</button></div></div></div>}</div>
+}
+
+function CapTrinhConfigView(){ const [rows,setRows]=useState([{id:1,ma:"CT01",ten:"Lãnh đạo Vụ",thuTu:1,active:true},{id:2,ma:"CT02",ten:"Phó Chánh án",thuTu:2,active:true},{id:3,ma:"CT03",ten:"Chánh án",thuTu:3,active:true}]); return <div style={{padding:16,fontFamily:F}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><b>Danh mục cấp trình</b><button onClick={()=>setRows(v=>[...v,{id:Date.now(),ma:`CT0${v.length+1}`,ten:"Cấp trình mới",thuTu:v.length+1,active:true}])}>+ Thêm mới</button></div><table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr>{["Mã","Tên cấp trình","Thứ tự","Trạng thái","Thao tác"].map(x=><th key={x} style={TH_STYLE}>{x}</th>)}</tr></thead><tbody>{rows.map(r=><tr key={r.id}><td style={TD_STYLE}>{r.ma}</td><td style={TD_STYLE}><input value={r.ten} onChange={e=>setRows(v=>v.map(x=>x.id===r.id?{...x,ten:e.target.value}:x))}/></td><td style={TD_STYLE}><input type="number" value={r.thuTu} onChange={e=>setRows(v=>v.map(x=>x.id===r.id?{...x,thuTu:+e.target.value}:x))}/></td><td style={TD_STYLE}><input type="checkbox" checked={r.active} onChange={()=>setRows(v=>v.map(x=>x.id===r.id?{...x,active:!x.active}:x))}/></td><td style={TD_STYLE}><button onClick={()=>setRows(v=>v.filter(x=>x.id!==r.id))}>Xóa</button></td></tr>)}</tbody></table></div> }
+
+function CauHinhTTVView(){ const [tab,setTab]=useState<"ttv"|"tonhom"|"captrinh">("ttv"); return <div style={{height:"100%",display:"flex",flexDirection:"column"}}><div style={{display:"flex",gap:6,padding:"8px 16px",borderBottom:`1px solid ${BORDER}`,background:"#fff"}}>{[["ttv","Cấu hình TTV báo cáo"],["tonhom","Danh sách Tổ/Nhóm"],["captrinh","Danh mục cấp trình"]].map(([k,l])=><button key={k} onClick={()=>setTab(k as any)} style={{padding:"7px 12px",border:`1px solid ${tab===k?RED:BORDER}`,color:tab===k?RED:TEXT,background:"#fff",borderRadius:4}}>{l}</button>)}</div><div style={{flex:1,overflow:"auto"}}>{tab==="ttv"?<CauHinhTTVCore/>:tab==="tonhom"?<ToNhomConfigView/>:<CapTrinhConfigView/>}</div></div> }
 
 function TabDanhSachDon({ detail }: { detail: VuAnDetailData }) {
   const danhSachDon = detail?.danhSachDon || [];
@@ -2865,21 +2910,7 @@ export default function App() {
         ) : appView === "giao-tieu-ho-so" ? (
           <GiaoTieuHoSoView onClose={() => setAppView("list")} userRole={globalUserRole} />
         ) : appView === "them-ho-so" ? (
-          <div style={{ flex: 1, overflow: "auto", position: "relative" }}>
-            <button
-              onClick={() => setAppView("list")}
-              style={{
-                position: "absolute", top: 12, left: 12, zIndex: 10,
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "6px 14px", background: "#fff", color: RED,
-                border: `1px solid ${RED}`, borderRadius: 4, cursor: "pointer",
-                fontSize: 12, fontWeight: 600, fontFamily: F,
-              }}
-            >
-              ← Quay lại
-            </button>
-            <ThemHoSoScreen />
-          </div>
+          <ThemMoiVuAnScreen onClose={() => setAppView("list")} />
         ) : (
           <NhanDonTLVuAnView
             userRole={globalUserRole}

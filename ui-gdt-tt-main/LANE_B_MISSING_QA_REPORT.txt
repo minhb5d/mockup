@@ -1,0 +1,35 @@
+LANE B / THIẾU — QA REPORT
+Date: 2026-08-27
+Scope source: Đã dán markdown (1)(20260827-144310).md
+
+Scope count:
+- 118 THIẾU cases in source list.
+- Case #18 “Popup xác nhận Hủy ghép vụ án”: deliberately SKIPPED by user instruction.
+- Coding target: remaining 117 cases at mockup/UI-state level.
+
+QA results:
+1) TypeScript syntax parser over src/**/*.ts, src/**/*.tsx
+   - Files parsed: 94
+   - Syntax errors: 0
+
+2) Semantic regression check against previous Lane-B fixed baseline
+   - New non-dependency TypeScript error signatures introduced by this pass: 0
+   - Existing baseline errors / missing dependency type errors are not counted as new regressions.
+
+3) Static functional markers
+   - 28 representative assertions across all 10 modules: 28 PASS / 0 FAIL
+   - Includes explicit guard: Case #18 remains unimplemented.
+
+4) Full Vite build
+   - NOT VERIFIED in this container.
+   - `npm run build` exits 127 because `node_modules/.bin/vite` / Vite executable is absent in the mounted dependency set.
+   - This is an environment/dependency limitation, not a syntax failure detected in the patched source.
+   - On a clean machine run: `npm ci && npm run build`.
+
+Dead/duplicate code:
+- Prior Lane-B pass already consolidated duplicated GiaoTieuHoSoView implementation.
+- This pass reuses existing components/modals where possible; no second Hủy-ghép modal/handler was introduced.
+
+Case #18 guard evidence in source:
+- NhanDonTLVuAnView.tsx contains comment that Hủy ghép is intentionally not handled.
+- No `if (action === "huy-ghep")` handler is present.

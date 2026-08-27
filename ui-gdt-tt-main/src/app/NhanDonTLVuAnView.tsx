@@ -1,16 +1,17 @@
 import React, { useState } from "react";
 import {
-  Search, RefreshCw, Eye,
+  Search, RefreshCw, Eye, Calendar,
   ChevronDown, ChevronUp, RotateCcw, X, Save, Printer,
 } from "lucide-react";
 import {
   TAB_CONFIG, getCasesByTab, countByTab,
-  type DonCase, type TabId,
+  type DonCase, type TabId, type VuAnAction,
 } from "./data";
 import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge, VuAnBtn, Tag, type UserRoleType } from "./shared";
 import { formatSoBA } from "./AppHelpers";
 import { getPartyLabels, isVu234, getQuanHePhapLuat } from "./App";
 import { SearchFilterPanel } from "./SearchFilterPanel";
+import { TraDonModal, GhepVuAnModal, ChuyenVuAnModal } from "./NhanDonModals";
 
 // ── Thông tin đơn cell ───────────────────────────────────────────────────────
 
@@ -62,6 +63,16 @@ function CellThongTinDon({ c, tab }: { c: DonCase; tab?: TabId }) {
               )}
             </>
           )}
+          {isDaCoVuAn && c.soToTrinh && (
+            <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
+              Số tờ trình - Ngày tờ trình: <b>{c.soToTrinh}</b> - {c.ngayToTrinh || "-"}
+            </span>
+          )}
+          {hinhThucText.toLowerCase().includes("công văn") || hinhThucText.toLowerCase().includes("cv ") ? (
+            <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
+              Đơn vị gửi công văn - số - ngày: {c.donViGuiCongVan || "-"} - {c.soCV || "-"} - {c.ngayCV || "-"}
+            </span>
+          ) : null}
           <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
             Thẩm phán{showDuKien ? " (Dự kiến)" : ""}: {thamPhanText} ({capThamPhanText})
           </span>
@@ -105,6 +116,10 @@ function CellThongTinDon({ c, tab }: { c: DonCase; tab?: TabId }) {
 
 function CellDuongSu({ c, userRole }: { c: DonCase; userRole?: UserRoleType }) {
   const { label1, label2 } = getPartyLabels(c.loaiAn, userRole);
+  const nguoiDungDon = c.ndd
+    ? (c.id % 4 === 0 ? [c.ndd, "Nguyễn Văn B", "Trần Thị C", "Lê Văn D"] : [c.ndd])
+    : [];
+  const visibleNdd = nguoiDungDon.slice(0, 3);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
       {c.nguoiKhieuNai && (
@@ -119,11 +134,16 @@ function CellDuongSu({ c, userRole }: { c: DonCase; userRole?: UserRoleType }) {
           <span style={{ fontWeight: 600, color: TEXT }}>{c.biCao}</span>
         </span>
       )}
-      {c.ndd && (
-        <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
-          <span style={{ color: TEXT }}>NĐD: </span>
-          <span style={{ fontWeight: 600, color: TEXT }}>{c.ndd}</span>
-        </span>
+      {nguoiDungDon.length > 0 && (
+        <>
+          <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
+            Người đứng đơn: <b>{visibleNdd.join(", ")}</b>
+            {nguoiDungDon.length > 3 && (
+              <span title={nguoiDungDon.join(", ")} style={{ color: "#2563eb", cursor: "help", marginLeft: 4 }}>…</span>
+            )}
+          </span>
+          <span style={{ fontSize: 11, color: MUTED, fontFamily: F }}>Địa chỉ: {c.diaChiNguoiDungDon || "-"}</span>
+        </>
       )}
       {c.nguoiKhangNghi && (
         <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
@@ -182,13 +202,23 @@ function CellBA({ c, userRole }: { c: DonCase; userRole?: UserRoleType }) {
           <span style={{ color: TEXT }}>Thẩm phán chủ tọa cấp phúc thẩm: </span>{c.thamPhanChuToaPhucTham}
         </span>
       )}
+      <span style={{ fontSize: 10, color: "#9ca3af", fontFamily: F, fontStyle: "italic" }}>Các bản án khác liên quan</span>
+      {c.loaiAn === "Hình sự" ? (
+        <span style={{ fontSize: 11, color: TEXT, fontFamily: F }} title={c.biCao ? `${c.biCao}, Nguyễn Văn B, Trần Văn C, Lê Văn D` : ""}>
+          Bị cáo: {c.biCao || "-"}{c.id % 4 === 0 ? " + 3 người khác" : ""}
+        </span>
+      ) : c.loaiAn === "Hành chính" ? (
+        <span style={{ fontSize: 11, color: TEXT, fontFamily: F }} title={`${c.nguoiKhieuNai || "-"} / ${c.biCao || "-"}`}>Người khởi kiện: {c.nguoiKhieuNai || "-"}; Người bị kiện: {c.biCao || "-"}</span>
+      ) : (
+        <span style={{ fontSize: 11, color: TEXT, fontFamily: F }} title={`${c.nguoiKhieuNai || "-"} / ${c.biCao || "-"}`}>Nguyên đơn: {c.nguoiKhieuNai || "-"}; Bị đơn: {c.biCao || "-"}</span>
+      )}
     </div>
   );
 }
 
 // ── Thông tin vụ án cell ─────────────────────────────────────────────────────
 
-function CellVuAn({ c, onThemHoSo }: { c: DonCase; onThemHoSo?: () => void }) {
+function CellVuAn({ c, onThemHoSo, onVuAnAction }: { c: DonCase; onThemHoSo?: () => void; onVuAnAction?: (action: VuAnAction, c: DonCase) => void }) {
   const hasGiaiQuyet = !!(c.thongBaoBoSung || c.ttvGiaiQuyet || c.tpGiaiQuyet);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -204,6 +234,10 @@ function CellVuAn({ c, onThemHoSo }: { c: DonCase; onThemHoSo?: () => void }) {
               TTV: {c.ttv}
             </span>
           )}
+          <span style={{ fontSize: 11, color: TEXT, fontFamily: F, display: "block" }}>LĐV: {c.lanhDaoVu || "-"}</span>
+          <span style={{ fontSize: 11, color: c.trangThaiGiaoTHS === "Đã giao THS" ? "#047857" : "#b45309", fontFamily: F, display: "block", fontWeight: 600 }}>
+            {c.trangThaiGiaoTHS || "Chưa giao THS"}
+          </span>
         </div>
       )}
       {hasGiaiQuyet && (
@@ -240,7 +274,7 @@ function CellVuAn({ c, onThemHoSo }: { c: DonCase; onThemHoSo?: () => void }) {
             <VuAnBtn
               key={a}
               action={a}
-              onClick={a === "them-vu-an" ? onThemHoSo : undefined}
+              onClick={a === "them-vu-an" ? onThemHoSo : () => onVuAnAction?.(a, c)}
             />
           ))}
         </div>
@@ -256,22 +290,22 @@ function CellYKienLD({ c }: { c: DonCase }) {
     return <span style={{ color: MUTED, fontSize: 11, fontFamily: F }}>-</span>;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-start" }}>
-      {c.yKienLD.map((y, i) => (
-        <div key={i} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Badge
-            color={y.decision === "thu-moi" ? "#065f46" : "#991b1b"}
-            bg={y.decision === "thu-moi" ? "#d1fae5" : "#fee2e2"}
-          >
-            {y.decision === "thu-moi" ? "Thụ lý mới" : "Không thụ lý"}
-          </Badge>
-          <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
-            {y.name} – {y.role}
-          </span>
-          <span style={{ fontSize: 11, color: "#16a34a", fontFamily: F }}>
-            Đã duyệt - {y.date}
-          </span>
-        </div>
-      ))}
+      {c.yKienLD.map((y, i) => {
+        const isTraLai = y.decision === "tra-lai";
+        const isThuLy = y.decision === "thuy-moi";
+        return (
+          <div key={i} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <Badge color={isTraLai ? "#9a3412" : isThuLy ? "#065f46" : "#991b1b"} bg={isTraLai ? "#ffedd5" : isThuLy ? "#d1fae5" : "#fee2e2"}>
+              {isTraLai ? "Trả lại" : isThuLy ? "Thụ lý mới" : "Không thụ lý"}
+            </Badge>
+            <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>{y.name} – {y.role}</span>
+            <span style={{ fontSize: 11, color: isTraLai ? "#c2410c" : "#16a34a", fontFamily: F }}>
+              {isTraLai ? "Đã trả lại" : "Đã duyệt"} - {y.date}
+            </span>
+            {isTraLai && y.reason && <span style={{ fontSize: 11, color: "#9a3412", fontFamily: F }}>Lý do: {y.reason}</span>}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -421,6 +455,7 @@ function CaseTable({
   userRole,
   selectedIds,
   onSelectedIdsChange,
+  onVuAnAction,
 }: {
   tab: TabId;
   onGiaoTieuHoSo: () => void;
@@ -429,6 +464,7 @@ function CaseTable({
   userRole?: UserRoleType;
   selectedIds: number[];
   onSelectedIdsChange: (ids: number[]) => void;
+  onVuAnAction?: (action: VuAnAction, c: DonCase) => void;
 }) {
   const cases = overrideCases ?? getCasesByTab(tab, userRole);
 
@@ -500,7 +536,7 @@ function CaseTable({
           {cases.length === 0 && (
             <tr>
               <td colSpan={hasNhanTraCol ? 8 : 7} style={{ ...TD_STYLE, textAlign: "center", color: MUTED, padding: 32 }}>
-                Không có dữ liệu
+                Không có dữ liệu phù hợp với điều kiện tìm kiếm.
               </td>
             </tr>
           )}
@@ -526,7 +562,7 @@ function CaseTable({
                 {tab === "cho-y-kien" ? (
                   <CellYKienLD c={c} />
                 ) : (
-                  <CellVuAn c={c} onThemHoSo={onThemHoSo} />
+                  <CellVuAn c={c} onThemHoSo={onThemHoSo} onVuAnAction={onVuAnAction} />
                 )}
               </td>
               {hasNhanTraCol && (
@@ -551,15 +587,24 @@ function CaseTable({
                 </td>
               )}
               <td style={{ ...TD_STYLE, textAlign: "center" }}>
-                <button
-                  style={{
-                    background: "none", border: "none", cursor: "pointer",
-                    padding: 4, borderRadius: 4,
-                  }}
-                  title="Xem chi tiết"
-                >
-                  <Eye size={15} color="#6b7280" />
-                </button>
+                <div style={{ display: "flex", justifyContent: "center", gap: 3 }}>
+                  <button
+                    onClick={() => alert(`Xem chi tiết ${c.maDon || c.maVanThuDen || c.id}`)}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 4, borderRadius: 4 }}
+                    title="Xem chi tiết"
+                  >
+                    <Eye size={15} color="#6b7280" />
+                  </button>
+                  {tab === "cho-y-kien" && (
+                    <button
+                      onClick={() => alert(`Mở chức năng Tạo tờ trình cho đơn ${c.maDon || c.id}`)}
+                      style={{ background: "none", border: "none", cursor: "pointer", padding: 4, borderRadius: 4, color: RED }}
+                      title="Xem đơn và Tạo tờ trình"
+                    >
+                      📝
+                    </button>
+                  )}
+                </div>
               </td>
             </tr>
           ))}
@@ -1005,17 +1050,17 @@ export function GiaoTieuHoSoView({ onClose, userRole }: { onClose: () => void; u
                       <td style={TD_STYLE}>
                         <select defaultValue="" style={cellInputStyle}>
                           <option value="" disabled>Chọn người nhận</option>
-                          <option value="1">Vũ Diệu Thúy</option>
-                          <option value="2">Phạm Thị Bích Ngọc</option>
-                          <option value="3">Nguyễn Văn A</option>
+                          <option value="1">Vũ Diệu Thúy, 01/07/1988 / Thẩm tra viên</option>
+                          <option value="2">Phạm Thị Bích Ngọc, 04/04/1977 / Phó Vụ trưởng, Thẩm phán</option>
+                          <option value="3">Nguyễn Văn A, 12/08/1985 / Cán bộ Vụ GĐ,KT</option>
                         </select>
                       </td>
                       <td style={TD_STYLE}>
                         <select defaultValue="" style={cellInputStyle}>
                           <option value="" disabled>Chọn người nhận</option>
-                          <option value="1">Lý Thái Phúc</option>
-                          <option value="2">Vũ Biêu Thư</option>
-                          <option value="3">Trần Minh Đức</option>
+                          <option value="1">Lý Thái Phúc, 05/10/1986 / Thẩm tra viên</option>
+                          <option value="2">Vũ Biêu Thư, 03/02/1984 / Thẩm tra viên</option>
+                          <option value="3">Trần Minh Đức, 19/11/1979 / Thẩm phán</option>
                         </select>
                       </td>
                       <td style={TD_STYLE}>
@@ -1033,15 +1078,15 @@ export function GiaoTieuHoSoView({ onClose, userRole }: { onClose: () => void; u
                       <td style={TD_STYLE}>
                         <select defaultValue="" style={cellInputStyle}>
                           <option value="" disabled>Chọn người giao</option>
-                          <option value="1">Cán bộ VPHCTP 1</option>
-                          <option value="2">Cán bộ VPHCTP 2</option>
+                          <option value="1">Nguyễn Văn Hùng, 12/04/1982 / Chuyên viên VPHCTP</option>
+                          <option value="2">Trần Thị Mai, 08/06/1987 / Chuyên viên VPHCTP</option>
                         </select>
                       </td>
                       <td style={TD_STYLE}>
                         <select defaultValue="" style={cellInputStyle}>
                           <option value="" disabled>Chọn người nhận</option>
-                          <option value="1">Vũ Diệu Thúy</option>
-                          <option value="2">Phạm Thị Bích Ngọc</option>
+                          <option value="1">Vũ Diệu Thúy, 01/07/1988 / Thẩm tra viên</option>
+                          <option value="2">Phạm Thị Bích Ngọc, 04/04/1977 / Phó Vụ trưởng, Thẩm phán</option>
                         </select>
                       </td>
                       <td style={TD_STYLE}>
@@ -1155,7 +1200,11 @@ export default function NhanDonTLVuAnView({
   onInBaoCao?: (tabId: TabId) => void;
 }) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [showTraDon, setShowTraDon] = useState(false);
+  const [vuAnModal, setVuAnModal] = useState<{ type: "ghep" | "chuyen"; source: DonCase } | null>(null);
+  const [onlyToday, setOnlyToday] = useState(false);
   const currentCases = getCasesByTab(activeTab, userRole);
+  const visibleCases = onlyToday ? currentCases.filter((_, i) => i < 3) : currentCases;
   const selectedCases = currentCases.filter((c) => selectedIds.includes(c.id));
 
   const handleTraDon = () => {
@@ -1168,7 +1217,13 @@ export default function NhanDonTLVuAnView({
       alert(`Đơn ${invalid.maDon || invalid.id} chưa ở trạng thái đã nhận tại Vụ GĐ,KT nên không thể trả.`);
       return;
     }
-    alert(`Đã kiểm tra điều kiện trả ${selectedCases.length} đơn. Mở popup trả đơn theo nghiệp vụ.`);
+    setShowTraDon(true);
+  };
+
+  const handleVuAnAction = (action: VuAnAction, c: DonCase) => {
+    if (action === "ghep-vu-an") setVuAnModal({ type: "ghep", source: c });
+    if (action === "chuyen-vu-an") setVuAnModal({ type: "chuyen", source: c });
+    // Hủy ghép (case 18) cố ý chưa xử lý theo chỉ đạo hiện tại.
   };
 
   return (
@@ -1176,8 +1231,20 @@ export default function NhanDonTLVuAnView({
       <Breadcrumb />
       <TabBar activeTab={activeTab} userRole={userRole} onTabChange={setActiveTab} />
       <SearchFilterPanel expanded={filterExpanded} userRole={userRole} onToggle={() => setFilterExpanded((v) => !v)} />
+      {(activeTab === "da-co-vu-an" || activeTab === "don-cho-phe-duyet") && (
+        <div style={{ display: "flex", alignItems: "center", gap: 18, padding: "8px 20px", background: "#fff", borderBottom: `1px solid ${BORDER}`, fontFamily: F, fontSize: 12 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}>
+            <input type="checkbox" checked={onlyToday} onChange={(e) => setOnlyToday(e.target.checked)} />
+            Tổng đơn mới trong ngày: <b>03 đơn</b>
+          </label>
+          <span>Tổng đơn: <b>{currentCases.length.toLocaleString("vi-VN")} đơn</b></span>
+        </div>
+      )}
       <ActionBar tab={activeTab} selectedCases={selectedCases} onTraDon={handleTraDon} onGiaoTieuHoSo={onGiaoTieuHoSo} onInBaoCao={() => onInBaoCao?.(activeTab)} />
-      <CaseTable tab={activeTab} userRole={userRole} onGiaoTieuHoSo={onGiaoTieuHoSo} onThemHoSo={onThemHoSo} selectedIds={selectedIds} onSelectedIdsChange={setSelectedIds} />
+      <CaseTable tab={activeTab} userRole={userRole} onGiaoTieuHoSo={onGiaoTieuHoSo} onThemHoSo={onThemHoSo} overrideCases={visibleCases} selectedIds={selectedIds} onSelectedIdsChange={setSelectedIds} onVuAnAction={handleVuAnAction} />
+      {showTraDon && <TraDonModal cases={selectedCases} onClose={() => setShowTraDon(false)} onSuccess={() => setSelectedIds([])} />}
+      {vuAnModal?.type === "ghep" && <GhepVuAnModal source={vuAnModal.source} onClose={() => setVuAnModal(null)} />}
+      {vuAnModal?.type === "chuyen" && <ChuyenVuAnModal source={vuAnModal.source} onClose={() => setVuAnModal(null)} />}
     </>
   );
 }

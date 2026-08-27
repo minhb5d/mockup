@@ -544,6 +544,8 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
   const [daCapSo, setDaCapSo] = useState(false);
   const [showTrinhKy, setShowTrinhKy] = useState(false);
   const [showBieuMau, setShowBieuMau] = useState(false);
+  const [baSo,setBaSo]=useState(""); const [baNgay,setBaNgay]=useState(""); const [baToa,setBaToa]=useState(""); const [baStatus,setBaStatus]=useState("");
+  const [replyResults,setReplyResults]=useState<Array<{so:string;ngay:string;donVi:string}>>([]); const [selectedReply,setSelectedReply]=useState("");
 
   const inSt: React.CSSProperties = {
     width: "100%", border: `1px solid ${BORDER}`, borderRadius: 5,
@@ -658,13 +660,24 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
           {/* Hàng 3: Nội dung công văn */}
           <div>
             <label style={lblSt}>Nội dung công văn</label>
-            <textarea placeholder="Nhập nội dung công văn" style={{ ...inSt, minHeight: 80, resize: "vertical" }} />
+            <textarea maxLength={2000} placeholder="Nhập nội dung công văn (tối đa 2.000 ký tự)" style={{ ...inSt, minHeight: 80, resize: "vertical" }} />
           </div>
 
           {/* Hàng 4: Ghi chú */}
           <div>
             <label style={lblSt}>Ghi chú</label>
-            <textarea placeholder="Nhập ghi chú" style={{ ...inSt, minHeight: 70, resize: "vertical" }} />
+            <textarea maxLength={2000} placeholder="Nhập ghi chú (tối đa 2.000 ký tự)" style={{ ...inSt, minHeight: 70, resize: "vertical" }} />
+          </div>
+
+          <div style={{border:`1px solid ${BORDER}`,borderRadius:6,padding:16}}>
+            <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>Tra cứu bản án/quyết định</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr auto",gap:10,alignItems:"end"}}>
+              <div><label style={lblSt}>Số BA/QĐ</label><input value={baSo} onChange={e=>setBaSo(e.target.value)} style={inSt}/></div>
+              <div><label style={lblSt}>Ngày BA/QĐ</label><input type="date" value={baNgay} onChange={e=>setBaNgay(e.target.value)} style={inSt}/></div>
+              <div><label style={lblSt}>Tòa xét xử</label><input value={baToa} onChange={e=>setBaToa(e.target.value)} style={inSt}/></div>
+              <button onClick={()=>{if(baSo.trim()){setBaNgay(baNgay||"2026-07-20");setBaToa(baToa||"Tòa án nhân dân TP Hà Nội");setBaStatus("Đã tìm thấy thông tin bản án");}else setBaStatus("Không tìm thấy thông tin bản án");}} style={{height:34}}>Tìm kiếm</button>
+            </div>
+            {baStatus&&<div style={{marginTop:8,fontSize:12,color:baStatus.startsWith("Đã")?"#047857":"#b91c1c"}}>{baStatus}</div>}
           </div>
 
           {/* Khung: Trả lời cho công văn */}
@@ -679,7 +692,7 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
                     display: "flex", alignItems: "center", gap: 6, padding: "6px 16px",
                     background: "#7f1d1d", color: "#fff", border: "none", borderRadius: 4,
                     cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F, marginTop: 10,
-                  }}>
+                  }} onClick={()=>setReplyResults([{so:traLoiSoCV||"25/CV-TA",ngay:traLoiNgayCV||"20/07/2026",donVi:"Tòa án nhân dân tỉnh Bắc Ninh"},{so:"18/CV-VKS",ngay:"15/07/2026",donVi:"VKSND tối cao"}])}>
                   <Search size={13} /> Tìm kiếm
                 </button>
               </div>
@@ -708,8 +721,12 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
+          {replyResults.length>0&&<div style={{border:`1px solid ${BORDER}`,borderRadius:5,padding:10}}><b style={{fontSize:12}}>Kết quả công văn được trả lời</b><table style={{width:"100%",borderCollapse:"collapse",marginTop:8}}><tbody>{replyResults.map(r=><tr key={r.so}><td style={TD_STYLE}><input type="radio" name="reply" checked={selectedReply===r.so} onChange={()=>setSelectedReply(r.so)}/></td><td style={TD_STYLE}>{r.so}</td><td style={TD_STYLE}>{r.ngay}</td><td style={TD_STYLE}>{r.donVi}</td></tr>)}</tbody></table>{selectedReply&&<div style={{fontSize:11,color:"#047857"}}>Đã liên kết trả lời cho công văn {selectedReply}</div>}</div>}
+
           {/* Phần Đính kèm tệp (Công văn đến) hoặc Cấu hình nơi nhận (Công văn đi) */}
           {loaiCV === "di" ? (
+            <div style={{display:"flex",flexDirection:"column",gap:12}}>
+            <div style={{border:`1px solid ${BORDER}`,borderRadius:6,padding:16}}><div style={{fontSize:13,fontWeight:700,marginBottom:8}}>Đính kèm tệp công văn đi</div><input type="file" multiple onChange={e=>{const fs=Array.from(e.target.files??[]); if(fs.length)setAttachments(v=>[...v,...fs]);}}/>{attachments.map((f,i)=><div key={i} style={{fontSize:11,marginTop:4}}>📎 {f.name}</div>)}</div>
             <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, padding: 16, background: "#fff" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, fontFamily: F }}>
@@ -810,6 +827,7 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
                 </table>
               </div>
             </div>
+            </div>
           ) : (
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, fontFamily: F, marginBottom: 8 }}>Đính kèm tệp</div>
@@ -880,6 +898,7 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
                 {daCapSo ? "Hủy cấp số" : "Lấy số"}
               </button>
 
+              <button onClick={() => alert("Đã trình duyệt công văn") } style={{padding:"7px 20px",background:"#fff",color:RED,border:`1px solid ${RED}`,borderRadius:4,cursor:"pointer",fontSize:12,fontWeight:700}}>Trình duyệt</button>
               <button
                 onClick={() => setShowTrinhKy(true)}
                 style={{ padding: "7px 20px", background: "#7f1d1d", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F }}>
@@ -1179,6 +1198,7 @@ function TabToTrinhCV() {
                         <Trash2 size={14} color="#dc2626" />
                       </button>
                     )}
+                    <button onClick={()=>alert("Đã mở tờ trình kế thừa để trình lại") } style={{background:"none",border:"none",cursor:"pointer",padding:3,color:RED,fontSize:11}} title="Trình lại">Trình lại</button>
                     <button style={{ background: "none", border: "none", cursor: "pointer", padding: 3 }} title="Xem văn bản"><Eye size={14} color="#0e7490" /></button>
                   </div>
                 </td>
@@ -1295,6 +1315,7 @@ function ThemKetQuaGQModal({ onClose }: { onClose: () => void }) {
   const [noiDung, setNoiDung] = useState("");
   const [ghiChu, setGhiChu] = useState("");
   const [showTrinhKy, setShowTrinhKy] = useState(false);
+  const [daCapSoKQ,setDaCapSoKQ]=useState(false);
 
   const [noiNhanList, setNoiNhanList] = useState([
     {
@@ -1559,13 +1580,7 @@ function ThemKetQuaGQModal({ onClose }: { onClose: () => void }) {
 
                 <div>
                   <label style={lblSt}>Đơn vị nhận</label>
-                  <input
-                    type="text"
-                    placeholder="Chọn nơi nhận trước"
-                    value={donViNhan}
-                    onChange={e => setDonViNhan(e.target.value)}
-                    style={inSt}
-                  />
+                  {noiNhan === "Khác" ? <input placeholder="Nhập đơn vị nhận" value={donViNhan} onChange={e=>setDonViNhan(e.target.value)} style={inSt}/> : <select value={donViNhan} onChange={e=>setDonViNhan(e.target.value)} style={inSt}><option value="">Chọn đơn vị nhận</option>{(noiNhan === "Tòa án nhân dân" ? ["Tòa đăng nhập","Tòa xét xử BA bị GĐT","Đ/c Chánh án","Đ/c PCA phụ trách"] : noiNhan === "Viện kiểm sát" ? ["VKSND tối cao","VKS ngang cấp"] : ["Cơ quan điều tra Bộ Công an"]).map(x=><option key={x}>{x}</option>)}</select>}
                 </div>
               </div>
             </>
@@ -1594,11 +1609,11 @@ function ThemKetQuaGQModal({ onClose }: { onClose: () => void }) {
             <textarea
               placeholder="Nhập nội dung ý kiến"
               value={noiDung}
-              onChange={e => setNoiDung(e.target.value.slice(0, 1000))}
+              onChange={e => setNoiDung(e.target.value.slice(0, 2000))}
               style={{ ...inSt, minHeight: 90, resize: "vertical" }}
             />
             <div style={{ textAlign: "right", fontSize: 11, color: MUTED, marginTop: 3 }}>
-              {noiDung.length} / 1000
+              {noiDung.length} / 2000
             </div>
           </div>
 
@@ -1608,11 +1623,11 @@ function ThemKetQuaGQModal({ onClose }: { onClose: () => void }) {
             <textarea
               placeholder="Nhập ghi chú"
               value={ghiChu}
-              onChange={e => setGhiChu(e.target.value.slice(0, 1000))}
+              onChange={e => setGhiChu(e.target.value.slice(0, 2000))}
               style={{ ...inSt, minHeight: 90, resize: "vertical" }}
             />
             <div style={{ textAlign: "right", fontSize: 11, color: MUTED, marginTop: 3 }}>
-              {ghiChu.length} / 1000
+              {ghiChu.length} / 2000
             </div>
           </div>
 
@@ -1788,6 +1803,8 @@ function ThemKetQuaGQModal({ onClose }: { onClose: () => void }) {
                 >
                   Xem biểu mẫu
                 </button>
+                <button onClick={()=>setDaCapSoKQ(v=>!v)} style={{padding:"7px 18px",background:"#fff",border:`1px solid ${BORDER}`,borderRadius:4,cursor:"pointer"}}>{daCapSoKQ?"Hủy cấp số":"Lấy số"}</button>
+                <button onClick={()=>alert("Đã trình duyệt kết quả giải quyết") } style={{padding:"7px 18px",background:"#fff",border:`1px solid ${RED}`,color:RED,borderRadius:4,cursor:"pointer"}}>Trình duyệt</button>
                 <button
                   onClick={() => setShowTrinhKy(true)}
                   style={{
@@ -1974,7 +1991,7 @@ function ChiTietCongVanView({ row, onBack }: { row: CVRow; onBack: () => void })
                         Tòa ra BA: {row.toaRaBA || "TAND tỉnh Bắc Ninh"}
                       </div>
                     </td>
-                    <td style={TD}>{row.donVi}</td>
+                    <td style={TD}>{row.loai === "den" ? row.donViGui : row.donViNhan}</td>
                     <td style={TD}>Nguyễn Văn Bình</td>
                     <td style={{ ...TD, color: MUTED, fontSize: 11, fontFamily: F }}>
                       Công văn xin ý kiến giải quyết vướng mắc án kinh doanh thương mại
@@ -2054,6 +2071,8 @@ function ChiTietCongVanView({ row, onBack }: { row: CVRow; onBack: () => void })
               </table>
             </div>
 
+            <div style={{background:"#fff",border:`1px solid ${BORDER}`,borderRadius:8,padding:14,marginBottom:16}}><b style={{fontSize:12}}>Phân công Thẩm tra viên</b><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginTop:8}}><select style={inSt} defaultValue="Vũ Diệu Thúy - Thẩm tra viên"><option>Vũ Diệu Thúy - Thẩm tra viên</option><option>Võ Thị Thùy Giang - Thẩm tra viên</option></select><input type="date" defaultValue="2026-07-20" style={inSt}/></div></div>
+
             {/* 2. Card: Lịch sử phân công Thẩm phán */}
             <div style={{ background: "#fff", borderRadius: 8, border: `1px solid ${BORDER}`, padding: 18 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
@@ -2074,7 +2093,7 @@ function ChiTietCongVanView({ row, onBack }: { row: CVRow; onBack: () => void })
                 </colgroup>
                 <thead>
                   <tr>
-                    {["STT", "HỌ VÀ TÊN THẨM PHÁN", "CHỨC DANH", "NGÀY PHÂN CÔNG", "NGƯỜI THAO TÁC", "GHI CHÚ"].map(h => (
+                    {["STT", "GIAI ĐOẠN", "HỌ VÀ TÊN THẨM PHÁN", "CHỨC DANH", "NGÀY PHÂN CÔNG", "NGƯỜI THAO TÁC", "GHI CHÚ"].map(h => (
                       <th key={h} style={TH}>{h}</th>
                     ))}
                   </tr>
@@ -2120,7 +2139,7 @@ function ChiTietCongVanView({ row, onBack }: { row: CVRow; onBack: () => void })
                 </colgroup>
                 <thead>
                   <tr>
-                    {["STT", "HỌ VÀ TÊN TTV", "CHỨC DANH TTV", "NGÀY PHÂN CÔNG TTV", "HỌ VÀ TÊN LĐ", "TÊN CHỨC VỤ LĐ", "NGÀY PHÂN CÔNG LĐ"].map(h => (
+                    {["STT", "GIAI ĐOẠN", "HỌ VÀ TÊN TTV", "CHỨC DANH TTV", "NGÀY PHÂN CÔNG TTV", "HỌ VÀ TÊN LĐ", "TÊN CHỨC VỤ LĐ", "NGÀY PHÂN CÔNG LĐ"].map(h => (
                       <th key={h} style={TH}>{h}</th>
                     ))}
                   </tr>
