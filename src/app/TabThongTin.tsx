@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Eye, Trash2, Sliders, Search } from "lucide-react";
+import { Eye, Trash2, Sliders, Search, Pencil } from "lucide-react";
 import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge, getThoiHieuOptions, type UserRoleType } from "./shared";
 import type { VuAnDetailData } from "./QuanLyVuAnView";
 import { LOAI_AN_OPTIONS, LoaiAn } from "./data";
@@ -32,7 +32,7 @@ export function InfoGrid({ rows }: { rows: Array<[string, React.ReactNode]> }) {
   );
 }
 
-export type NguoiLienQuanRow = { stt: number; hoTen: string; ngaySinh: string; cccd: string; diaChi: string; toiDanh?: string; nguoiDuocKhieuNai?: string; noiDungKhieuNai?: string };
+export type NguoiLienQuanRow = { stt: number; hoTen: string; ngaySinh: string; cccd: string; diaChi: string; toiDanh?: string; nguoiDuocKhieuNai?: string; noiDungKhieuNai?: string; labels?: string[]; duocGDT?: boolean };
 
 // TH-069: gợi ý người liên quan lấy từ các quá trình giải quyết trước của vụ án
 const NGUOI_LIEN_QUAN_GOI_Y = [
@@ -157,7 +157,7 @@ export const MOCK_DATA_BY_LOAI_AN: Record<LoaiAn, TabThongTinMockData> = {
       nhom1: {
         title: "* Bị cáo",
         required: true,
-        rows: [{ stt: 1, hoTen: "Đặng Thị Dương", ngaySinh: "1995", cccd: "036302091038", toiDanh: "Cố ý gây thương tích (Khoản 2 Điều 134 BLHS)", diaChi: "Số nhà 7, Xã Trường Sơn, Tỉnh Bắc Ninh" }],
+        rows: [{ stt: 1, hoTen: "Đặng Thị Dương", ngaySinh: "1995", cccd: "036302091038", toiDanh: "Cố ý gây thương tích (Khoản 2 Điều 134 BLHS)", diaChi: "Số nhà 7, Xã Trường Sơn, Tỉnh Bắc Ninh", labels: ["Đầu vụ", "Tái phạm"], duocGDT: true }],
       },
       nhom2: {
         title: "* Bị hại",
@@ -657,7 +657,18 @@ function NguoiLienQuanTable({ rows, noMarginBottom = false, showToiDanh = false,
         {rows.map((r, idx) => (
           <tr key={r.stt} style={{ background: idx % 2 === 0 ? "#fff" : "#fafafa" }}>
             <td style={{ ...TD_STYLE, textAlign: "center", color: MUTED, fontSize: 12 }}>{r.stt}</td>
-            <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT }}>{r.hoTen}</td>
+            <td style={TD_STYLE}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2, fontFamily: F }}>
+                <span style={{ fontSize: 12, color: TEXT, fontWeight: 600 }}>{r.hoTen}</span>
+                {r.cccd && <span style={{ fontSize: 10.5, color: MUTED }}>CCCD: {r.cccd}</span>}
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                  {r.labels?.map(l => (
+                    <Badge key={l} color="#1e40af" bg="#dbeafe">{l}</Badge>
+                  ))}
+                  {r.duocGDT && <Badge color="#065f46" bg="#d1fae5">Được GĐT,TT</Badge>}
+                </div>
+              </div>
+            </td>
             <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT, textAlign: "center" }}>{r.ngaySinh}</td>
             {isKhieuNai && (
               <>
@@ -674,6 +685,7 @@ function NguoiLienQuanTable({ rows, noMarginBottom = false, showToiDanh = false,
             <td style={{ ...TD_STYLE, textAlign: "center" }}>
               <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
                 <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Xem"><Eye size={13} color={MUTED} /></button>
+                <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Sửa"><Pencil size={13} color={MUTED} /></button>
                 <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Xóa"><Trash2 size={13} color={MUTED} /></button>
               </div>
             </td>

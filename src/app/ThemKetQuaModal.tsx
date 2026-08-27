@@ -24,16 +24,25 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
   const trangThai = detail?.trangThai || "Chưa có kết quả giải quyết đơn";
 
   // Section 1: Thông tin đơn
+  // BR-02: đơn đã có kết quả giải quyết thì không hiện trong danh sách "Đơn liên quan"
   const [donDataList, setDonDataList] = useState([
     {
       id: "don-1",
       label: "1. Đơn 09D732899 - Phạm Minh Tuấn",
       nguoi: ["Phạm Minh Tuấn", "Phạm Văn Nam"],
+      daCoKQ: false,
     },
     {
       id: "don-2",
       label: "2. Đơn 10D732900 - Trần Văn Hùng",
       nguoi: ["Trần Văn Hùng"],
+      daCoKQ: false,
+    },
+    {
+      id: "don-3",
+      label: "3. Đơn 11D732901 - Lê Thị Hoa (đã có KQGQ)",
+      nguoi: ["Lê Thị Hoa"],
+      daCoKQ: true,
     },
   ]);
   const [donCheckedList, setDonCheckedList] = useState<Record<string, boolean>>({
@@ -359,6 +368,8 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
     { value: "vks", label: "Viện kiểm sát đang giải quyết" },
   ];
 
+  const [hinhThucTrinh, setHinhThucTrinh] = useState("trinh-ky");
+  const [noiDungDuyetKy, setNoiDungDuyetKy] = useState("");
   const [thamQuyenXetXu, setThamQuyenXetXu] = useState("");
   const [noiDungVuAn, setNoiDungVuAn] = useState("");
   const [xetThay, setXetThay] = useState("");
@@ -467,6 +478,26 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
                 <span>■ Thông tin đơn</span>
               </div>
 
+              {/* TH-088: chọn hình thức trình và nội dung duyệt ký */}
+              {(isTraLoi || isVks || isKhangNghi) && (
+                <div style={{ marginBottom: 12 }}>
+                  <label style={lblSt}>Hình thức trình</label>
+                  <div style={{ display: "flex", gap: 20, marginBottom: 8 }}>
+                    {[{ v: "trinh-duyet", l: "Trình duyệt" }, { v: "trinh-ky", l: "Trình ký" }].map(o => (
+                      <label key={o.v} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, cursor: "pointer", fontFamily: F }}>
+                        <input type="radio" name="hinh-thuc-trinh" checked={hinhThucTrinh === o.v}
+                          onChange={() => setHinhThucTrinh(o.v)} style={{ accentColor: "#800000", cursor: "pointer" }} />
+                        <span style={{ fontWeight: hinhThucTrinh === o.v ? 700 : 400 }}>{o.l}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <label style={lblSt}>Nội dung duyệt ký</label>
+                  <textarea value={noiDungDuyetKy} onChange={e => setNoiDungDuyetKy(e.target.value)}
+                    placeholder="Nhập nội dung trình duyệt / trình ký"
+                    style={{ ...inSt, minHeight: 56, resize: "vertical" }} />
+                </div>
+              )}
+
               {!isKhieuNai && (
                 <div>
                   {/* <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
@@ -530,7 +561,7 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
                           marginTop: 4,
                         }}
                       >
-                        {donDataList.map(don => {
+                        {donDataList.filter(d => !d.daCoKQ).map(don => {
                           const isWholeDonChecked = !!donCheckedList[don.id];
                           const isExpanded = !!donExpanded[don.id];
                           const anyNguoiChecked = don.nguoi.some(n => donCheckedList[`${don.id}::${n}`]);
@@ -941,6 +972,11 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
                               >
                                 <option value="Khác">Khác</option>
                                 <option value="Tòa án nhân dân">Tòa án nhân dân</option>
+                                <option value="Viện kiểm sát nhân dân">Viện kiểm sát nhân dân</option>
+                                <option value="Cơ quan thi hành án hình sự">Cơ quan thi hành án hình sự</option>
+                                <option value="Cơ quan thi hành án dân sự">Cơ quan thi hành án dân sự</option>
+                                <option value="Trại giam">Trại giam</option>
+                                <option value="Trại tạm giam">Trại tạm giam</option>
                                 <option value="Viện kiểm sát">Viện kiểm sát</option>
                                 <option value="Đương sự">Đương sự</option>
                               </select>
@@ -1024,6 +1060,11 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
                             >
                               <option value="Khác">Khác</option>
                               <option value="Tòa án nhân dân">Tòa án nhân dân</option>
+                              <option value="Viện kiểm sát nhân dân">Viện kiểm sát nhân dân</option>
+                              <option value="Cơ quan thi hành án hình sự">Cơ quan thi hành án hình sự</option>
+                              <option value="Cơ quan thi hành án dân sự">Cơ quan thi hành án dân sự</option>
+                              <option value="Trại giam">Trại giam</option>
+                              <option value="Trại tạm giam">Trại tạm giam</option>
                               <option value="Viện kiểm sát">Viện kiểm sát</option>
                               <option value="Đương sự">Đương sự</option>
                             </select>
@@ -1113,7 +1154,7 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
                 onClick={() => setShowTrinhKy(true)}
                 style={{ padding: "7px 20px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F }}
               >
-                Trình ký
+                {hinhThucTrinh === "trinh-duyet" ? "Trình duyệt" : "Trình ký"}
               </button>
             )}
             {!isXepDon && (
