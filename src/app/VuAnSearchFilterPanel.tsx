@@ -82,6 +82,7 @@ export interface VuAnFilterValues {
 
   ketQuaGiaiQuyet: string;
   hinhThucDon: string;
+  loaiBaGDT: string;
   phanLoaiDon: string;
 
   capXetXu: string;
@@ -118,6 +119,7 @@ export const INITIAL_FILTER_VALUES: VuAnFilterValues = {
   yKienToTrinh: "",
   ketQuaGiaiQuyet: "",
   hinhThucDon: "",
+  loaiBaGDT: "",
   phanLoaiDon: "",
   capXetXu: "",
   ketQuaXetXu: "",
@@ -152,6 +154,7 @@ export const FILTER_LABELS: Record<keyof VuAnFilterValues, string> = {
   yKienToTrinh: "Ý kiến tờ trình",
   ketQuaGiaiQuyet: "Kết quả giải quyết",
   hinhThucDon: "Hình thức đơn",
+  loaiBaGDT: "Loại BA GĐT",
   phanLoaiDon: "Phân loại đơn",
   capXetXu: "Cấp xét xử",
   ketQuaXetXu: "Kết quả xét xử",
@@ -501,6 +504,19 @@ export function VuAnSearchFilterPanel({
                 </optgroup>
               </select>
             </div>
+            <div>
+              <label style={labelStyle}>Loại BA GĐT</label>
+              <select value={filters.loaiBaGDT} onChange={(e) => handleChange("loaiBaGDT", e.target.value)} style={selectStyle}>
+                <option value="">– Tất cả –</option>
+                <optgroup label="Đơn đề nghị GĐT,TT">
+                  <option value="Đơn đề nghị GĐT">Đơn đề nghị GĐT</option>
+                  <option value="Đơn đề nghị TT">Đơn đề nghị TT</option>
+                </optgroup>
+                <option value="Rút hồ sơ đoàn kiểm tra">Rút hồ sơ đoàn kiểm tra</option>
+                <option value="Chủ động GĐT qua Bản án">Chủ động GĐT qua Bản án</option>
+              </select>
+            </div>
+
             <div>
               <label style={labelStyle}>Hình thức đơn</label>
               <select value={filters.hinhThucDon} onChange={(e) => handleChange("hinhThucDon", e.target.value)} style={selectStyle}>
