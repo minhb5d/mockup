@@ -62,6 +62,9 @@ type VuXetXuRow = {
   hdxx: string;
   ngayXX: string;
   phongXX: string;
+  // THIẾU [TB]: bổ sung QHPL (bắt buộc) + QHPL thống kê — SRS mục A.5–A.11
+  qhpl?: string;
+  qhplThongKe?: string;
 };
 
 // ── Helper to resolve party labels & values by department/case type ─────────
@@ -580,7 +583,10 @@ function TabThongTin({ row, userRole }: { row: VuXetXuRow; userRole?: UserRoleTy
                 ["Số – Ngày thụ lý XX", row.soNgayThuLy || "–", "Số – Ngày Kháng nghị", row.soNgayKhangNghi],
                 ["Số – Ngày BAST (hoặc QĐST)", row.soNgayBAQD, "Người kháng nghị", row.nguoiKhangNghi],
                 ["Tòa ra BA/QĐ", row.toaRABAQD, "Tòa án giải quyết", row.toaAnGiaiQuyet],
-                // ["Viện kiểm sát giải quyết", row.vienKiemSat, ],
+                // THIẾU [TB]: bổ sung Trạng thái, VKS giải quyết, Thời hiệu giải quyết, QHPL, QHPL thống kê — SRS mục A.5–A.11
+                ["Trạng thái", row.trangThai, "Viện kiểm sát giải quyết", row.vienKiemSat || "–"],
+                ["Thời hiệu giải quyết", row.thoiHieu || "–", "QHPL", row.qhpl || "–"],
+                ["QHPL thống kê", row.qhplThongKe || "–", "", ""],
               ]} />
             </div>
             <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, overflow: "hidden", marginBottom: 12 }}>
@@ -641,6 +647,8 @@ function TabThongTin({ row, userRole }: { row: VuXetXuRow; userRole?: UserRoleTy
               { title: "Người có quyền lợi và nghĩa vụ liên quan", req: false, cols: ["STT", "Họ và tên/Tổ chức", "Năm sinh", "Địa chỉ", "Thao tác"], rows: [["1", "Trần Anh Tuấn", "1988", "Xã Vân Sơn, Tỉnh Bắc Ninh", actBtns]] },
             ] : [
               { title: "* Người khiếu nại", req: true, cols: ["STT", "Họ và tên/Tổ chức", "Năm sinh", "Địa chỉ", "Thao tác"], rows: [["1", "Phan Mai Hoa", "", "Tổ 3, phường Yên Nghĩa, TP Hà Nội", actBtns]] },
+              // THIẾU [TB]: cột "Người được khiếu nại" + ràng buộc "Nội dung khiếu nại bắt buộc" — SRS mục C.8
+              { title: "Người được khiếu nại", req: false, cols: ["STT", "Họ và tên/Tổ chức", "Nội dung khiếu nại *", "Địa chỉ", "Thao tác"], rows: [["1", "Trần Văn Hải", "Khiếu nại về mức hình phạt tuyên tại bản án", "Tổ 7, Xã Yên Định, Tỉnh Bắc Ninh", actBtns]] },
               {
                 title: "* Bị cáo", req: true, cols: ["STT", "Họ và tên (ngày sinh – CCCD)", "Tư cách tố tụng", "Thông tin bổ sung hình phạt", "Địa chỉ", "Thao tác"],
                 rows: [["1", <div key="ht" style={{ fontSize: 12, lineHeight: 1.5, fontFamily: F }}><div style={{ fontWeight: 600 }}>{row.biCao}</div><div style={{ color: MUTED, fontSize: 11 }}>NS: 2000 · CCCD: 027200001234</div></div>, "Bị cáo đầu vụ", <div key="td" style={{ fontSize: 11, lineHeight: 1.5, fontFamily: F }}><div><b>Tội che giấu tội phạm (Tội danh chính)</b> Khoản 1 Điểm a</div><div style={{ color: MUTED }}>Tù có thời hạn – 15 năm, 6 tháng; Phạt tiền, khi không áp dụng hình phạt là phạt chính</div></div>, "Tổ 7, Xã Yên Định, Tỉnh Bắc Ninh", actBtns]]
@@ -4614,8 +4622,8 @@ function TabTaiLieuVuAn({ row }: { row?: VuXetXuRow }) {
 
 // ── Detail view ───────────────────────────────────────────────────────────────
 
-function ChiTietVuXetXuView({ row, userRole, onBack }: { row: VuXetXuRow; userRole?: UserRoleType; onBack: () => void }) {
-  const [tab, setTab] = useState<DetailTab>("thong-tin");
+function ChiTietVuXetXuView({ row, userRole, onBack, initialTab }: { row: VuXetXuRow; userRole?: UserRoleType; onBack: () => void; initialTab?: DetailTab }) {
+  const [tab, setTab] = useState<DetailTab>(initialTab || "thong-tin");
 
   const isHinhSuDetail =
     userRole === "vu-1" ||
@@ -4701,6 +4709,8 @@ const BO_LUAT_OPTIONS = ["Bộ luật Hình sự 2015", "Bộ luật Dân sự 2
 const DIEU_LUAT_OPTIONS = ["Điều 371", "Điều 372", "Điều 388", "Điều 391", "Điều 393", "Điều 398", "Điều 400"];
 
 function TabKetQua({ row }: { row: VuXetXuRow }) {
+  // THIẾU [Thấp]: trạng thái nút theo luồng ký — SRS mục E
+  const [trangThaiKy, setTrangThaiKy] = useState<"chua-co-kq" | "cho-ky" | "da-ky">("chua-co-kq");
   const [apAnLe, setApAnLe] = useState<"khong" | "co">("khong");
   const [toaXetXuLai, setToaXetXuLai] = useState(""); // THIẾU [Cao] – SRS mục B.11
   const [suaToiDanh, setSuaToiDanh] = useState<string | null>(null); // THIẾU [Cao] – popup sửa tội danh
@@ -4994,12 +5004,33 @@ function TabKetQua({ row }: { row: VuXetXuRow }) {
         </div>
       </div>
 
+      {/* THIẾU [Thấp]: khối Thông tin thống kê — SRS mục G (SRS ghi "đang phát triển") */}
+      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, overflow: "hidden" }}>
+        <div style={{ padding: "10px 14px", background: BG, borderBottom: `1px solid ${BORDER}` }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: TEXT, fontFamily: F }}>Thông tin thống kê</span>
+        </div>
+        <div style={{ padding: 24, textAlign: "center" as const, color: MUTED, fontSize: 12, fontFamily: F }}>
+          Chức năng đang phát triển.
+        </div>
+      </div>
+
       {/* Footer actions */}
+      {/* THIẾU [Thấp]: nhóm nút Thêm mới KQ/Cập nhật KQ/Chỉnh sửa thông tin vụ án + trạng thái nút theo luồng ký — SRS mục E */}
       <div style={{ display: "flex", justifyContent: "center", gap: 10, paddingBottom: 8 }}>
+        {trangThaiKy === "chua-co-kq" ? (
+          <button onClick={() => setTrangThaiKy("cho-ky")} style={{ padding: "7px 22px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: F }}>+ Thêm mới kết quả</button>
+        ) : trangThaiKy === "cho-ky" ? (
+          <button style={{ padding: "7px 22px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F }}>Cập nhật kết quả</button>
+        ) : (
+          <button style={{ padding: "7px 22px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F, color: MUTED }} disabled>Cập nhật kết quả (đã ký, khóa sửa)</button>
+        )}
+        <button style={{ padding: "7px 22px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F }}>Chỉnh sửa thông tin vụ án</button>
         <button style={{ padding: "7px 22px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F }}>Đóng</button>
         <button style={{ padding: "7px 22px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F }}>Lưu</button>
         <button style={{ padding: "7px 22px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F }}>Lấy số</button>
-        <button style={{ padding: "7px 22px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: F }}>Trình ký</button>
+        {trangThaiKy !== "da-ky" && (
+          <button onClick={() => setTrangThaiKy("da-ky")} style={{ padding: "7px 22px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: F }}>Trình ký</button>
+        )}
         <button style={{ padding: "7px 22px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F }}>Xem biểu mẫu</button>
       </div>
 
@@ -6166,6 +6197,8 @@ export default function QuanLyVuXetXuView({
   const [search, setSearch] = useState("");
   const [menuOpen, setMenuOpen] = useState<number | null>(null);
   const [detail, setDetail] = useState<VuXetXuRow | null>(null);
+  // THIẾU [TB]: nút "Xem kết quả xét xử" trên hàng danh sách — SRS phần Phân tab
+  const [detailInitialTab, setDetailInitialTab] = useState<DetailTab | undefined>(undefined);
   const [showThemModal, setShowThemModal] = useState(false);
   const [showBieuMauMain, setShowBieuMauMain] = useState(false);
   const [page, setPage] = useState(1);
@@ -6285,7 +6318,7 @@ export default function QuanLyVuXetXuView({
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  if (detail) return <ChiTietVuXetXuView row={detail} userRole={userRole} onBack={() => setDetail(null)} />;
+  if (detail) return <ChiTietVuXetXuView row={detail} userRole={userRole} initialTab={detailInitialTab} onBack={() => { setDetail(null); setDetailInitialTab(undefined); }} />;
 
   return (
     <>
@@ -6743,12 +6776,25 @@ export default function QuanLyVuXetXuView({
                   <td style={{ ...TD_STYLE, textAlign: "center" as const }} onClick={e => e.stopPropagation()}>
                     <button
                       onClick={() => setDetail(row)}
+                      title="Xem chi tiết"
                       style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 4, borderRadius: 4 }}
                       onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#f3f4f6"; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
                     >
                       <Eye size={15} />
                     </button>
+                    {/* THIẾU [TB]: nút "Xem kết quả xét xử" trên hàng danh sách — SRS phần Phân tab */}
+                    {row.trangThai === "da-xx" && (
+                      <button
+                        onClick={() => { setDetailInitialTab("ket-qua"); setDetail(row); }}
+                        title="Xem kết quả xét xử"
+                        style={{ background: "none", border: "none", cursor: "pointer", color: "#166534", padding: 4, borderRadius: 4, marginLeft: 2 }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#f3f4f6"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+                      >
+                        <FileText size={15} />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

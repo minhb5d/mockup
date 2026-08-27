@@ -31,6 +31,9 @@ export type VuAnDetail = {
   chuToa?: string;
   hdxx?: string;
   thanhVien?: string[];
+  // THIẾU [TB]: cột Kháng nghị trong bảng "DS các vụ án trình phê duyệt" — SRS 2.2.B.6
+  soKhangNghi?: string;
+  ngayKhangNghi?: string;
 };
 
 export type HDXXRow = {
@@ -711,11 +714,13 @@ const QD_ROWS = [
 
 // ── Lịch xét xử modal ────────────────────────────────────────────────────────
 
-type CalEvent = { label: string; color: string; bg: string; loai: "GĐT/TT" | "ST" | "PT"; phong?: string; gio?: string; caNgay?: boolean };
-const LOAI_STYLE: Record<"GĐT/TT" | "ST" | "PT", { color: string; bg: string }> = {
+type CalEvent = { label: string; color: string; bg: string; loai: "GĐT/TT" | "ST" | "PT" | "THA"; phong?: string; gio?: string; caNgay?: boolean; nguoiTao?: string };
+// THIẾU [TB]: bổ sung loại "Thi hành án" cho thanh thống kê Lịch xét xử — SRS Lên lịch mục 2
+const LOAI_STYLE: Record<"GĐT/TT" | "ST" | "PT" | "THA", { color: string; bg: string }> = {
   "GĐT/TT": { color: "#991b1b", bg: "#fee2e2" },
   "ST": { color: "#1e40af", bg: "#dbeafe" },
   "PT": { color: "#92400e", bg: "#fef3c7" },
+  "THA": { color: "#166534", bg: "#dcfce7" },
 };
 const INIT_EVENTS: Record<string, CalEvent[]> = {
   "2026-04-01": [{ label: "Xét xử vụ án gi...", color: "#166534", bg: "#dcfce7", loai: "GĐT/TT" }, { label: "Lịch hồ sơ khác...", color: "#92400e", bg: "#fef3c7", loai: "PT" }],
@@ -772,6 +777,15 @@ export function LichXetXuModal({ onClose, onSelectDate }: { onClose: () => void;
   // THIẾU [Cao]: Phòng xét xử là trường bắt buộc (SRS Lên lịch mục 3, 9)
   const [fPhongXX, setFPhongXX] = useState("");
   const [loiLich, setLoiLich] = useState("");
+  // THIẾU [TB]: bộ lọc "Người tạo" và "Cảnh báo trùng" — SRS Lên lịch mục 6, 7
+  const [fNguoiTaoFilter, setFNguoiTaoFilter] = useState("");
+  const [fCanhBaoTrung, setFCanhBaoTrung] = useState(false);
+  // THIẾU [TB]: nhóm Thông tin vụ án / tra cứu vụ án trong popup Thêm lịch — SRS mục 5–9
+  const [fSoThuLy, setFSoThuLy] = useState("");
+  const [fNgayThuLy, setFNgayThuLy] = useState("");
+  const [vuAnTraCuu, setVuAnTraCuu] = useState<string | null>(null);
+  // THIẾU [TB]: nút Xóa lịch xét xử + hộp xác nhận — SRS mục 11
+  const [confirmXoaLich, setConfirmXoaLich] = useState(false);
   const PHONG_XET_XU_OPTIONS = [
     "Phòng xét xử số 1", "Phòng xét xử số 2", "Phòng xét xử số 3",
     "Phòng xét xử số 4", "Phòng xử trực tuyến A", "Phòng xử trực tuyến B",
@@ -833,6 +847,26 @@ export function LichXetXuModal({ onClose, onSelectDate }: { onClose: () => void;
     }
     setSelectedDay(null);
     setFTitle(""); setFSoDS(""); setFHinhThuc(""); setFNguoiNhan("");
+    setFSoThuLy(""); setFNgayThuLy(""); setVuAnTraCuu(null);
+  };
+
+  // THIẾU [TB]: tra cứu vụ án theo Số thụ lý / Ngày thụ lý trong popup Thêm lịch — SRS mục 5–9
+  const handleTraCuuVuAn = () => {
+    if (!fSoThuLy.trim()) { setVuAnTraCuu(null); return; }
+    setVuAnTraCuu(`Vụ án Hình sự — Số thụ lý ${fSoThuLy}${fNgayThuLy ? ` ngày ${fNgayThuLy}` : ""}`);
+  };
+
+  // THIếU [TB]: nút Xóa lịch xét xử + hộp xác nhận — SRS mục 11
+  const handleXoaLich = () => {
+    if (!selectedDay) return;
+    const key = dateKey(selectedDay);
+    setEvents(prev => {
+      const list = prev[key] || [];
+      if (!list.length) return prev;
+      return { ...prev, [key]: list.slice(0, -1) };
+    });
+    setConfirmXoaLich(false);
+    setSelectedDay(null);
   };
 
   // render a single calendar cell
@@ -947,12 +981,38 @@ export function LichXetXuModal({ onClose, onSelectDate }: { onClose: () => void;
             </div>
             <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: TEXT, marginBottom: 8 }}>Tổng số lịch xét xử</div>
-              {([["GĐT/TT", "Giám đốc thẩm / Tái thẩm"], ["ST", "Sơ thẩm"], ["PT", "Phúc thẩm"]] as const).map(([k, label]) => (
-                <div key={k} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, fontSize: 11, color: TEXT }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: LOAI_STYLE[k].color, flexShrink: 0 }} />
-                  {label}
-                </div>
-              ))}
+              {/* THIẾU [TB]: bổ sung loại "Thi hành án" + số đếm theo từng loại — SRS Lên lịch mục 2 */}
+              {([["GĐT/TT", "Giám đốc thẩm / Tái thẩm"], ["ST", "Sơ thẩm"], ["PT", "Phúc thẩm"], ["THA", "Thi hành án"]] as const).map(([k, label]) => {
+                const soLuong = Object.values(events).flat().filter(e => e.loai === k).length;
+                return (
+                  <div key={k} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, marginBottom: 6, fontSize: 11, color: TEXT }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: "50%", background: LOAI_STYLE[k].color, flexShrink: 0 }} />
+                      {label}
+                    </span>
+                    <span style={{ fontWeight: 700, color: MUTED }}>{soLuong}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* THIẾU [TB]: bộ lọc "Người tạo" và "Cảnh báo trùng" — SRS Lên lịch mục 6, 7 */}
+            <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, marginBottom: 8, textTransform: "uppercase" as const }}>Bộ lọc khác</div>
+              <div style={{ marginBottom: 10 }}>
+                <label style={{ fontSize: 10, color: MUTED, display: "block", marginBottom: 3 }}>Người tạo</label>
+                <select value={fNguoiTaoFilter} onChange={e => setFNguoiTaoFilter(e.target.value)}
+                  style={{ width: "100%", padding: "4px 6px", fontSize: 12, border: `1px solid ${BORDER}`, borderRadius: 4, outline: "none", fontFamily: F, appearance: "none", cursor: "pointer" }}>
+                  <option value="">-- Tất cả --</option>
+                  <option value="Nguyễn Thu Hằng">Nguyễn Thu Hằng</option>
+                  <option value="Trần Thị Lan">Trần Thị Lan</option>
+                  <option value="Lê Thị Thu Hiển">Lê Thị Thu Hiển</option>
+                </select>
+              </div>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: TEXT, cursor: "pointer" }}>
+                <input type="checkbox" checked={fCanhBaoTrung} onChange={e => setFCanhBaoTrung(e.target.checked)} style={{ width: 14, height: 14 }} />
+                Chỉ hiện lịch đang trùng
+              </label>
             </div>
           </div>
 
@@ -1029,6 +1089,31 @@ export function LichXetXuModal({ onClose, onSelectDate }: { onClose: () => void;
 
             {/* Body */}
             <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column" as const, gap: 14 }}>
+              {/* THIẾU [TB]: nhóm Thông tin vụ án / tra cứu vụ án — SRS mục 5–9 */}
+              <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, padding: 12, background: BG }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: TEXT, marginBottom: 8 }}>Thông tin vụ án</div>
+                <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={lbl}>Số thụ lý</label>
+                    <input value={fSoThuLy} onChange={e => setFSoThuLy(e.target.value)} placeholder="Nhập số thụ lý" style={inp} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={lbl}>Ngày thụ lý</label>
+                    <input value={fNgayThuLy} onChange={e => setFNgayThuLy(e.target.value)} placeholder="dd/mm/yyyy" style={inp} />
+                  </div>
+                  <button onClick={handleTraCuuVuAn} title="Tra cứu vụ án"
+                    style={{ padding: "7px 10px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontFamily: F, color: TEXT }}>
+                    <Search size={14} /> Tra cứu
+                  </button>
+                </div>
+                {vuAnTraCuu && (
+                  <div style={{ marginTop: 8, fontSize: 12 }}>
+                    <span style={{ color: MUTED }}>Thông tin vụ án tìm được: </span>
+                    <a href="#" onClick={e => e.preventDefault()} style={{ color: RED, fontWeight: 600, textDecoration: "underline" }}>{vuAnTraCuu}</a>
+                  </div>
+                )}
+              </div>
+
               {/* Tiêu đề */}
               <div>
                 <label style={lbl}>Tiêu đề{req}</label>
@@ -1109,20 +1194,50 @@ export function LichXetXuModal({ onClose, onSelectDate }: { onClose: () => void;
             </div>
 
             {/* Footer */}
-            <div style={{ padding: "12px 20px", borderTop: `1px solid ${BORDER}`, display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button onClick={() => setSelectedDay(null)}
-                style={{ padding: "7px 22px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F, color: TEXT }}>
-                Đóng
-              </button>
-              <button onClick={handleTaoMoi}
-                style={{ padding: "7px 22px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F, color: TEXT }}>
-                Tạo mới
-              </button>
-              <button onClick={handleLuu}
-                style={{ padding: "7px 22px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: F }}>
-                Lưu
-              </button>
+            <div style={{ padding: "12px 20px", borderTop: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", gap: 10 }}>
+              {/* THIẾU [TB]: nút Xóa lịch xét xử + hộp xác nhận — SRS mục 11 */}
+              {selectedDay !== null && (events[dateKey(selectedDay)] || []).length > 0 ? (
+                <button onClick={() => setConfirmXoaLich(true)}
+                  style={{ padding: "7px 18px", background: "#fff", border: "1px solid #fecaca", color: "#dc2626", borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F }}>
+                  Xóa lịch xét xử
+                </button>
+              ) : <span />}
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={() => setSelectedDay(null)}
+                  style={{ padding: "7px 22px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F, color: TEXT }}>
+                  Đóng
+                </button>
+                <button onClick={handleTaoMoi}
+                  style={{ padding: "7px 22px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F, color: TEXT }}>
+                  Tạo mới
+                </button>
+                <button onClick={handleLuu}
+                  style={{ padding: "7px 22px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: F }}>
+                  Lưu
+                </button>
+              </div>
             </div>
+
+            {/* THIẾU [TB]: hộp xác nhận xóa lịch xét xử — SRS mục 11 */}
+            {confirmXoaLich && (
+              <div style={{ position: "fixed", inset: 0, zIndex: 1600, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.3)" }}
+                onClick={() => setConfirmXoaLich(false)}>
+                <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: 8, width: 380, padding: 20, boxShadow: "0 8px 48px rgba(0,0,0,0.22)", fontFamily: F }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 8 }}>Xác nhận xóa lịch xét xử</div>
+                  <div style={{ fontSize: 13, color: MUTED, marginBottom: 16 }}>Bạn có chắc chắn muốn xóa lịch xét xử này? Thao tác này không thể hoàn tác.</div>
+                  <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+                    <button onClick={() => setConfirmXoaLich(false)}
+                      style={{ padding: "7px 18px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F, color: TEXT }}>
+                      Hủy
+                    </button>
+                    <button onClick={handleXoaLich}
+                      style={{ padding: "7px 18px", background: "#dc2626", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: F }}>
+                      Xóa
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -4005,12 +4120,13 @@ function HDXXDetailView({
                     <colgroup>
                       <col style={{ width: 32 }} />
                       <col style={{ width: 36 }} />
+                      <col style={{ width: "10%" }} />
+                      <col style={{ width: "9%" }} />
+                      <col style={{ width: "15%" }} />
+                      <col style={{ width: "17%" }} />
                       <col style={{ width: "11%" }} />
-                      <col style={{ width: "16%" }} />
-                      <col style={{ width: "18%" }} />
-                      <col style={{ width: "12%" }} />
-                      <col style={{ width: "18%" }} />
-                      <col style={{ width: "11%" }} />
+                      <col style={{ width: "17%" }} />
+                      <col style={{ width: "10%" }} />
                       <col style={{ width: 44 }} />
                     </colgroup>
                     <thead>
@@ -4018,7 +4134,7 @@ function HDXXDetailView({
                         <th style={TH}>
                           <input type="checkbox" style={{ accentColor: RED }} />
                         </th>
-                        {["STT", "Số & Ngày thụ lý XX", thThongTin, thDuongSu, "Phân công TTV/TP", "Chủ tọa & HĐXX", "Trạng thái", "Thao tác"].map(
+                        {["STT", "Số & Ngày thụ lý XX", "Kháng nghị", thThongTin, thDuongSu, "Phân công TTV/TP", "Chủ tọa & HĐXX", "Trạng thái", "Thao tác"].map(
                           h => (
                             <th key={h} style={{ ...TH_STYLE, fontSize: 11, padding: "9px 12px" }}>
                               {h}
@@ -4048,6 +4164,17 @@ function HDXXDetailView({
                           <td style={{ ...TD_STYLE, fontSize: 12, padding: "12px", verticalAlign: "top" }}>
                             <div style={{ fontWeight: 700, color: TEXT, fontFamily: F }}>Số: {r.soTL}</div>
                             <div style={{ color: MUTED, fontFamily: F, marginTop: 2 }}>Ngày: {r.ngayTL}</div>
+                          </td>
+                          {/* THIẾU [TB]: cột Kháng nghị — SRS 2.2.B.6 */}
+                          <td style={{ ...TD_STYLE, fontSize: 12, padding: "12px", verticalAlign: "top" }}>
+                            {r.soKhangNghi ? (
+                              <>
+                                <div style={{ fontFamily: F, color: TEXT }}>Số: {r.soKhangNghi}</div>
+                                <div style={{ color: MUTED, fontFamily: F, marginTop: 2 }}>Ngày: {r.ngayKhangNghi || "-"}</div>
+                              </>
+                            ) : (
+                              <span style={{ color: MUTED, fontFamily: F }}>–</span>
+                            )}
                           </td>
                           <td style={{ ...TD_STYLE, fontSize: 12, padding: "12px", verticalAlign: "top" }}>
                             <div style={{ fontFamily: F, color: TEXT }}>Số BA: {formatSoBA(r.soBA)}</div>
@@ -4492,6 +4619,21 @@ function FilterPanel({ open, onToggle, userRole }: { open: boolean; onToggle: ()
               {col("Thẩm phán", <select style={inSt}><option value="">Vui lòng chọn</option><option>Trần Thị Lan</option><option>Lê Hoàng Nam</option></select>)}
               {col("Quá hạn xét xử", <select style={inSt}><option value="">– Tất cả –</option><option>Có</option><option>Không</option></select>)}
               {col("Hoãn thi hành án", <select style={inSt}><option value="">– Tất cả –</option><option>Có</option><option>Không</option></select>)}
+            </div>
+            {/* THIẾU [TB]: bộ lọc riêng của Danh sách phân công HĐXX — SRS 2.1.A */}
+            <div style={{ borderTop: `1px dashed ${BORDER}`, paddingTop: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, marginBottom: 8, textTransform: "uppercase" as const }}>Bộ lọc Danh sách phân công HĐXX</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 12 }}>
+                {col("Số danh sách", <input placeholder="Nhập số danh sách" style={inSt} />)}
+                {rangeRow("Ngày danh sách")}
+                {col("Đơn vị tạo", <select style={inSt}><option value="">– Tất cả –</option><option>Vụ Giám đốc, Kiểm tra I</option><option>Vụ Giám đốc, Kiểm tra II</option></select>)}
+                {col("Trạng thái", <select style={inSt}><option value="">– Tất cả –</option><option>Chờ ký duyệt</option><option>Đã ký duyệt</option></select>)}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                {col("Thẩm phán chủ tọa", <select style={inSt}><option value="">Vui lòng chọn</option><option>Nguyễn Biên Thùy</option><option>Trần Hồng Hà</option></select>)}
+                {col("Thẩm phán thành viên", <select style={inSt}><option value="">Vui lòng chọn</option><option>Trịnh Thị Minh Trang</option><option>Nguyễn Như Thắng</option></select>)}
+                {col("Hội đồng xét xử", <select style={inSt}><option value="">– Tất cả –</option><option>Hội đồng 5 thẩm phán</option><option>Hội đồng toàn thể</option></select>)}
+              </div>
             </div>
           </>
         )}
