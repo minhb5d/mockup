@@ -796,14 +796,12 @@ export function TabThongTin({ detail, userRole }: { detail?: VuAnDetailData; use
             <col style={{ width: "22%" }} />
             <col style={{ width: "8%" }} />
             <col style={{ width: "8%" }} />
-            <col style={{ width: "9%" }} />
-            <col style={{ width: "9%" }} />
+            <col style={{ width: "30%" }} />
             <col style={{ width: "22%" }} />
-            <col style={{ width: "18%" }} />
           </colgroup>
           <thead>
             <tr>
-              {["STT", "VỤ ÁN", "LOẠI BA/QĐ", "GIAI ĐOẠN", "SỐ BẢN ÁN", "NGÀY RA BẢN ÁN", "TÒA ÁN RA BẢN ÁN", "THẨM PHÁN XÉT XỬ"].map(h => (
+              {["STT", "VỤ ÁN", "LOẠI BA/QĐ", "GIAI ĐOẠN", "THÔNG TIN BẢN ÁN/QUYẾT ĐỊNH", "THẨM PHÁN XÉT XỬ"].map(h => (
                 <th key={h} style={TH_STYLE}>{h}</th>
               ))}
             </tr>
@@ -815,9 +813,13 @@ export function TabThongTin({ detail, userRole }: { detail?: VuAnDetailData; use
                 <td style={{ ...TD_STYLE, fontSize: 11, color: "#2563eb" }}>{r.vuAn}</td>
                 <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT, textAlign: "center" }}>{r.loai}</td>
                 <td style={{ ...TD_STYLE, fontSize: 11, textAlign: "center" }}>{r.giai}</td>
-                <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT, textAlign: "center" }}>{r.soBA}</td>
-                <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT, textAlign: "center" }}>{r.ngayBA}</td>
-                <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT }}>{r.toa}</td>
+                <td style={TD_STYLE}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 1, fontSize: 11, fontFamily: F }}>
+                    <span style={{ color: TEXT, fontWeight: 600 }}>Số: {r.soBA}</span>
+                    <span style={{ color: MUTED }}>Ngày: {r.ngayBA}</span>
+                    <span style={{ color: MUTED }}>Tòa: {r.toa}</span>
+                  </div>
+                </td>
                 <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT }}>
                   {r.thamPhans.reduce<React.ReactNode[]>((acc, tp, i) => {
                     if (i % 2 === 0) {

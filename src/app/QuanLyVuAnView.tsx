@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
   Search, Eye, ChevronDown, ChevronUp, ChevronRight, RotateCcw, X, Save, Printer,
-  FileText, Send, Archive, RefreshCw, Download, Trash2,
+  FileText, Send, Archive, RefreshCw, Download, Trash2, Pencil,
 } from "lucide-react";
 import { type LoaiAn } from "./data";
 import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge, TaiKhoanPhanQuyenBar, type UserRoleType } from "./shared";
@@ -1277,10 +1277,10 @@ export default function QuanLyVuAnView({
                       <td style={{ ...TD_STYLE, textAlign: "center" }}>
                         <button
                           onClick={() => onSelectVuAn(group.id)}
-                          style={{ background: "none", border: "none", cursor: "pointer", padding: 4, borderRadius: 4, fontSize: 18, color: MUTED, lineHeight: 1 }}
-                          title="Tùy chọn"
+                          style={{ background: "none", border: "none", cursor: "pointer", padding: 4, borderRadius: 4, lineHeight: 1 }}
+                          title="Xem chi tiết"
                         >
-                          ⋮
+                          <Eye size={15} color={MUTED} />
                         </button>
                       </td>
                     </tr>
@@ -1291,7 +1291,7 @@ export default function QuanLyVuAnView({
         </table>
 
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", borderTop: `1px solid ${BORDER}`, background: "#fff", fontSize: 12, color: MUTED, fontFamily: F }}>
-          <span>Hiển thị 1–{filteredGroups.reduce((s, g) => s + g.rows.length, 0)} trong tổng {filteredGroups.reduce((s, g) => s + g.rows.length, 0)} bản ghi</span>
+          <span>Hiển thị 1–{filteredGroups.length} trong tổng {filteredGroups.length} vụ án</span>
           <div style={{ flex: 1 }} />
           <button style={paginBtn} disabled>‹</button>
           <button style={{ ...paginBtn, background: RED, color: "#fff", border: `1px solid ${RED}` }}>1</button>
@@ -1713,6 +1713,7 @@ function TaoPhieuModal({ onClose }: { onClose: () => void }) {
                 {lbl("Loại phiếu", true)}
                 <select value={loaiPhieu} onChange={e => setLoaiPhieu(e.target.value)} style={selSt}>
                   <option value="">Chọn loại phiếu</option>
+                  <option value="Phiếu rút hồ sơ">Phiếu rút hồ sơ</option>
                   <option value="Phiếu mượn">Phiếu mượn</option>
                   <option value="Phiếu trả">Phiếu trả</option>
                   <option value="Phiếu chuyển">Phiếu chuyển</option>
@@ -1735,13 +1736,13 @@ function TaoPhieuModal({ onClose }: { onClose: () => void }) {
                 </div>
                 <div>
                   {lbl("Số phiếu")}
-                  <input value={soPhieu} onChange={e => setSoPhieu(e.target.value)} placeholder="Nhập số quyết định" style={inSt} />
+                  <input value={soPhieu} readOnly placeholder="Hệ thống cấp khi bấm Lấy số" style={{ ...inSt, background: "#f3f4f6", cursor: "not-allowed" }} />
                 </div>
                 <div>
                   {lbl("Người ký ban hành", true)}
                   <select style={selSt}><option value="">Chọn người ký</option><option>Nguyễn Văn A</option></select>
                 </div>
-                {loaiPhieu !== "Công văn XM, BS" && loaiPhieu !== "Công văn khác" && (
+                {["Phiếu trả", "Phiếu chuyển", "Nhận hồ sơ"].includes(loaiPhieu) && (
                   <div>
                     {lbl("Số bút lục")}
                     <input placeholder="Nhập số bút lục" style={inSt} />
@@ -1773,6 +1774,7 @@ function TaoPhieuModal({ onClose }: { onClose: () => void }) {
               </div>
             </div>
 
+            {["Phiếu rút hồ sơ", "Phiếu trả", "Phiếu chuyển", "Công văn XM, BS", "Công văn khác"].includes(loaiPhieu) && (
             <div style={{ marginBottom: 16 }}>
               <div style={{ display: "flex", alignItems: "center", marginBottom: 10 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: TEXT, fontFamily: F, flex: 1 }}>
@@ -1846,6 +1848,7 @@ function TaoPhieuModal({ onClose }: { onClose: () => void }) {
                 </tbody>
               </table>
             </div>
+            )}
 
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
               <div onClick={() => setDinhKem(v => !v)} style={{ width: 36, height: 20, borderRadius: 10, background: diinhKem ? "#0f766e" : "#d1d5db", cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
@@ -1871,6 +1874,16 @@ function TaoPhieuModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+// Trạng thái phiếu theo SRS: Đang tạo / Chờ ký / Đã có hiệu lực / Trả lại
+const TRANG_THAI_PHIEU: Record<string, string> = {
+  "Đã ký": "Đã có hiệu lực",
+  "Chờ ký": "Chờ ký",
+  "Đang tạo": "Đang tạo",
+  "Trả lại": "Trả lại",
+};
+// Sửa và Xóa chỉ cho phép khi phiếu chưa trình ký
+const CHUA_TRINH_KY = (tt: string) => tt !== "Chờ ký" && tt !== "Đã ký";
+
 function TabMuonTraHoSo({ detail }: { detail: VuAnDetailData }) {
   const [showModal, setShowModal] = useState(false);
   const muonTraHoSo = detail?.muonTraHoSo || [];
@@ -1893,30 +1906,35 @@ function TabMuonTraHoSo({ detail }: { detail: VuAnDetailData }) {
         </div>
         <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
           <colgroup>
-            <col style={{ width: 40 }} /><col style={{ width: "9%" }} /><col style={{ width: "7%" }} />
-            <col style={{ width: "7%" }} /><col style={{ width: "9%" }} /><col style={{ width: "8%" }} />
-            <col style={{ width: "13%" }} /><col style={{ width: "16%" }} /><col style={{ width: "14%" }} />
-            <col style={{ width: "8%" }} /><col style={{ width: 56 }} />
+            <col style={{ width: 40 }} /><col style={{ width: "12%" }} /><col style={{ width: "16%" }} />
+            <col style={{ width: "10%" }} /><col style={{ width: "14%" }} /><col style={{ width: "16%" }} />
+            <col style={{ width: "14%" }} /><col style={{ width: "10%" }} /><col style={{ width: 80 }} />
           </colgroup>
           <thead>
             <tr>
-              {["STT", "Loại phiếu", "Số phiếu", "Số bút lục", "Ngày ghi trên phiếu", "Ngày tạo", "Cán bộ", "Đơn vị giữ/chuyển hồ sơ", "Người ký duyệt", "Ghi chú", "Thao tác"].map((h) => (
+              {["STT", "Loại phiếu", "Thông tin phiếu", "Ngày ghi trên phiếu", "Người thao tác", "Đơn vị giữ/chuyển hồ sơ", "Người ký", "Ghi chú", "Thao tác"].map((h) => (
                 <th key={h} style={TH_STYLE}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {muonTraHoSo.length === 0 && (
-              <tr><td colSpan={11} style={{ ...TD_STYLE, textAlign: "center", color: MUTED, padding: 32 }}>Không có dữ liệu</td></tr>
+              <tr><td colSpan={9} style={{ ...TD_STYLE, textAlign: "center", color: MUTED, padding: 32 }}>Không có dữ liệu</td></tr>
             )}
             {muonTraHoSo.map((r, idx) => (
               <tr key={r.stt} style={{ background: idx % 2 === 0 ? "#fff" : "#fafafa" }}>
                 <td style={{ ...TD_STYLE, textAlign: "center", color: MUTED, fontSize: 12 }}>{r.stt}</td>
-                <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT }}>{r.loaiPhieu}</td>
-                <td style={{ ...TD_STYLE, fontSize: 12, color: MUTED, textAlign: "center" }}>{r.soPhieu}</td>
-                <td style={{ ...TD_STYLE, fontSize: 12, color: MUTED, textAlign: "center" }}>{r.soBuLuc}</td>
+                <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT }}>
+                  {r.loaiPhieu} {muonTraHoSo.slice(0, idx + 1).filter(x => x.loaiPhieu === r.loaiPhieu).length}
+                </td>
+                <td style={TD_STYLE}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 1, fontSize: 11, fontFamily: F }}>
+                    <span style={{ color: TEXT, fontWeight: 600 }}>Số phiếu: {r.soPhieu}</span>
+                    <span style={{ color: MUTED }}>Ngày tạo: {r.ngayTao}</span>
+                    <span style={{ color: MUTED }}>Số bút lục: {r.soBuLuc}</span>
+                  </div>
+                </td>
                 <td style={{ ...TD_STYLE, fontSize: 12, color: MUTED, textAlign: "center" }}>{r.ngayGhiPhieu}</td>
-                <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT, textAlign: "center" }}>{r.ngayTao}</td>
                 <td style={TD_STYLE}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
                     <span style={{ fontSize: 12, color: TEXT, fontFamily: F }}>{r.canBo}</span>
@@ -1925,17 +1943,25 @@ function TabMuonTraHoSo({ detail }: { detail: VuAnDetailData }) {
                 </td>
                 <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT }}>{r.donVi}</td>
                 <td style={{ ...TD_STYLE, textAlign: "center" }}>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
-                    <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>{r.nguoiKyDuyet}</span>
-                    <Badge color="#92400e" bg="#fef3c7">{r.trangThaiKy}</Badge>
-                  </div>
+                  {r.loaiPhieu === "Nhận hồ sơ" ? (
+                    <span style={{ color: MUTED }}>-</span>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
+                      <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>{r.nguoiKyDuyet}</span>
+                      <Badge color="#92400e" bg="#fef3c7">{TRANG_THAI_PHIEU[r.trangThaiKy] || r.trangThaiKy}</Badge>
+                    </div>
+                  )}
                 </td>
                 <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT }}>{r.ghiChu}</td>
                 <td style={{ ...TD_STYLE, textAlign: "center" }}>
                   <div style={{ display: "flex", gap: 2, justifyContent: "center" }}>
-                    <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Sửa"><Eye size={13} color={MUTED} /></button>
+                    {CHUA_TRINH_KY(r.trangThaiKy) && (
+                      <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Sửa"><Pencil size={13} color={MUTED} /></button>
+                    )}
                     <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="In"><Printer size={13} color={MUTED} /></button>
-                    <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Xóa"><X size={13} color="#ef4444" /></button>
+                    {CHUA_TRINH_KY(r.trangThaiKy) && (
+                      <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Xóa"><X size={13} color="#ef4444" /></button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -1979,27 +2005,28 @@ function TabPhanCong({ detail }: { detail: VuAnDetailData }) {
             <colgroup>
               <col style={{ width: 40 }} />
               <col style={{ width: "13%" }} />
-              <col style={{ width: "15%" }} />
-              <col style={{ width: "9%" }} />
-              <col style={{ width: "11%" }} />
-              <col style={{ width: "22%" }} />
+              <col style={{ width: "20%" }} />
+              <col style={{ width: "12%" }} />
+              <col style={{ width: "24%" }} />
               <col style={{ width: "26%" }} />
             </colgroup>
             <thead>
               <tr>
-                {["STT", "GIAI ĐOẠN", "HỌ VÀ TÊN THẨM PHÁN", "CHỨC DANH", "NGÀY PHÂN CÔNG", "NGƯỜI THAO TÁC", "GHI CHÚ"].map(h => (
+                {["STT", "GIAI ĐOẠN", "HỌ VÀ TÊN THẨM PHÁN", "NGÀY PHÂN CÔNG", "NGƯỜI THAO TÁC", "GHI CHÚ"].map(h => (
                   <th key={h} style={TH_STYLE}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {thamPhanRows.map((r, idx) => (
+              {[...thamPhanRows].sort((a, b) => b.stt - a.stt).map((r, idx) => (
                 <tr key={r.stt} style={{ background: idx % 2 === 0 ? "#fff" : "#fafafa" }}>
                   <td style={{ ...TD_STYLE, textAlign: "center", color: MUTED, fontSize: 12 }}>{r.stt}</td>
                   <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT }}>{r.giaiDoan}</td>
-                  <td style={{ ...TD_STYLE, fontSize: 11, fontWeight: 600, color: TEXT }}>{r.hoTen}</td>
-                  <td style={{ ...TD_STYLE, fontSize: 11, textAlign: "center" }}>
-                    <Badge color="#1e40af" bg="#dbeafe">{r.chucDanh}</Badge>
+                  <td style={TD_STYLE}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 1, fontFamily: F }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: TEXT }}>{r.hoTen}</span>
+                      <span style={{ fontSize: 10, color: MUTED }}>{r.chucDanh}</span>
+                    </div>
                   </td>
                   <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT, textAlign: "center" }}>{r.ngayPC}</td>
                   <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT }}>
@@ -2021,30 +2048,36 @@ function TabPhanCong({ detail }: { detail: VuAnDetailData }) {
             <colgroup>
               <col style={{ width: 40 }} />
               <col style={{ width: "12%" }} />
-              <col style={{ width: "13%" }} />
-              <col style={{ width: "12%" }} />
-              <col style={{ width: "12%" }} />
-              <col style={{ width: "13%" }} />
-              <col style={{ width: "13%" }} />
-              <col style={{ width: "12%" }} />
+              <col style={{ width: "20%" }} />
+              <col style={{ width: "15%" }} />
+              <col style={{ width: "20%" }} />
+              <col style={{ width: "15%" }} />
             </colgroup>
             <thead>
               <tr>
-                {["STT", "GIAI ĐOẠN", "HỌ VÀ TÊN TTV", "CHỨC DANH TTV", "NGÀY PHÂN CÔNG TTV", "HỌ VÀ TÊN LĐ", "TÊN CHỨC VỤ LĐ", "NGÀY PHÂN CÔNG LĐ"].map(h => (
+                {["STT", "GIAI ĐOẠN", "HỌ VÀ TÊN TTV", "NGÀY PHÂN CÔNG TTV", "HỌ VÀ TÊN LÃNH ĐẠO", "NGÀY PHÂN CÔNG LĐ"].map(h => (
                   <th key={h} style={TH_STYLE}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {ttvRows.map((r, idx) => (
+              {[...ttvRows].sort((a, b) => b.stt - a.stt).map((r, idx) => (
                 <tr key={r.stt} style={{ background: idx % 2 === 0 ? "#fff" : "#fafafa" }}>
                   <td style={{ ...TD_STYLE, textAlign: "center", color: MUTED, fontSize: 12 }}>{r.stt}</td>
                   <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT }}>{r.giaiDoan}</td>
-                  <td style={{ ...TD_STYLE, fontSize: 11, fontWeight: 600, color: TEXT }}>{r.hoTenTTV}</td>
-                  <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT }}>{r.chucDanhTTV}</td>
+                  <td style={TD_STYLE}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 1, fontFamily: F }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: TEXT }}>{r.hoTenTTV}</span>
+                      <span style={{ fontSize: 10, color: MUTED }}>{r.chucDanhTTV}</span>
+                    </div>
+                  </td>
                   <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT, textAlign: "center" }}>{r.ngayPCTTV}</td>
-                  <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT }}>{r.hoTenLD}</td>
-                  <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT }}>{r.chucVuLD}</td>
+                  <td style={TD_STYLE}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 1, fontFamily: F }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: TEXT }}>{r.hoTenLD}</span>
+                      <span style={{ fontSize: 10, color: MUTED }}>{r.chucVuLD}</span>
+                    </div>
+                  </td>
                   <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT, textAlign: "center" }}>{r.ngayPCLD}</td>
                 </tr>
               ))}
@@ -2057,6 +2090,8 @@ function TabPhanCong({ detail }: { detail: VuAnDetailData }) {
 }
 
 function TabGiaiQuyetVB({ detail }: { detail?: VuAnDetailData }) {
+  // Án hình sự: SRS đổi tên thành "Quyết định tạm đình chỉ thi hành án" và bỏ checkbox
+  const isHinhSuDetail = (detail?.loaiAn || "").toLowerCase().includes("hình sự");
   const [showThemKetQua, setShowThemKetQua] = useState(false);
   const [showThemHoan, setShowThemHoan] = useState(false);
   const [showTaiLieuHoSoModal, setShowTaiLieuHoSoModal] = useState(false);
@@ -2191,15 +2226,21 @@ function TabGiaiQuyetVB({ detail }: { detail?: VuAnDetailData }) {
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, flexWrap: "wrap", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: TEXT, cursor: "pointer", fontFamily: F }}>
-                <input
-                  type="checkbox"
-                  checked={isHoanChecked}
-                  onChange={e => setIsHoanChecked(e.target.checked)}
-                  style={{ accentColor: "#800000", cursor: "pointer" }}
-                />
-                <span>Quyết định hoãn thi hành án</span>
-              </label>
+              {isHinhSuDetail ? (
+                <span style={{ fontSize: 13, fontWeight: 600, color: TEXT, fontFamily: F }}>
+                  Quyết định tạm đình chỉ thi hành án
+                </span>
+              ) : (
+                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: TEXT, cursor: "pointer", fontFamily: F }}>
+                  <input
+                    type="checkbox"
+                    checked={isHoanChecked}
+                    onChange={e => setIsHoanChecked(e.target.checked)}
+                    style={{ accentColor: "#800000", cursor: "pointer" }}
+                  />
+                  <span>Quyết định hoãn thi hành án</span>
+                </label>
+              )}
               <div style={{ position: "relative", width: 220 }}>
                 <input
                   type="text"

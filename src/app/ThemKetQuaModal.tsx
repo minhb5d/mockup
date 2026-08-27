@@ -128,7 +128,7 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
       "Lê Văn Hùng (Bị cáo)",
     ].filter(Boolean))
   ) as string[];
-  const [selectedBiCao, setSelectedBiCao] = useState(biCaoOptions[0] || "Phan Văn Thành (Bị cáo đầu vụ)");
+  const [selectedBiCao, setSelectedBiCao] = useState<string[]>(biCaoOptions.length ? [biCaoOptions[0]] : []);
 
   const DEFAULT_HOSO_DATA = [
     {
@@ -614,14 +614,14 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                     <div>
                       <label style={lblSt}>
-                        <span style={{ color: "#dc2626", marginRight: 3 }}>*</span>Chọn Bị cáo
+                        <span style={{ color: "#dc2626", marginRight: 3 }}>*</span>Chọn Bị cáo (giữ Ctrl để chọn nhiều)
                       </label>
                       <select
+                        multiple
                         value={selectedBiCao}
-                        onChange={e => setSelectedBiCao(e.target.value)}
-                        style={{ ...inSt, cursor: "pointer" }}
+                        onChange={e => setSelectedBiCao(Array.from(e.target.selectedOptions, o => o.value))}
+                        style={{ ...inSt, cursor: "pointer", height: 92 }}
                       >
-                        <option value="">-- Chọn bị cáo --</option>
                         {biCaoOptions.map(bc => (
                           <option key={bc} value={bc}>{bc}</option>
                         ))}

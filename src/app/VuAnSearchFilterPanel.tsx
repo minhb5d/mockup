@@ -90,6 +90,7 @@ export interface VuAnFilterValues {
 
   rutKhangNghi: string;
   ngayRutKhangNghi: string;
+  ngayRutKhangNghiDen: string;
 }
 
 export const INITIAL_FILTER_VALUES: VuAnFilterValues = {
@@ -123,6 +124,7 @@ export const INITIAL_FILTER_VALUES: VuAnFilterValues = {
   ngayTuyenAn: "",
   rutKhangNghi: "",
   ngayRutKhangNghi: "",
+  ngayRutKhangNghiDen: "",
 };
 
 export const FILTER_LABELS: Record<keyof VuAnFilterValues, string> = {
@@ -155,7 +157,8 @@ export const FILTER_LABELS: Record<keyof VuAnFilterValues, string> = {
   ketQuaXetXu: "Kết quả xét xử",
   ngayTuyenAn: "Ngày tuyên án",
   rutKhangNghi: "Rút kháng nghị",
-  ngayRutKhangNghi: "Ngày rút KN",
+  ngayRutKhangNghi: "Rút KN từ ngày",
+  ngayRutKhangNghiDen: "Rút KN đến ngày",
 };
 
 export function VuAnSearchFilterPanel({
@@ -545,8 +548,11 @@ export function VuAnSearchFilterPanel({
               </select>
             </div>
             <div>
-              <label style={labelStyle}>Ngày rút kháng nghị</label>
-              <input placeholder="dd/mm/yyyy" value={filters.ngayRutKhangNghi} onChange={(e) => handleChange("ngayRutKhangNghi", e.target.value)} style={inputStyle} />
+              <label style={labelStyle}>Rút kháng nghị từ ngày – Đến ngày</label>
+              <div style={{ display: "flex", gap: 6 }}>
+                <input placeholder="Từ ngày" value={filters.ngayRutKhangNghi} onChange={(e) => handleChange("ngayRutKhangNghi", e.target.value)} style={inputStyle} />
+                <input placeholder="Đến ngày" value={filters.ngayRutKhangNghiDen} onChange={(e) => handleChange("ngayRutKhangNghiDen", e.target.value)} style={inputStyle} />
+              </div>
             </div>
           </div>
         )}
