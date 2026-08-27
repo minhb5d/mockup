@@ -1376,6 +1376,7 @@ function ThemBieuMauModal({
   const [noiNhanList, setNoiNhanList] = useState<NoiNhanItem[]>(DEFAULT_NOI_NHAN);
   const [addingNoiNhan, setAddingNoiNhan] = useState(false);
   const [newLoaiNN, setNewLoaiNN] = useState("Viện kiểm sát");
+  const [newGhiChu, setNewGhiChu] = useState("");
   const [newChiTiet, setNewChiTiet] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [wordZoom, setWordZoom] = useState(100);

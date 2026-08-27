@@ -46,6 +46,7 @@ export interface VuAnRow {
   kqgqDon?: { loai: string; so: string; ngay: string };
   // TH-064: địa chỉ người đứng đơn
   diaChiNDD?: string;
+  extraTags?: string[];
 }
 
 export interface VuAnGroup {
@@ -367,6 +368,9 @@ export interface VuAnDetailData {
   }>;
   thamPhan?: string;
   thamTraVien?: string;
+  id?: string;
+  nguyenDon?: string;
+  biDon?: string;
   isKhieuNai?: boolean;
   entityWord?: string;
   moduleLabel?: string;

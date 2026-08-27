@@ -740,10 +740,6 @@ export function TabThongTin({ detail, userRole, onRequiredChange }: { detail?: V
   const [denNghiOpen, setDenNghiOpen] = useState(mock.denNghiGDT.hasData);
   const [quanHePL, setQuanHePL] = useState(mock.thongTinThem.quanHePL);
   const [quanHePLThongKe, setQuanHePLThongKe] = useState(mock.thongTinThem.quanHePLThongKe);
-  // TH-090: báo cho màn chi tiết biết thông tin bắt buộc đã đủ hay chưa
-  useEffect(() => {
-    onRequiredChange?.(Boolean(quanHePL && thuTucGiaiQuyet));
-  }, [quanHePL, thuTucGiaiQuyet]);
 
   // Khi chọn Loại án khác, đồng bộ lại state theo mock tương ứng
   useEffect(() => {
@@ -759,6 +755,11 @@ export function TabThongTin({ detail, userRole, onRequiredChange }: { detail?: V
   const displayThuTuc = detail?.namGiaiQuyet || mock.thongTinChung.thuTucGiaiQuyet;
   const [thuTucGiaiQuyet, setThuTucGiaiQuyet] = useState(displayThuTuc);
   const [soNgayBA, setSoNgayBA] = useState("");
+
+  // TH-090: báo cho màn chi tiết biết thông tin bắt buộc đã đủ hay chưa
+  useEffect(() => {
+    onRequiredChange?.(Boolean(quanHePL && thuTucGiaiQuyet));
+  }, [quanHePL, thuTucGiaiQuyet]);
   const displaySoNgayBA = detail?.soNgayBanAn || mock.thongTinChung.soNgayBanAn;
   const displayToa = detail?.toaXetXu || mock.thongTinChung.toaRaBanAn;
 

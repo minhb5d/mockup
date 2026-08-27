@@ -17,6 +17,7 @@ import {
   TaiKhoanPhanQuyenBar,
 } from "./shared";
 import { formatSoBA, isVu234, getQuanHePhapLuat, getPartyLabels } from "./AppHelpers";
+import type { UserRoleType } from "./shared";
 import {
   KHIEU_NAI_LIST,
   filterVuAnListByRole,
