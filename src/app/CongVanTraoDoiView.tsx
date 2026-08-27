@@ -521,11 +521,6 @@ export function XemBieuMauCongVanModal({ onClose }: { onClose: () => void }) {
 
 // ── TaoCongVanModal ───────────────────────────────────────────────────────────
 
-const NOI_NHAN_OPTIONS: Record<"toa-an" | "vien-kiem-sat", string[]> = {
-  "toa-an": ["Tòa án nhân dân tối cao", "Tòa án nhân dân cấp cao tại Hà Nội", "Tòa án nhân dân cấp cao tại Đà Nẵng", "Tòa án nhân dân cấp cao tại TP. Hồ Chí Minh", "Tòa án nhân dân tỉnh Tuyên Quang", "Tòa án nhân dân TP. Hà Nội"],
-  "vien-kiem-sat": ["Viện kiểm sát nhân dân tối cao", "Viện kiểm sát nhân dân cấp cao tại Hà Nội", "Viện kiểm sát nhân dân cấp cao tại Đà Nẵng", "Viện kiểm sát nhân dân cấp cao tại TP. Hồ Chí Minh"],
-};
-
 export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
   const [loaiCV, setLoaiCV] = useState<"den" | "di">("den");
   const [noiGuiLoai, setNoiGuiLoai] = useState("");

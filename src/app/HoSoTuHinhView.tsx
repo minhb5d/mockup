@@ -12,81 +12,7 @@ const HS_LIST = [
   { id: "hs-4", soBA: "12/2024/HS-PT", ngayBA: "12/02/2024", toa: "Tòa án nhân dân cấp cao tại Hà Nội", giaiDoan: "Phúc thẩm", tenVuAn: "Chu Văn An giết người", maVuAn: "VA26-000035", soBiAn: "04", trangThai: "da-co-kqgq", vuAnBadge: "" },
 ];
 
-export const DON_AN_GIAM_LIST = [
-  {
-    id: "ag-1",
-    soDon: "ĐAG-2026/001",
-    ngayNhan: "12/05/2026",
-    biAn: "Chu Văn An",
-    namSinh: "1988",
-    cmnd: "079088001234",
-    diaChi: "Huyện Đức Hòa, Tỉnh Long An",
-    soBA: "125/2023/HS-ST",
-    ngayBA: "15/10/2023",
-    toiDanh: "Tội giết người và cướp tài sản",
-    toaXu: "Tòa án nhân dân tỉnh Long An",
-    trangThai: "dang-xem-xet",
-    lanGui: "Lần 1",
-    ttv: "Nguyễn Thị Thùy Liên",
-    lanhDao: "Nguyễn Văn Hiền",
-    lyDo: "Bị án có hoàn cảnh gia đình đặc biệt khó khăn, đã bồi thường khắc phục toàn bộ thiệt hại và gia đình có công với cách mạng.",
-  },
-  {
-    id: "ag-2",
-    soDon: "ĐAG-2026/002",
-    ngayNhan: "20/06/2026",
-    biAn: "Nguyễn Văn Tuấn",
-    namSinh: "1992",
-    cmnd: "001092008876",
-    diaChi: "Huyện Mê Linh, TP Hà Nội",
-    soBA: "42/2024/HS-PT",
-    ngayBA: "20/01/2024",
-    toiDanh: "Tội vận chuyển trái phép chất ma túy",
-    toaXu: "TAND Cấp cao tại Hà Nội",
-    trangThai: "trinh-chu-tich-nuoc",
-    lanGui: "Lần 1",
-    ttv: "Lý Thái Phúc",
-    lanhDao: "Lê Thị Bình Ngọc",
-    lyDo: "Bị án thành khẩn khai báo, lập công chuộc tội giúp cơ quan điều tra triệt phá đường dây ma túy lớn.",
-  },
-  {
-    id: "ag-3",
-    soDon: "ĐAG-2026/003",
-    ngayNhan: "01/07/2026",
-    biAn: "Hoàng Văn Bảy",
-    namSinh: "1985",
-    cmnd: "022085009911",
-    diaChi: "TP Hạ Long, Tỉnh Quảng Ninh",
-    soBA: "18/2024/HS-ST",
-    ngayBA: "08/03/2024",
-    toiDanh: "Tội giết người do vượt quá giới hạn phòng vệ chính đáng",
-    toaXu: "Tòa án nhân dân tỉnh Quảng Ninh",
-    trangThai: "da-co-quyet-dinh",
-    lanGui: "Lần 2",
-    ttv: "Phạm Thị Bích Ngọc",
-    lanhDao: "Nguyễn Như Thắng",
-    lyDo: "Có tình tiết mới giảm nhẹ đặc biệt theo quy định tại điểm b khoản 1 Điều 51 Bộ luật Hình sự.",
-  },
-];
-
 export type TuHinhTabId = "don-xin-an-giam" | "ho-so-tu-hinh";
-
-function AnGiamTrangThaiChip({ status }: { status: string }) {
-  const map: Record<string, { label: string; dot: string; bg: string; color: string }> = {
-    "dang-xem-xet": { label: "Đang xem xét", dot: "#3b82f6", bg: "#eff6ff", color: "#1d4ed8" },
-    "trinh-chu-tich-nuoc": { label: "Đã trình CTN", dot: "#f59e0b", bg: "#fffbeb", color: "#92400e" },
-    "da-co-quyet-dinh": { label: "Đã có QĐ ân giảm", dot: "#16a34a", bg: "#f0fdf4", color: "#065f46" },
-  };
-  const s = map[status] ?? { label: "Đang xử lý", dot: "#9ca3af", bg: "#f3f4f6", color: "#374151" };
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 14, fontSize: 11, fontWeight: 500, fontFamily: F, background: s.bg, color: s.color, whiteSpace: "nowrap" }}>
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: s.dot, flexShrink: 0 }} />
-      {s.label}
-    </span>
-  );
-}
-
-const PHAN_CONG_HS = { ttv: "Nguyễn Thị Thùy Liên", tp: "Phạm Thị Bích Ngọc", ld: "Nguyễn Văn Hiền" };
 
 function HSTrangThaiChip({ status }: { status: string }) {
   const map: Record<string, { label: string; dot: string; bg: string; color: string }> = {
@@ -598,11 +524,10 @@ function HSTHTabPhanCong() {
           <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
             <colgroup>
               <col style={{ width: 40 }} />
+              <col style={{ width: "20%" }} />
               <col style={{ width: "13%" }} />
-              <col style={{ width: "15%" }} />
-              <col style={{ width: "9%" }} />
-              <col style={{ width: "11%" }} />
-              <col style={{ width: "22%" }} />
+              <col style={{ width: "13%" }} />
+              <col style={{ width: "24%" }} />
               <col style={{ width: "26%" }} />
             </colgroup>
             <thead>
@@ -635,13 +560,12 @@ function HSTHTabPhanCong() {
           <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
             <colgroup>
               <col style={{ width: 40 }} />
-              <col style={{ width: "12%" }} />
-              <col style={{ width: "13%" }} />
-              <col style={{ width: "12%" }} />
-              <col style={{ width: "12%" }} />
-              <col style={{ width: "13%" }} />
-              <col style={{ width: "13%" }} />
-              <col style={{ width: "12%" }} />
+              <col style={{ width: "16%" }} />
+              <col style={{ width: "14%" }} />
+              <col style={{ width: "14%" }} />
+              <col style={{ width: "16%" }} />
+              <col style={{ width: "16%" }} />
+              <col style={{ width: "16%" }} />
             </colgroup>
             <thead>
               <tr>{["STT", "HỌ VÀ TÊN TTV", "CHỨC DANH TTV", "NGÀY PHÂN CÔNG TTV", "HỌ VÀ TÊN LĐ", "TÊN CHỨC VỤ LĐ", "NGÀY PHÂN CÔNG LĐ"].map(h => <th key={h} style={TH_STYLE}>{h}</th>)}</tr>
@@ -1856,12 +1780,6 @@ function XacMinhSubTab() {
   );
 }
 
-export function ModalThemMoiToTrinh({ onClose }: { onClose: () => void }) {
-  return <HSTHTaoToTrinhModal onClose={onClose} />;
-}
-
-
-
 function HoSoTuHinhDetailView({ id, onBack }: { id: string; onBack: () => void }) {
   const [tab, setTab] = useState<HSDetailTab>("thong-tin");
   const [kqSubTab, setKqSubTab] = useState<KetQuaSubTab>("toa-an");
@@ -1907,7 +1825,7 @@ function HoSoTuHinhDetailView({ id, onBack }: { id: string; onBack: () => void }
       <div style={{ padding: "12px 20px", background: "#fff", borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: "flex", alignItems: "center", gap: 10 }}>
         <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: TEXT, lineHeight: 1, padding: "0 4px 0 0" }}>←</button>
         <span style={{ fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: F }}>
-          Hồ sơ tử hình – {hs.maVuAn} – ĐẶNG THÌN DƯƠNG
+          Hồ sơ tử hình – {hs.maVuAn} – {hs.tenVuAn}
         </span>
       </div>
 
@@ -1990,11 +1908,10 @@ function HoSoTuHinhDetailView({ id, onBack }: { id: string; onBack: () => void }
                 <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
                   <colgroup>
                     <col style={{ width: 45 }} />
-                    <col style={{ width: 160 }} />
                     <col style={{ width: 180 }} />
                     <col style={{ width: 220 }} />
-                    <col style={{ width: 160 }} />
-                    <col style={{ width: 180 }} />
+                    <col style={{ width: 220 }} />
+                    <col style={{ width: 200 }} />
                     <col style={{ width: 80 }} />
                   </colgroup>
                   <thead>
@@ -2583,6 +2500,7 @@ function HSTHTabHoSoTuHinh({ maVuAn, tenVuAn }: { maVuAn?: string; tenVuAn?: str
 const HO_SO_TU_HINH_TABLE_ROWS = [
   {
     stt: 1,
+    hsId: "hs-1",
     maVTD: "VTD-2026-00356",
     ngayVTD: "10/02/2024",
     donViGui: "TAND cấp cao tại Hà Nội",
@@ -2602,6 +2520,7 @@ const HO_SO_TU_HINH_TABLE_ROWS = [
   },
   {
     stt: 2,
+    hsId: "hs-2",
     maVTD: "VTD-2026-00357",
     ngayVTD: "10/02/2024",
     donViGui: "TAND cấp cao tại Hà Nội",
@@ -2620,6 +2539,7 @@ const HO_SO_TU_HINH_TABLE_ROWS = [
   },
   {
     stt: 3,
+    hsId: "hs-3",
     maVTD: "VTD-2026-00589",
     ngayVTD: "15/04/2024",
     donViGui: "VKSND tỉnh Đồng Nai",
@@ -2639,6 +2559,7 @@ const HO_SO_TU_HINH_TABLE_ROWS = [
   },
   {
     stt: 4,
+    hsId: "hs-4",
     maVTD: "VTD-2026-00612",
     ngayVTD: "28/06/2023",
     donViGui: "TAND cấp cao tại TP.HCM",
@@ -2659,6 +2580,7 @@ const HO_SO_TU_HINH_TABLE_ROWS = [
   },
   {
     stt: 5,
+    hsId: "hs-1",
     maVTD: "VTD-2026-00701",
     ngayVTD: "10/09/2024",
     donViGui: "VKSND tỉnh Nghệ An",
@@ -2681,6 +2603,7 @@ const HO_SO_TU_HINH_TABLE_ROWS = [
 const DON_XIN_AN_GIAM_ROWS = [
   {
     stt: 1,
+    hsId: "hs-1",
     maDon: "4984",
     cvChuyen: "31 - 05/06/2026",
     thuLyMoi: "2329241",
@@ -2697,6 +2620,7 @@ const DON_XIN_AN_GIAM_ROWS = [
   },
   {
     stt: 2,
+    hsId: "hs-2",
     maDon: "4985",
     cvChuyen: "31 - 05/06/2026",
     thuLyMoi: "2329241",
@@ -2713,6 +2637,7 @@ const DON_XIN_AN_GIAM_ROWS = [
   },
   {
     stt: 3,
+    hsId: "hs-3",
     maDon: "4956",
     cvChuyen: "18 - 05/06/2026",
     thuLyMoi: "",
@@ -2729,6 +2654,7 @@ const DON_XIN_AN_GIAM_ROWS = [
   },
   {
     stt: 4,
+    hsId: "hs-4",
     maDon: "4971",
     cvChuyen: "22 - 07/06/2026",
     thuLyMoi: "",
@@ -2966,7 +2892,7 @@ export default function HoSoTuHinhView({
                         </div>
                       </td>
                       <td style={TD_COL}>{row.nguoiThaoTac !== "-" ? (<div style={{ lineHeight: 1.5, fontSize: 11 }}><div><span style={{ color: MUTED }}>Người thao tác: </span>{row.nguoiThaoTac}</div><div style={{ color: MUTED }}>{row.ngayThaoTac}</div></div>) : (<div style={{ color: MUTED }}>-</div>)}</td>
-                      <td style={{ ...TD_COL, textAlign: "center" }}><button onClick={() => setDetail("hs-1")} style={{ background: "none", border: "none", cursor: "pointer", padding: 3 }} title="Xem chi tiết đơn"><Eye size={15} color="#059669" /></button></td>
+                      <td style={{ ...TD_COL, textAlign: "center" }}><button onClick={() => setDetail(row.hsId)} style={{ background: "none", border: "none", cursor: "pointer", padding: 3 }} title="Xem chi tiết đơn"><Eye size={15} color="#059669" /></button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -3037,7 +2963,7 @@ export default function HoSoTuHinhView({
                         <div style={{ lineHeight: 1.6 }}>
                           <div>
                             <span style={{ color: MUTED }}>Mã VTĐ: </span>
-                            <span style={{ color: "#1e40af", fontWeight: 700, cursor: "pointer", textDecoration: "underline" }} onClick={() => setDetail("hs-1")}>
+                            <span style={{ color: "#1e40af", fontWeight: 700, cursor: "pointer", textDecoration: "underline" }} onClick={() => setDetail(row.hsId)}>
                               {row.maVTD}
                             </span>
                           </div>
@@ -3122,7 +3048,7 @@ export default function HoSoTuHinhView({
                         <HSTrangThaiChip status={row.trangThai} />
                       </td>
                       <td style={{ ...TD_COL, textAlign: "center", whiteSpace: "nowrap" }}>
-                        <button onClick={() => setDetail("hs-1")} style={{ background: "none", border: "none", cursor: "pointer", padding: 3 }} title="Xem chi tiết hồ sơ tử hình"><Eye size={15} color="#059669" /></button>
+                        <button onClick={() => setDetail(row.hsId)} style={{ background: "none", border: "none", cursor: "pointer", padding: 3 }} title="Xem chi tiết hồ sơ tử hình"><Eye size={15} color="#059669" /></button>
                       </td>
                     </tr>
                   ))}

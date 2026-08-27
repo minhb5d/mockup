@@ -574,40 +574,6 @@ const ROWS: HDXXRow[] = [
   },
 ];
 
-const HDXX_MEMBERS: Record<number, { vai: string; ho: string; chucVu: string }[]> = {
-  1: [
-    { vai: "Chủ tọa", ho: "Nguyễn Văn Minh", chucVu: "Thẩm phán cao cấp" },
-    { vai: "Thẩm phán", ho: "Trần Thị Lan", chucVu: "Thẩm phán" },
-    { vai: "Thẩm phán", ho: "Lê Hoàng Nam", chucVu: "Thẩm phán" },
-    { vai: "Thẩm phán", ho: "Phạm Thị Hoa", chucVu: "Thẩm phán" },
-    { vai: "Thẩm phán", ho: "Đỗ Quang Hùng", chucVu: "Thẩm phán" },
-    { vai: "Thư ký", ho: "Nguyễn Thu Hằng", chucVu: "Thư ký tòa án" },
-  ],
-  2: [
-    { vai: "Chủ tọa", ho: "Vũ Đình Tuấn", chucVu: "Thẩm phán cao cấp" },
-    { vai: "Thẩm phán", ho: "Bùi Thị Mai", chucVu: "Thẩm phán" },
-    { vai: "Thẩm phán", ho: "Cao Văn Thắng", chucVu: "Thẩm phán" },
-    { vai: "Thẩm phán", ho: "Đinh Hữu Đức", chucVu: "Thẩm phán" },
-    { vai: "Thẩm phán", ho: "Hoàng Thị Yến", chucVu: "Thẩm phán" },
-    { vai: "Thư ký", ho: "Lý Văn An", chucVu: "Thư ký tòa án" },
-  ],
-  4: [
-    { vai: "Chủ tọa", ho: "Nguyễn Đức Long", chucVu: "Thẩm phán TAND Tối cao" },
-    { vai: "Thẩm phán", ho: "Trần Văn Bình", chucVu: "Thẩm phán" },
-    { vai: "Thẩm phán", ho: "Lê Thị Cúc", chucVu: "Thẩm phán" },
-  ],
-  5: [
-    { vai: "Chủ tọa", ho: "Phạm Quốc Anh", chucVu: "Thẩm phán cao cấp" },
-    { vai: "Thẩm phán", ho: "Ngô Thị Dung", chucVu: "Thẩm phán" },
-    { vai: "Thẩm phán", ho: "Lưu Văn Hải", chucVu: "Thẩm phán" },
-    { vai: "Thẩm phán", ho: "Trịnh Hữu Lộc", chucVu: "Thẩm phán" },
-    { vai: "Thẩm phán", ho: "Bùi Ngọc Hà", chucVu: "Thẩm phán" },
-    { vai: "Thư ký", ho: "Hoàng Văn Toàn", chucVu: "Thư ký tòa án" },
-  ],
-};
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 function TrangThaiBadge({ type }: { type: HDXXRow["trangThaiXX"] }) {
   if (type === "chua-phan-cong")
     return <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 4, fontSize: 11, fontWeight: 700, fontFamily: F, background: "#fee2e2", color: RED, border: `1px solid ${RED}` }}>Chưa phân công HĐXX</span>;
@@ -734,15 +700,6 @@ function ContextMenu({ row, onClose, onXem, onPhanCong, onLichXX }: {
 }
 
 // ── HĐXX Detail view ──────────────────────────────────────────────────────────
-
-const ALL_JUDGES = [
-  { name: "Nguyễn Văn Quảng", chuc: "Chánh án" },
-  { name: "Nguyễn Biên Thùy", chuc: "Phó Chánh án" },
-  { name: "Nguyễn Hải Trâm", chuc: "Phó Chánh án" },
-  { name: "Lê Tiến", chuc: "Phó Chánh án" },
-  { name: "Phạm Quốc Hưng", chuc: "Phó Chánh án" },
-  { name: "Nguyễn Văn Tiến", chuc: "Phó Chánh án" },
-];
 
 const QD_ROWS = [
   { id: 1, soQD: "2442/2026/QĐ-TANDTC", ngayQD: "16/07/2026", tenBM: "Quyết định thành lập Hội đồng xét xử", nguoiKy: "Nguyễn Biên Thùy", trangThai: "Đã có hiệu lực" },

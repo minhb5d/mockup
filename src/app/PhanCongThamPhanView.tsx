@@ -808,7 +808,7 @@ export function PhanCongThamPhanView() {
                       <td style={{ ...TD_STYLE, textAlign: "center", color: MUTED }}>{i + 1}</td>
                       <td style={{ ...TD_STYLE, fontWeight: 600, color: TEXT }}>{tp}</td>
                       <td style={{ ...TD_STYLE, color: MUTED }}>Thẩm phán Tòa án nhân dân tối cao</td>
-                      <td style={{ ...TD_STYLE, color: "#1e40af", fontWeight: 600 }}>{Math.floor(Math.random() * 8) + 2} vụ</td>
+                      <td style={{ ...TD_STYLE, color: "#1e40af", fontWeight: 600 }}>{((i * 3) % 8) + 2} vụ</td>
                     </tr>
                   ))}
                 </tbody>

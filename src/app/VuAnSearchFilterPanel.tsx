@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Search, RotateCcw, Calendar, ChevronDown, ChevronUp, X } from "lucide-react";
 import { F, RED, BORDER, TEXT, MUTED } from "./shared";
 import { LOAI_AN_OPTIONS } from "./data";
-import { UserRoleType } from "./App";
+import type { UserRoleType } from "./shared";
 
 export const DANH_SACH_TOA_AN_FILTER = [
   "Tòa án nhân dân tối cao",

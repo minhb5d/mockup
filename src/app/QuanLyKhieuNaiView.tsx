@@ -16,12 +16,7 @@ import {
   CapXetXu,
   TaiKhoanPhanQuyenBar,
 } from "./shared";
-import { formatSoBA } from "./AppHelpers";
-import {
-  isVu234,
-  getQuanHePhapLuat,
-  getPartyLabels,
-} from "./App";
+import { formatSoBA, isVu234, getQuanHePhapLuat, getPartyLabels } from "./AppHelpers";
 import {
   KHIEU_NAI_LIST,
   filterVuAnListByRole,
@@ -70,6 +65,10 @@ export function QuanLyKhieuNaiView({
         if (rows.length === 0) return null;
         return { ...group, rows };
       }
+      // TODO(LE-xxx, Lane A – Quản lý khiếu nại): tab "Quá hạn giải quyết" hiện trả về
+      // toàn bộ danh sách vì chưa có dữ liệu thời hạn. Theo SRS phải lọc theo thời hạn
+      // giải quyết (hình sự 7 ngày, dân sự 15 ngày kể từ ngày thụ lý) và chỉ lấy vụ
+      // "Chưa có KQGQ" hoặc "Đã có KQGQ nhưng còn đơn thụ lý mới".
       return group;
     })
     .filter(Boolean) as VuAnGroup[];

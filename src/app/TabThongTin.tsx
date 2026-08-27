@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Eye, Trash2, Sliders } from "lucide-react";
 import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge, getThoiHieuOptions, type UserRoleType } from "./shared";
-import type { VuAnDetailData } from "./App";
+import type { VuAnDetailData } from "./QuanLyVuAnView";
 import { LOAI_AN_OPTIONS, LoaiAn } from "./data";
 
 export function SectionCard({ title, children, collapsible = false }: { title: string; children: React.ReactNode; collapsible?: boolean }) {
