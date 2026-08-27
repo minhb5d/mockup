@@ -23,7 +23,7 @@ type TrangThai =
   | "da-xx"                 // Đã xét xử
   | "chuyen-tham-quyen";    // Chuyển thẩm quyền xét xử
 
-type DetailTab = "thong-tin" | "thu-ly" | "to-trinh" | "phan-cong" | "qd-vu-an" | "ket-qua" | "tai-lieu-vu-an" | "ho-so-vu-an";
+type DetailTab = "thong-tin" | "thu-ly" | "to-trinh" | "phan-cong" | "qd-bi-cao" | "qd-vu-an" | "ket-qua" | "tai-lieu-vu-an" | "ho-so-vu-an" | "don-gdt-tt";
 
 type VuXetXuRow = {
   id: number;
@@ -37,7 +37,7 @@ type VuXetXuRow = {
   toa: string;
   capXetXu: string;             // e.g. "Sơ thẩm"
   thoiHieu: string;             // e.g. "5 năm"
-  tag?: "an-qh" | "an-tu-hinh" | "an-chi-dao";
+  tag?: "an-qh" | "an-quoc-hoi" | "an-tu-hinh" | "an-chi-dao" | "an-tvtn";
   ndkn: string;
   ndd: string;
   ttv: string;
@@ -105,6 +105,8 @@ export function getVuXetXuPartyInfo(row: VuXetXuRow | ModalVuAnRow | any, userRo
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
+// LỆCH (SRS): Hội đồng toàn thể cố định 11 thẩm phán, hiển thị xám, không thêm/bớt
+const SO_TP_HOI_DONG_TOAN_THE = 11;
 const DANH_SACH_THAM_PHAN = [
   { id: "tp1", ten: "Lê Thị Thu Hiển", chucVu: "Chánh án TAND tối cao", donVi: "Hội đồng Thẩm phán TANDTC" },
   { id: "tp2", ten: "Nguyễn Như Thắng", chucVu: "Thẩm phán TAND tối cao", donVi: "Hội đồng Thẩm phán TANDTC" },
@@ -523,8 +525,8 @@ function ThongTinChungBlock({ row }: { row: VuXetXuRow }) {
             <span style={{ fontSize: 12, fontWeight: 600, color: TEXT, fontFamily: F }}>Thông tin chung của vụ án</span>
           </div>
           <InfoGrid rows={[
-            ["Mã vụ án – Tên vụ án", row.maVuAn, "Số – Ngày Kháng nghị", row.soNgayKhangNghi],
-            ["Số – Ngày BA/QĐ", row.soNgayBAQD, "Người kháng nghị", row.nguoiKhangNghi || "Viện trưởng Viện kiểm sát nhân dân tối cao"],
+            ["Số – Ngày thụ lý XX", row.soNgayThuLy || "–", "Số – Ngày Kháng nghị", row.soNgayKhangNghi],
+            ["Số – Ngày BAST (hoặc QĐST)", row.soNgayBAQD, "Người kháng nghị", row.nguoiKhangNghi || "Viện trưởng Viện kiểm sát nhân dân tối cao"],
             ["Tòa ra BA/QĐ", row.toaRABAQD, "Tòa án giải quyết", row.toaAnGiaiQuyet],
           ]} />
         </div>
@@ -543,7 +545,8 @@ function TabThongTin({ row, userRole }: { row: VuXetXuRow; userRole?: UserRoleTy
   const TD: React.CSSProperties = { ...TD_STYLE, fontSize: 12, padding: "9px 12px" };
   const inp: React.CSSProperties = { border: `1px solid ${BORDER}`, borderRadius: 4, padding: "7px 10px", fontSize: 12, fontFamily: F, outline: "none", background: "#fff", width: "100%", boxSizing: "border-box" as const };
 
-  const actBtns = <div style={{ display: "flex", gap: 4 }}><button style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}><Eye size={14} /></button><button style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444" }}><Trash2 size={14} /></button></div>;
+  // LỆCH (SRS): thao tác dòng người tham gia tố tụng là Sửa + Biểu mẫu (không phải Xem + Xóa)
+  const actBtns = <div style={{ display: "flex", gap: 4 }}><button title="Sửa" style={{ background: "none", border: "none", cursor: "pointer", color: "#2563eb" }}><Pencil size={14} /></button><button title="Biểu mẫu" style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}><FileText size={14} /></button></div>;
 
   const PTab = ({ cols, rows, noData }: { cols: string[]; rows: React.ReactNode[][]; noData?: boolean }) => (
     <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -572,8 +575,8 @@ function TabThongTin({ row, userRole }: { row: VuXetXuRow; userRole?: UserRoleTy
                 <span style={{ fontSize: 12, fontWeight: 600, color: TEXT, fontFamily: F }}>Thông tin chung của vụ án</span>
               </div>
               <InfoGrid rows={[
-                ["Mã vụ án – Tên vụ án", row.maVuAn, "Số – Ngày Kháng nghị", row.soNgayKhangNghi],
-                ["Số – Ngày BA/QĐ", row.soNgayBAQD, "Người kháng nghị", row.nguoiKhangNghi],
+                ["Số – Ngày thụ lý XX", row.soNgayThuLy || "–", "Số – Ngày Kháng nghị", row.soNgayKhangNghi],
+                ["Số – Ngày BAST (hoặc QĐST)", row.soNgayBAQD, "Người kháng nghị", row.nguoiKhangNghi],
                 ["Tòa ra BA/QĐ", row.toaRABAQD, "Tòa án giải quyết", row.toaAnGiaiQuyet],
                 // ["Viện kiểm sát giải quyết", row.vienKiemSat, ],
               ]} />
@@ -637,8 +640,8 @@ function TabThongTin({ row, userRole }: { row: VuXetXuRow; userRole?: UserRoleTy
             ] : [
               { title: "* Người khiếu nại", req: true, cols: ["STT", "Họ và tên/Tổ chức", "Năm sinh", "Địa chỉ", "Thao tác"], rows: [["1", "Phan Mai Hoa", "", "Tổ 3, phường Yên Nghĩa, TP Hà Nội", actBtns]] },
               {
-                title: "* Bị cáo", req: true, cols: ["STT", "Họ và tên/Tổ chức", "Địa vị pháp lý", "Thông tin tội danh, Mức án", "Năm sinh", "Địa chỉ", "Thao tác"],
-                rows: [["1", row.biCao, "Bị cáo đầu vụ", <div key="td" style={{ fontSize: 11, lineHeight: 1.5, fontFamily: F }}><div><b>Tội che giấu tội phạm (Tội danh chính)</b> Khoản 1 Điểm a</div><div style={{ color: MUTED }}>Tù có thời hạn – 15 năm, 6 tháng; Phạt tiền, khi không áp dụng hình phạt là phạt chính</div></div>, "2000", "Tổ 7, Xã Yên Định, Tỉnh Bắc Ninh", actBtns]]
+                title: "* Bị cáo", req: true, cols: ["STT", "Họ và tên (ngày sinh – CCCD)", "Tư cách tố tụng", "Thông tin bổ sung hình phạt", "Địa chỉ", "Thao tác"],
+                rows: [["1", <div key="ht" style={{ fontSize: 12, lineHeight: 1.5, fontFamily: F }}><div style={{ fontWeight: 600 }}>{row.biCao}</div><div style={{ color: MUTED, fontSize: 11 }}>NS: 2000 · CCCD: 027200001234</div></div>, "Bị cáo đầu vụ", <div key="td" style={{ fontSize: 11, lineHeight: 1.5, fontFamily: F }}><div><b>Tội che giấu tội phạm (Tội danh chính)</b> Khoản 1 Điểm a</div><div style={{ color: MUTED }}>Tù có thời hạn – 15 năm, 6 tháng; Phạt tiền, khi không áp dụng hình phạt là phạt chính</div></div>, "Tổ 7, Xã Yên Định, Tỉnh Bắc Ninh", actBtns]]
               },
               { title: "Bị hại", req: false, cols: ["STT", "Họ và tên/Tổ chức", "Năm sinh", "Địa chỉ", "Thao tác"], rows: [] as React.ReactNode[][] },
               { title: "Người có quyền lợi và nghĩa vụ liên quan", req: false, cols: ["STT", "Họ và tên/Tổ chức", "Năm sinh", "Địa chỉ", "Thao tác"], rows: [] as React.ReactNode[][] },
@@ -761,8 +764,8 @@ function TabPhanCong({ row }: { row: VuXetXuRow }) {
           <span style={{ fontSize: 12, fontWeight: 600, color: TEXT, fontFamily: F }}>Thông tin chung của vụ án</span>
         </div>
         <InfoGrid rows={[
-          ["Mã vụ án – Tên vụ án", row.maVuAn, "Số – Ngày Kháng nghị", row.soNgayKhangNghi],
-          ["Số – Ngày BA/QĐ", row.soNgayBAQD, "Người kháng nghị", row.nguoiKhangNghi || "Viện trưởng Viện kiểm sát nhân dân tối cao"],
+          ["Số – Ngày thụ lý XX", row.soNgayThuLy || "–", "Số – Ngày Kháng nghị", row.soNgayKhangNghi],
+          ["Số – Ngày BAST (hoặc QĐST)", row.soNgayBAQD, "Người kháng nghị", row.nguoiKhangNghi || "Viện trưởng Viện kiểm sát nhân dân tối cao"],
           ["Tòa ra BA/QĐ", row.toaRABAQD, "Tòa án giải quyết", row.toaAnGiaiQuyet],
         ]} />
       </div>
@@ -3563,8 +3566,8 @@ function TabQuyetDinhVuAn({ row, userRole }: { row: VuXetXuRow; userRole?: UserR
           <span style={{ fontSize: 12, fontWeight: 600, color: TEXT, fontFamily: F }}>Thông tin chung của vụ án</span>
         </div>
         <InfoGrid rows={[
-          ["Mã vụ án – Tên vụ án", row.maVuAn, "Số – Ngày Kháng nghị", row.soNgayKhangNghi],
-          ["Số – Ngày BA/QĐ", row.soNgayBAQD, "Người kháng nghị", row.nguoiKhangNghi || "Viện trưởng Viện kiểm sát nhân dân tối cao"],
+          ["Số – Ngày thụ lý XX", row.soNgayThuLy || "–", "Số – Ngày Kháng nghị", row.soNgayKhangNghi],
+          ["Số – Ngày BAST (hoặc QĐST)", row.soNgayBAQD, "Người kháng nghị", row.nguoiKhangNghi || "Viện trưởng Viện kiểm sát nhân dân tối cao"],
           ["Tòa ra BA/QĐ", row.toaRABAQD, "Tòa án giải quyết", row.toaAnGiaiQuyet],
         ]} />
       </div>
@@ -4054,11 +4057,11 @@ function TabQuyetDinhBiCao({ row }: { row?: VuXetXuRow }) {
           }}
         >
           <div>
-            <span style={{ color: MUTED }}>Mã vụ án - Tên vụ án: </span>
+            <span style={{ color: MUTED }}>Số - Ngày thụ lý XX: </span>
             <span style={{ color: "#111827", fontWeight: 600 }}>{row?.maVuAn || "VA26-002148"}</span>
           </div>
           <div>
-            <span style={{ color: MUTED }}>Số - Ngày BA/QĐ: </span>
+            <span style={{ color: MUTED }}>Số - Ngày BAST (hoặc QĐST): </span>
             <span style={{ color: "#111827", fontWeight: 600 }}>5469 - 03/07/2026</span>
           </div>
           <div>
@@ -4463,8 +4466,8 @@ function TabKetQua({ row }: { row: VuXetXuRow }) {
           <span style={{ fontSize: 13, fontWeight: 700, color: TEXT, fontFamily: F }}>Thông tin chung của vụ án</span>
         </div>
         <InfoGrid rows={[
-          ["Mã vụ án – Tên vụ án", row.maVuAn, "Số – Ngày Kháng nghị", row.soNgayKhangNghi],
-          ["Số – Ngày BA/QĐ", row.soNgayBAQD, "Người kháng nghị", row.nguoiKhangNghi || "Viện trưởng Viện kiểm sát nhân dân tối cao"],
+          ["Số – Ngày thụ lý XX", row.soNgayThuLy || "–", "Số – Ngày Kháng nghị", row.soNgayKhangNghi],
+          ["Số – Ngày BAST (hoặc QĐST)", row.soNgayBAQD, "Người kháng nghị", row.nguoiKhangNghi || "Viện trưởng Viện kiểm sát nhân dân tối cao"],
           ["Tòa ra BA/QĐ", row.toaRABAQD, "Tòa án giải quyết", row.toaAnGiaiQuyet],
         ]} />
       </div>
@@ -4595,7 +4598,7 @@ function TabKetQua({ row }: { row: VuXetXuRow }) {
               </tr>
               <tr style={{ background: BG }}>
                 <th style={{ ...TH, borderRight: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>Xét xử lại</th>
-                <th style={{ ...TH, borderRight: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>Đối với hình phạt</th>
+                <th style={{ ...TH, borderRight: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>Đổi hình phạt</th>
                 <th style={{ ...TH, borderRight: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>Tên</th>
                 <th style={{ ...TH, borderRight: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>Tội danh</th>
                 <th style={{ ...TH, borderRight: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>Hình phạt chính</th>
@@ -4718,14 +4721,16 @@ function HDXXDropdownSelectorPopover({
   );
 
   const allNonPresidingJudges = DANH_SACH_THAM_PHAN.filter(j => j.ten !== chuToaName);
-  const isAllSelected = allNonPresidingJudges.length > 0 && allNonPresidingJudges.every(j => selected.includes(j.ten));
+  // LỆCH (SRS): Hội đồng toàn thể = đúng 11 TP (chủ tọa + 10 thành viên), danh sách cố định
+  const hoiDongToanThe = allNonPresidingJudges.slice(0, SO_TP_HOI_DONG_TOAN_THE - 1);
+  const isAllSelected =
+    selected.length === hoiDongToanThe.length && hoiDongToanThe.every(j => selected.includes(j.ten));
 
   const toggleAll = () => {
     if (isAllSelected) {
       setSelected([]);
     } else {
-      const namesToAdd = allNonPresidingJudges.map(j => j.ten);
-      setSelected(namesToAdd);
+      setSelected(hoiDongToanThe.map(j => j.ten));
     }
   };
 
@@ -4796,7 +4801,7 @@ function HDXXDropdownSelectorPopover({
               boxShadow: "0 1px 2px rgba(0,0,0,0.04)"
             }}
           >
-            🏛️ Chọn tất cả (Hội đồng toàn thể)
+            🏛️ Hội đồng toàn thể (11 TP)
           </button>
           <button
             type="button"
@@ -4819,7 +4824,7 @@ function HDXXDropdownSelectorPopover({
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 10, fontFamily: F }}>
           <span style={{ color: isAllSelected ? "#15803d" : "#1e40af", fontWeight: 700 }}>
-            {isAllSelected ? "✓ Hội đồng toàn thể (Chủ tọa: Chánh án TANDTC)" : selected.length === 4 ? "✓ Hội đồng 5 thẩm phán" : `Đã chọn: ${selected.length} thành viên`}
+            {isAllSelected ? "✓ Hội đồng toàn thể – 11 thẩm phán (Chủ tọa: Chánh án TANDTC)" : selected.length === 4 ? "✓ Hội đồng 5 thẩm phán" : `Đã chọn: ${selected.length} thành viên`}
           </span>
           <span style={{ color: MUTED }}>Tổng: {selected.length + 1} Thẩm phán</span>
         </div>
@@ -5401,12 +5406,12 @@ function ThemVuXetXuModal({ userRole = "hinh-su", onClose }: { userRole?: string
   const getHDXXName = (memberCount: number) => {
     if (memberCount === 0) return "Chưa chọn HĐXX";
     if (memberCount === 4) return "Hội đồng 5 thẩm phán";
-    if (memberCount >= DANH_SACH_THAM_PHAN.length - 1) return "Hội đồng toàn thể";
+    if (memberCount >= SO_TP_HOI_DONG_TOAN_THE - 1) return "Hội đồng toàn thể";
     return `Hội đồng ${memberCount + 1} thẩm phán`;
   };
 
   const updateJudgesForRow = (rowKey: string, newJudges: string[]) => {
-    const isToanThe = newJudges.length >= DANH_SACH_THAM_PHAN.length - 1;
+    const isToanThe = newJudges.length >= SO_TP_HOI_DONG_TOAN_THE - 1;
     const chanhAnObj = DANH_SACH_THAM_PHAN.find(j => j.ten === CHANH_AN_NAME) || { chucVu: "Chánh án TAND tối cao", donVi: "Hội đồng Thẩm phán TANDTC" };
 
     setRows(prev =>
@@ -5418,7 +5423,7 @@ function ThemVuXetXuModal({ userRole = "hinh-su", onClose }: { userRole?: string
         const targetChuToaChucVu = isToanThe ? `${chanhAnObj.chucVu} (${chanhAnObj.donVi})` : r.chuToaChucVu;
 
         let finalMembers = isToanThe
-          ? DANH_SACH_THAM_PHAN.filter(j => j.ten !== CHANH_AN_NAME).map(j => j.ten)
+          ? DANH_SACH_THAM_PHAN.filter(j => j.ten !== CHANH_AN_NAME).slice(0, SO_TP_HOI_DONG_TOAN_THE - 1).map(j => j.ten)
           : newJudges.filter(name => name !== targetChuToa);
 
         return {
@@ -5851,6 +5856,21 @@ export default function QuanLyVuXetXuView({
   const [fLanhDaoVu, setFLanhDaoVu] = useState("");
   const [fTTV, setFTTV] = useState("");
   const [fQuaHanXX, setFQuaHanXX] = useState("");
+  // THIẾU [Cao]: 12/21 trường tìm kiếm theo SRS Quản lý vụ XX mục A
+  const [fNguyenDonBiDon, setFNguyenDonBiDon] = useState("");
+  const [fSoThuLyXX, setFSoThuLyXX] = useState("");
+  const [fThuLyTuNgay, setFThuLyTuNgay] = useState("");
+  const [fThuLyDenNgay, setFThuLyDenNgay] = useState("");
+  const [fXetXuTuNgay, setFXetXuTuNgay] = useState("");
+  const [fXetXuDenNgay, setFXetXuDenNgay] = useState("");
+  const [fTrangThaiXX, setFTrangThaiXX] = useState("");
+  const [fThamPhan, setFThamPhan] = useState("");
+  const [fHoanTHA, setFHoanTHA] = useState("");
+  const [fSoKhangNghi, setFSoKhangNghi] = useState("");
+  const [fNgayKhangNghi, setFNgayKhangNghi] = useState("");
+  const [fNguoiKhangNghi, setFNguoiKhangNghi] = useState("");
+  const [fThamQuyenXX, setFThamQuyenXX] = useState("");
+  const [fAnLe, setFAnLe] = useState("");
 
   const isVu1 = userRole === "vu-1" || userRole === "hinh-su" || !userRole;
   const thuocAnOptions = isVu1
@@ -5866,6 +5886,10 @@ export default function QuanLyVuXetXuView({
     setFLanhDaoVu("");
     setFTTV("");
     setFQuaHanXX("");
+    setFNguyenDonBiDon(""); setFSoThuLyXX(""); setFThuLyTuNgay(""); setFThuLyDenNgay("");
+    setFXetXuTuNgay(""); setFXetXuDenNgay(""); setFTrangThaiXX(""); setFThamPhan("");
+    setFHoanTHA(""); setFSoKhangNghi(""); setFNgayKhangNghi(""); setFNguoiKhangNghi("");
+    setFThamQuyenXX(""); setFAnLe("");
   };
 
   const inSt: React.CSSProperties = {
@@ -6077,18 +6101,102 @@ export default function QuanLyVuXetXuView({
                 </select>
               </div>
 
-              {/* 8. Quá hạn xét xử */}
+              {/* 8. Quá hạn luật định (LỆCH: SRS 3 option) */}
               <div>
-                <label style={labelStyle}>Quá hạn xét xử</label>
+                <label style={labelStyle}>Quá hạn luật định</label>
                 <select
                   value={fQuaHanXX}
                   onChange={(e) => setFQuaHanXX(e.target.value)}
                   style={selSt}
                 >
                   <option value="">– Tất cả –</option>
-                  <option value="Quá hạn">Quá hạn</option>
-                  <option value="Không quá hạn">Không quá hạn</option>
+                  <option value="Không">Không</option>
+                  <option value="Quá hạn chủ quan">Quá hạn chủ quan</option>
+                  <option value="Quá hạn khách quan">Quá hạn khách quan</option>
                 </select>
+              </div>
+
+              {/* ── THIẾU [Cao]: 12 trường tìm kiếm bổ sung theo SRS ── */}
+              <div>
+                <label style={labelStyle}>Nguyên đơn / Bị đơn</label>
+                <input value={fNguyenDonBiDon} onChange={e => setFNguyenDonBiDon(e.target.value)} placeholder="Nhập tên" style={inSt} />
+              </div>
+              <div>
+                <label style={labelStyle}>Số thụ lý XX</label>
+                <input value={fSoThuLyXX} onChange={e => setFSoThuLyXX(e.target.value)} placeholder="Nhập số thụ lý xét xử" style={inSt} />
+              </div>
+              <div>
+                <label style={labelStyle}>Số thụ lý XX từ – đến ngày</label>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <input type="date" value={fThuLyTuNgay} onChange={e => setFThuLyTuNgay(e.target.value)} style={{ ...inSt, flex: 1, minWidth: 0 }} />
+                  <span style={{ fontSize: 12, color: MUTED }}>–</span>
+                  <input type="date" value={fThuLyDenNgay} onChange={e => setFThuLyDenNgay(e.target.value)} style={{ ...inSt, flex: 1, minWidth: 0 }} />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>Xét xử từ – đến ngày</label>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <input type="date" value={fXetXuTuNgay} onChange={e => setFXetXuTuNgay(e.target.value)} style={{ ...inSt, flex: 1, minWidth: 0 }} />
+                  <span style={{ fontSize: 12, color: MUTED }}>–</span>
+                  <input type="date" value={fXetXuDenNgay} onChange={e => setFXetXuDenNgay(e.target.value)} style={{ ...inSt, flex: 1, minWidth: 0 }} />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>Trạng thái xét xử</label>
+                <select value={fTrangThaiXX} onChange={e => setFTrangThaiXX(e.target.value)} style={selSt}>
+                  <option value="">– Tất cả –</option>
+                  <option>Chưa thụ lý xét xử</option>
+                  <option>Chưa có danh sách xét xử</option>
+                  <option>Đã có danh sách xét xử</option>
+                  <option>Đã xét xử</option>
+                  <option>Hoãn phiên tòa</option>
+                  <option>Đình chỉ</option>
+                  <option>Rút kháng nghị</option>
+                  <option>Chuyển thẩm quyền</option>
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Thẩm phán</label>
+                <input value={fThamPhan} onChange={e => setFThamPhan(e.target.value)} placeholder="Nhập tên thẩm phán" style={inSt} />
+              </div>
+              <div>
+                <label style={labelStyle}>Hoãn THA?</label>
+                <select value={fHoanTHA} onChange={e => setFHoanTHA(e.target.value)} style={selSt}>
+                  <option value="">– Tất cả –</option>
+                  <option value="Có">Có</option>
+                  <option value="Không">Không</option>
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Số kháng nghị</label>
+                <input value={fSoKhangNghi} onChange={e => setFSoKhangNghi(e.target.value)} placeholder="Nhập số kháng nghị" style={inSt} />
+              </div>
+              <div>
+                <label style={labelStyle}>Ngày kháng nghị</label>
+                <input type="date" value={fNgayKhangNghi} onChange={e => setFNgayKhangNghi(e.target.value)} style={inSt} />
+              </div>
+              <div>
+                <label style={labelStyle}>Người kháng nghị</label>
+                <select value={fNguoiKhangNghi} onChange={e => setFNguoiKhangNghi(e.target.value)} style={selSt}>
+                  <option value="">– Tất cả –</option>
+                  <option>Chánh án Tòa án nhân dân tối cao</option>
+                  <option>Viện trưởng Viện kiểm sát nhân dân tối cao</option>
+                  <option>Chánh án Tòa án nhân dân cấp tỉnh</option>
+                  <option>Viện trưởng Viện kiểm sát nhân dân cấp tỉnh</option>
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Thẩm quyền xét xử</label>
+                <select value={fThamQuyenXX} onChange={e => setFThamQuyenXX(e.target.value)} style={selSt}>
+                  <option value="">– Tất cả –</option>
+                  <option>Ủy ban Thẩm phán TAND cấp cao</option>
+                  <option>Hội đồng Thẩm phán TAND tối cao</option>
+                  <option>Tòa chuyên trách TAND cấp cao</option>
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Án lệ áp dụng</label>
+                <input value={fAnLe} onChange={e => setFAnLe(e.target.value)} placeholder="Nhập số án lệ" style={inSt} />
               </div>
             </div>
 
@@ -6130,7 +6238,7 @@ export default function QuanLyVuXetXuView({
                   fontFamily: F,
                 }}
               >
-                <RotateCcw size={13} /> Xóa bộ lọc
+                <RotateCcw size={13} /> Làm mới
               </button>
             </div>
           </div>
@@ -6167,7 +6275,7 @@ export default function QuanLyVuXetXuView({
               <tr>
                 <th style={TH_STYLE}><input type="checkbox" /></th>
                 <th style={TH_STYLE}>STT</th>
-                <th style={TH_STYLE}>SỐ & NGÀY THỤ LÝ XX</th>
+                <th style={TH_STYLE}>THÔNG TIN VỤ XÉT XỬ</th>
                 <th style={TH_STYLE}>
                   {userRole === "hinh-su" || userRole === "vu-1"
                     ? "THÔNG TIN BẢN ÁN HÌNH SỰ"
@@ -6203,9 +6311,16 @@ export default function QuanLyVuXetXuView({
                   </td>
                   <td style={{ ...TD_STYLE, textAlign: "center" as const, color: MUTED, fontSize: 12 }}>{(page - 1) * PAGE_SIZE + idx + 1}</td>
 
-                  {/* Số & Ngày thụ lý XX */}
+                  {/* LỆCH: cột "Thông tin vụ xét xử" theo SRS – Kháng nghị, Người KN, gạch ngang, Số & ngày thụ lý XX */}
                   <td style={TD_STYLE}>
                     <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                      <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
+                        <b>Kháng nghị:</b> {row.soQD || "–"}{row.ngayQD ? ` – ${row.ngayQD}` : ""}
+                      </span>
+                      <span style={{ fontSize: 11, color: MUTED, fontFamily: F }}>
+                        <b>Người KN:</b> {row.nguoiKhangNghi || "Viện trưởng VKSNDTC"}
+                      </span>
+                      <div style={{ borderTop: `1px solid ${BORDER}`, margin: "2px 0" }} />
                       <span style={{ fontSize: 11, color: "#2563eb", fontFamily: F, fontWeight: 600 }}>Số: {row.soThuLy}</span>
                       <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>Ngày: {row.ngayThuLy}</span>
                     </div>

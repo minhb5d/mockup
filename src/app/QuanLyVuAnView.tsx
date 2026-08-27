@@ -31,7 +31,7 @@ export interface VuAnRow {
   ttv: string; lanhDao: string;
   kqgq: "chua-phan-cong" | "trinh-pho-chanh-an" | "trinh-tham-phan";
   trangThaiHoSo: "chua-co" | "dang-muon" | "da-co" | "da-tra" | "da-chuyen";
-  kqGiaiQuyet: "chua-co" | "da-co" | "da-co-con-don";
+  kqGiaiQuyet: "chua-co" | "da-co" | "da-co-con-don" | "chap-nhan" | "khong-chap-nhan" | "xep-don";
   trangThaiToTrinh: "chua-co" | "dang-trinh" | "da-duyet" | "bi-tra-lai";
   soToTrinh: number;
   thamPhan?: string;

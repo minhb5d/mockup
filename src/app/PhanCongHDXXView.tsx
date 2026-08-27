@@ -28,6 +28,9 @@ export type VuAnDetail = {
   trangThai: string;
   sub: string;
   extra?: string;
+  chuToa?: string;
+  hdxx?: string;
+  thanhVien?: string[];
 };
 
 export type HDXXRow = {
@@ -35,7 +38,7 @@ export type HDXXRow = {
   soDS: string;
   ngayDS: string;
   donViGui: string;
-  loaiAn: "Hình sự" | "Dân sự" | "Kinh doanh thương mại" | "Hành chính";
+  loaiAn: "Hình sự" | "Dân sự" | "Kinh doanh thương mại" | "Lao động" | "Hôn nhân gia đình" | "Hành chính";
   loaiBanAn?: string;
   capXX?: "Sơ thẩm" | "Phúc thẩm";
   soBA?: string;
@@ -708,7 +711,7 @@ const QD_ROWS = [
 
 // ── Lịch xét xử modal ────────────────────────────────────────────────────────
 
-type CalEvent = { label: string; color: string; bg: string; loai: "GĐT/TT" | "ST" | "PT" };
+type CalEvent = { label: string; color: string; bg: string; loai: "GĐT/TT" | "ST" | "PT"; phong?: string; gio?: string; caNgay?: boolean };
 const LOAI_STYLE: Record<"GĐT/TT" | "ST" | "PT", { color: string; bg: string }> = {
   "GĐT/TT": { color: "#991b1b", bg: "#fee2e2" },
   "ST": { color: "#1e40af", bg: "#dbeafe" },
@@ -766,19 +769,50 @@ export function LichXetXuModal({ onClose, onSelectDate }: { onClose: () => void;
   const [fNgayTao, setFNgayTao] = useState("18/03/2026");
   const [fHinhThuc, setFHinhThuc] = useState("");
   const [fNguoiNhan, setFNguoiNhan] = useState("");
+  // THIẾU [Cao]: Phòng xét xử là trường bắt buộc (SRS Lên lịch mục 3, 9)
+  const [fPhongXX, setFPhongXX] = useState("");
+  const [loiLich, setLoiLich] = useState("");
+  const PHONG_XET_XU_OPTIONS = [
+    "Phòng xét xử số 1", "Phòng xét xử số 2", "Phòng xét xử số 3",
+    "Phòng xét xử số 4", "Phòng xử trực tuyến A", "Phòng xử trực tuyến B",
+  ];
 
   const today = 17;
   const dateKey = (d: number | null) => d ? `2026-04-${String(d).padStart(2, "0")}` : "";
+
+  // THIẾU [Cao]: kiểm tra trùng lịch xét xử theo Ngày + Giờ/Cả ngày + Phòng (SRS mục 13)
+  const timLichTrung = (): string | null => {
+    if (!selectedDay) return null;
+    const key = dateKey(selectedDay);
+    const sameDay = events[key] || [];
+    const trung = sameDay.find(
+      e => e.phong && e.phong === fPhongXX && (fCalNgay || e.caNgay || (e.gio && e.gio === `${fGioFrom}-${fGioTo}`))
+    );
+    return trung ? trung.label : null;
+  };
 
   const buildEvent = (): CalEvent | null => {
     if (!selectedDay) return null;
     const loai: CalEvent["loai"] =
       fHinhThuc === "Sơ thẩm" ? "ST" : fHinhThuc === "Phúc thẩm" ? "PT" : "GĐT/TT";
     const st = LOAI_STYLE[loai];
-    return { label: fTitle || `Lịch ${loai}`, color: st.color, bg: st.bg, loai };
+    return {
+      label: fTitle || `Lịch ${loai}`, color: st.color, bg: st.bg, loai,
+      phong: fPhongXX, gio: `${fGioFrom}-${fGioTo}`, caNgay: fCalNgay,
+    };
+  };
+
+  // BR: bắt buộc Phòng xét xử + chặn trùng lịch
+  const kiemTraTruocKhiLuu = (): boolean => {
+    if (!fPhongXX) { setLoiLich("Phòng xét xử là bắt buộc."); return false; }
+    const tenTrung = timLichTrung();
+    if (tenTrung) { setLoiLich(`Lịch xét xử đang trùng với ${tenTrung}.`); return false; }
+    setLoiLich("");
+    return true;
   };
 
   const handleTaoMoi = () => {
+    if (!kiemTraTruocKhiLuu()) return;
     const ev = buildEvent();
     if (!ev || !selectedDay) return;
     const key = dateKey(selectedDay);
@@ -788,6 +822,7 @@ export function LichXetXuModal({ onClose, onSelectDate }: { onClose: () => void;
   };
 
   const handleLuu = () => {
+    if (!kiemTraTruocKhiLuu()) return;
     const ev = buildEvent();
     if (!ev || !selectedDay) return;
     const key = dateKey(selectedDay);
@@ -1052,6 +1087,25 @@ export function LichXetXuModal({ onClose, onSelectDate }: { onClose: () => void;
                   </select>
                 </div>
               </div>
+
+              {/* THIẾU [Cao]: Phòng xét xử (bắt buộc) – SRS Lên lịch mục 3, 9 */}
+              <div style={{ display: "flex", gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={lbl}>Phòng xét xử{req}</label>
+                  <select value={fPhongXX} onChange={e => { setFPhongXX(e.target.value); setLoiLich(""); }}
+                    style={{ ...inp, appearance: "none", cursor: "pointer", borderColor: !fPhongXX && loiLich ? "#ef4444" : BORDER }}>
+                    <option value="">Chọn phòng xét xử</option>
+                    {PHONG_XET_XU_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: 1 }} />
+              </div>
+
+              {loiLich && (
+                <div style={{ padding: "8px 10px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 4, fontSize: 12, color: "#991b1b", fontFamily: F }}>
+                  ⚠ {loiLich}
+                </div>
+              )}
             </div>
 
             {/* Footer */}
@@ -3047,8 +3101,10 @@ function SuaDanhSachModal({
             >
               Lưu
             </button>
+            {/* LỆCH (SRS): nhóm nút popup Sửa DS là Trả lại · Ký duyệt · Xem biểu mẫu · Lưu · Đóng.
+                "Lấy số" và "Trình ký" là THỪA so với SRS – tạm ẩn, chờ Lead xác nhận trước khi xóa hẳn. */}
             <button
-              onClick={() => alert("Đã lấy số danh sách xét xử thành công!")}
+              onClick={() => alert("Đã trả lại danh sách xét xử cho người tạo!")}
               style={{
                 padding: "8px 18px",
                 border: `1px solid ${BORDER}`,
@@ -3061,10 +3117,10 @@ function SuaDanhSachModal({
                 fontFamily: F,
               }}
             >
-              Lấy số
+              Trả lại
             </button>
             <button
-              onClick={() => alert("Đã trình ký danh sách xét xử thành công!")}
+              onClick={() => alert("Đã ký duyệt danh sách xét xử thành công!")}
               style={{
                 padding: "8px 22px",
                 border: "none",
@@ -3077,7 +3133,7 @@ function SuaDanhSachModal({
                 fontFamily: F,
               }}
             >
-              Trình ký
+              Ký duyệt
             </button>
             <button
               onClick={() => alert("Mở biểu mẫu dự thảo danh sách xét xử...")}
@@ -3396,7 +3452,8 @@ function HDXXDetailView({
   const [editHDXX, setEditHDXX] = useState(row.hdxx);
   const [editMembers, setEditMembers] = useState(row.thanhPhanHDXX ? row.thanhPhanHDXX.join(", ") : "");
   const [ghiChu, setGhiChu] = useState("");
-  const [qdRows, setQdRows] = useState(QD_ROWS);
+  type QDRow = { id: number; soQD: string; ngayQD?: string; tenBM?: string; tenQD?: string; ngayKy?: string; nguoiKy: string; trangThai: string };
+  const [qdRows, setQdRows] = useState<QDRow[]>(QD_ROWS);
 
   const TH: React.CSSProperties = { ...TH_STYLE, fontSize: 11, padding: "9px 12px", fontFamily: F, color: "#374151" };
   const TD: React.CSSProperties = { ...TD_STYLE, fontSize: 12, padding: "10px 12px", verticalAlign: "middle", fontFamily: F, color: TEXT };

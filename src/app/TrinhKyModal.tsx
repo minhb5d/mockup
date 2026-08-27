@@ -1271,7 +1271,7 @@ const LANH_DAO_THEO_LOAI_AN: Record<string, { phoVuTruong: string[]; vuTruong: s
   },
 };
 
-export function TrinhKyModal({ onClose, loaiAn = "Hình sự" }: { onClose: () => void; loaiAn?: string }) {
+export function TrinhKyModal({ onClose, loaiAn = "Hình sự", title, onSuccess }: { onClose: () => void; loaiAn?: string; title?: string; onSuccess?: () => void; record?: { loaiVB?: string; soHoSo?: string; donViSoan?: string } }) {
   const [leftTab, setLeftTab] = useState<"noi-dung" | "thong-tin" | "ho-so">("noi-dung");
   const [capTrinh, setCapTrinh] = useState("Trình Phó vụ trưởng");
   const [uuTien, setUuTien] = useState("Binh-thuong");
@@ -1403,7 +1403,7 @@ export function TrinhKyModal({ onClose, loaiAn = "Hình sự" }: { onClose: () =
     <div style={{ position: "fixed", inset: 0, zIndex: 1600, display: "flex", flexDirection: "column" }}>
       {/* Dark red header */}
       <div style={{ background: "#7f1d1d", padding: "12px 20px", flexShrink: 0 }}>
-        <span style={{ fontSize: 15, fontWeight: 700, color: "#fff", fontFamily: F }}>Trình ký</span>
+        <span style={{ fontSize: 15, fontWeight: 700, color: "#fff", fontFamily: F }}>{title || "Trình ký"}</span>
       </div>
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {/* Left panel */}
@@ -1543,6 +1543,7 @@ export function TrinhKyModal({ onClose, loaiAn = "Hình sự" }: { onClose: () =
             <button onClick={onClose} style={{ padding: "7px 20px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>Đóng</button>
             <button
               disabled={!fileKyTay}
+              onClick={() => { onSuccess?.(); onClose(); }}
               title={!fileKyTay ? "Phải tải file tờ trình đã ký tay trước khi trình ký (BR-03)" : "Trình ký"}
               style={{ padding: "7px 24px", background: fileKyTay ? RED : "#d1d5db", color: "#fff", border: "none", borderRadius: 4, cursor: fileKyTay ? "pointer" : "not-allowed", fontSize: 12, fontWeight: 700, fontFamily: F }}>
               Trình ký
