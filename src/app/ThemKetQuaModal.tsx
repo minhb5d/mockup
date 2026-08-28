@@ -371,6 +371,14 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
   const [hinhThucTrinh, setHinhThucTrinh] = useState("trinh-ky");
   const [noiDungDuyetKy, setNoiDungDuyetKy] = useState("");
   const [thamQuyenXetXu, setThamQuyenXetXu] = useState("");
+  const [trichYeu, setTrichYeu] = useState(isKhieuNai ? "V/v thông báo giải quyết đơn khiếu nại" : "");
+  const [ketQuaXacDinhThamQuyen, setKetQuaXacDinhThamQuyen] = useState("");
+  const KET_QUA_XAC_DINH_THAM_QUYEN_OPTIONS = ["Đúng thẩm quyền", "Không đúng thẩm quyền - chuyển đơn vị khác", "Đang xác minh thẩm quyền"];
+  const [canCuDieuLuatRows, setCanCuDieuLuatRows] = useState<Array<{ id: number; boLuat: string; dieuLuat: string; khoan: string; diem: string }>>([
+    { id: 1, boLuat: "Bộ luật Tố tụng hình sự 2015", dieuLuat: "", khoan: "", diem: "" },
+  ]);
+  const themDongCanCuDieuLuat = () => setCanCuDieuLuatRows(prev => [...prev, { id: Date.now(), boLuat: "Bộ luật Tố tụng hình sự 2015", dieuLuat: "", khoan: "", diem: "" }]);
+  const xoaDongCanCuDieuLuat = (id: number) => setCanCuDieuLuatRows(prev => prev.filter(r => r.id !== id));
   const [noiDungVuAn, setNoiDungVuAn] = useState("");
   const [xetThay, setXetThay] = useState("");
   const [quyetDinhKN, setQuyetDinhKN] = useState("");
@@ -498,8 +506,19 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
                 </div>
               )}
 
-              {!isKhieuNai && (
-                <div>
+              {isKhieuNai && (
+                <div style={{ marginBottom: 8 }}>
+                  <label style={lblSt}>Trích yếu</label>
+                  <input
+                    type="text"
+                    value={trichYeu}
+                    onChange={e => setTrichYeu(e.target.value)}
+                    style={inSt}
+                  />
+                </div>
+              )}
+
+              <div>
                   {/* <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
                     <label style={lblSt}>
                       <span style={{ color: "#dc2626", marginRight: 3 }}>*</span>Đơn liên quan / Người đứng đơn
@@ -638,6 +657,54 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
                       </div>
                     )}
                   </div>
+                </div>
+
+              {isKhieuNai && (
+                <div>
+                  <label style={lblSt}>
+                    <span style={{ color: "#dc2626", marginRight: 3 }}>*</span>Kết quả xác định thẩm quyền
+                  </label>
+                  <select value={ketQuaXacDinhThamQuyen} onChange={e => setKetQuaXacDinhThamQuyen(e.target.value)} style={{ ...inSt, cursor: "pointer", maxWidth: 380 }}>
+                    <option value="">-- Chọn kết quả xác định thẩm quyền --</option>
+                    {KET_QUA_XAC_DINH_THAM_QUYEN_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+              )}
+
+              {isKhieuNai && (
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", flex: 1 }}>Căn cứ điều luật</span>
+                    <button type="button" onClick={themDongCanCuDieuLuat}
+                      style={{ padding: "4px 12px", background: "#800000", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600 }}>
+                      + Thêm dòng
+                    </button>
+                  </div>
+                  <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #e5e7eb" }}>
+                    <thead>
+                      <tr style={{ background: "#f9fafb" }}>
+                        {["Bộ luật", "Điều luật", "Khoản", "Điểm", ""].map(h => (
+                          <th key={h} style={{ padding: "6px 8px", fontSize: 11, fontWeight: 700, color: "#6b7280", textAlign: "left", border: "1px solid #e5e7eb" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {canCuDieuLuatRows.map((r, i) => (
+                        <tr key={r.id}>
+                          {(["boLuat", "dieuLuat", "khoan", "diem"] as const).map(k => (
+                            <td key={k} style={{ border: "1px solid #e5e7eb", padding: 4 }}>
+                              <input value={r[k]} onChange={e => setCanCuDieuLuatRows(prev => prev.map((x, j) => j === i ? { ...x, [k]: e.target.value } : x))}
+                                style={{ width: "100%", border: "none", fontSize: 12, outline: "none" }} />
+                            </td>
+                          ))}
+                          <td style={{ border: "1px solid #e5e7eb", padding: 4, textAlign: "center" }}>
+                            <button type="button" onClick={() => xoaDongCanCuDieuLuat(r.id)}
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 12 }}>Xóa</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
 

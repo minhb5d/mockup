@@ -26,6 +26,60 @@ import {
   QuickViewDanhSachDonModal,
 } from "./QuanLyVuAnView";
 import { VuAnSearchFilterPanel } from "./VuAnSearchFilterPanel";
+import { PrintReportModal, type BieuMauIn } from "./PrintReportModal";
+
+// SRS mục 1 "Chức năng In báo cáo" — 4 loại danh sách, mỗi loại 1 bảng tiêu chí riêng
+// (22/17/13/13 tiêu chí đầy đủ theo SRS; ở đây gom các tiêu chí chính để dựng popup thật,
+// thay cho nút "In biểu đồ" chỉ gọi window.print() trước đây).
+const BIEU_MAU_KHIEU_NAI: BieuMauIn[] = [
+  {
+    id: "quan-ly-vu-khieu-nai",
+    ten: "Quản lý vụ khiếu nại",
+    tieuChi: [
+      { key: "khoangNgay", label: "Ngày thụ lý (Từ – Đến)", type: "date-range" },
+      { key: "toaRaBA", label: "Tòa ra BA/QĐ", type: "text" },
+      { key: "soBA", label: "Số BA/QĐ", type: "text" },
+      { key: "loaiAn", label: "Loại án", type: "select", options: ["Hình sự", "Dân sự", "Kinh doanh, thương mại", "Lao động", "Hôn nhân gia đình", "Hành chính"] },
+      { key: "nguyenDon", label: "Nguyên đơn", type: "text" },
+      { key: "biDon", label: "Bị đơn", type: "text" },
+      { key: "trangThaiThuLy", label: "Trạng thái thụ lý", type: "select", options: ["Thụ lý mới", "Đã thụ lý"] },
+      { key: "ketQuaThuLy", label: "Kết quả thụ lý", type: "select", options: ["Chưa có kết quả", "Đã có kết quả"] },
+      { key: "ttv", label: "Thẩm tra viên", type: "text" },
+      { key: "lanhDao", label: "Lãnh đạo phụ trách", type: "text" },
+    ],
+  },
+  {
+    id: "ds-to-trinh",
+    ten: "Danh sách tờ trình",
+    tieuChi: [
+      { key: "khoangNgay", label: "Ngày trình lãnh đạo (Từ – Đến)", type: "date-range" },
+      { key: "soToTrinh", label: "Số tờ trình", type: "text" },
+      { key: "capTrinh", label: "Cấp trình", type: "text" },
+      { key: "trangThaiTrinh", label: "Trạng thái trình", type: "select", options: ["Chưa có tờ trình", "Chưa trình", "Đang trình", "Đã duyệt"] },
+      { key: "nguoiLap", label: "Người lập tờ trình", type: "text" },
+    ],
+  },
+  {
+    id: "quan-ly-ho-so",
+    ten: "Quản lý hồ sơ",
+    tieuChi: [
+      { key: "khoangNgay", label: "Ngày lập phiếu (Từ – Đến)", type: "date-range" },
+      { key: "loaiPhieu", label: "Loại phiếu", type: "select", options: ["Phiếu mượn", "Phiếu trả", "Phiếu chuyển", "Phiếu nhận"] },
+      { key: "trangThaiHoSo", label: "Trạng thái hồ sơ", type: "select", options: ["Chưa có hồ sơ", "Đang mượn hồ sơ", "Đã có hồ sơ", "Đã trả hồ sơ"] },
+      { key: "donViGiuHoSo", label: "Đơn vị giữ hồ sơ", type: "select", options: ["TAND", "VKS", "Trại giam", "Trại tạm giam", "Khác"] },
+    ],
+  },
+  {
+    id: "giai-quyet-don",
+    ten: "Giải quyết đơn",
+    tieuChi: [
+      { key: "khoangNgay", label: "Ngày giải quyết (Từ – Đến)", type: "date-range" },
+      { key: "loaiKetQua", label: "Loại kết quả", type: "select", options: ["Chấp nhận khiếu nại", "Không chấp nhận khiếu nại", "Xếp đơn"] },
+      { key: "thamQuyen", label: "Kết quả xác định thẩm quyền", type: "select", options: ["Đúng thẩm quyền", "Không đúng thẩm quyền - chuyển đơn vị khác", "Đang xác minh thẩm quyền"] },
+      { key: "nguoiKy", label: "Người ký ban hành", type: "text" },
+    ],
+  },
+];
 
 const paginBtn: React.CSSProperties = {
   padding: "4px 10px",
@@ -40,6 +94,21 @@ const paginBtn: React.CSSProperties = {
 
 export type KhieuNaiTabId = "tat-ca" | "dang-giai-quyet" | "da-giai-quyet" | "qua-han";
 
+// SRS: Thời hạn giải quyết đếm ngược — Hình sự 7 ngày, Dân sự 15 ngày kể từ ngày thụ lý.
+// Trả về số ngày còn lại (âm = đã quá hạn); null nếu không đọc được ngày thụ lý.
+function tinhSoNgayConLai(ngayThuLy: string | undefined, soNgayHan: number): number | null {
+  if (!ngayThuLy) return null;
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(ngayThuLy.trim());
+  if (!m) return null;
+  const thuLy = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+  const han = new Date(thuLy);
+  han.setDate(han.getDate() + soNgayHan);
+  const homNay = new Date();
+  homNay.setHours(0, 0, 0, 0);
+  han.setHours(0, 0, 0, 0);
+  return Math.round((han.getTime() - homNay.getTime()) / 86400000);
+}
+
 export function QuanLyKhieuNaiView({
   userRole,
   setUserRole,
@@ -51,6 +120,7 @@ export function QuanLyKhieuNaiView({
 }) {
   const [activeTab, setActiveTab] = useState<KhieuNaiTabId>("dang-giai-quyet");
   const [quickViewDonGroup, setQuickViewDonGroup] = useState<VuAnGroup | null>(null);
+  const [showInBaoCao, setShowInBaoCao] = useState(false);
 
   const roleGroups = filterVuAnListByRole(KHIEU_NAI_LIST, userRole);
   const filteredGroups = roleGroups
@@ -66,10 +136,18 @@ export function QuanLyKhieuNaiView({
         if (rows.length === 0) return null;
         return { ...group, rows };
       }
-      // TODO(LE-xxx, Lane A – Quản lý khiếu nại): tab "Quá hạn giải quyết" hiện trả về
-      // toàn bộ danh sách vì chưa có dữ liệu thời hạn. Theo SRS phải lọc theo thời hạn
-      // giải quyết (hình sự 7 ngày, dân sự 15 ngày kể từ ngày thụ lý) và chỉ lấy vụ
-      // "Chưa có KQGQ" hoặc "Đã có KQGQ nhưng còn đơn thụ lý mới".
+      if (activeTab === "qua-han") {
+        // SRS: thời hạn giải quyết Hình sự 7 ngày, Dân sự 15 ngày kể từ ngày thụ lý.
+        // Chỉ tính vụ chưa có KQGQ hoặc đã có KQGQ nhưng còn đơn thụ lý mới.
+        const rows = group.rows.filter((r) => {
+          if (r.kqGiaiQuyet === "da-co") return false;
+          const soNgayHan = r.loaiAn === "Hình sự" ? 7 : 15;
+          const conLai = tinhSoNgayConLai(r.ngayThuLy, soNgayHan);
+          return conLai !== null && conLai < 0;
+        });
+        if (rows.length === 0) return null;
+        return { ...group, rows };
+      }
       return group;
     })
     .filter(Boolean) as VuAnGroup[];
@@ -168,7 +246,7 @@ export function QuanLyKhieuNaiView({
         </button>
 
         <button
-          onClick={() => window.print()}
+          onClick={() => setShowInBaoCao(true)}
           style={{
             display: "flex",
             alignItems: "center",
@@ -183,9 +261,17 @@ export function QuanLyKhieuNaiView({
             fontFamily: F,
           }}
         >
-          <Printer size={13} /> In biểu đồ
+          <Printer size={13} /> In báo cáo
         </button>
       </div>
+
+      {showInBaoCao && (
+        <PrintReportModal
+          onClose={() => setShowInBaoCao(false)}
+          bieuMauList={BIEU_MAU_KHIEU_NAI}
+          tieuDeMan="In báo cáo — Quản lý khiếu nại"
+        />
+      )}
 
       {/* Table Section */}
       <div style={{ flex: 1, overflow: "auto" }}>
@@ -342,6 +428,45 @@ export function QuanLyKhieuNaiView({
                             ? <Badge color="#0f766e" bg="#ccfbf1">Trình Thẩm phán</Badge>
                             : <Badge color="#1e40af" bg="#dbeafe">Trình Phó Chánh án</Badge>}
 
+                        {/* — Tờ trình — */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: 2, borderTop: `1px dashed #e5e7eb`, paddingTop: 4 }}>
+                          <span style={{ fontSize: 10, color: MUTED, fontFamily: F, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>Tờ trình</span>
+                          {row.kqgq === "chua-phan-cong" ? (
+                            <span style={{ fontSize: 11, color: "#6b7280", fontFamily: F }}>Chưa có tờ trình</span>
+                          ) : row.kqgq === "trinh-tham-phan" ? (
+                            <span style={{ fontSize: 11, color: "#6b7280", fontFamily: F }}>Chưa trình</span>
+                          ) : (
+                            <>
+                              <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
+                                TT-{row.soThuLy?.replace(/\D/g, "").slice(-4) || "0000"}/2026 - {row.ngayThuLy}
+                              </span>
+                              <span style={{ fontSize: 11, color: "#2563eb", fontFamily: F, textDecoration: "underline", cursor: "pointer" }}
+                                onClick={() => onSelectKhieuNai(group.id, "to-trinh" as ChiTietTab)}>
+                                Tờ trình giải quyết khiếu nại - {row.ngayThuLy}
+                              </span>
+                              <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
+                                Trình Phó Chánh án - Chờ cho ý kiến
+                              </span>
+                            </>
+                          )}
+                        </div>
+
+                        {/* — Thời hạn giải quyết — */}
+                        {row.kqGiaiQuyet !== "da-co" && (() => {
+                          const soNgayHan = row.loaiAn === "Hình sự" ? 7 : 15;
+                          const conLai = tinhSoNgayConLai(row.ngayThuLy, soNgayHan);
+                          if (conLai === null) return null;
+                          const quaHan = conLai < 0;
+                          return (
+                            <div style={{ borderTop: `1px dashed #e5e7eb`, paddingTop: 4 }}>
+                              <span style={{ fontSize: 10, color: MUTED, fontFamily: F, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>Thời hạn giải quyết</span>{" "}
+                              <Badge color={quaHan ? "#991b1b" : conLai <= 2 ? "#92400e" : "#065f46"} bg={quaHan ? "#fee2e2" : conLai <= 2 ? "#fef3c7" : "#d1fae5"}>
+                                {quaHan ? `Quá hạn ${Math.abs(conLai)} ngày` : `Còn ${conLai} ngày`}
+                              </Badge>
+                            </div>
+                          );
+                        })()}
+
                         {/* — Trạng thái hồ sơ — */}
                         <div style={{ display: "flex", flexDirection: "column", gap: 2, borderTop: `1px dashed #e5e7eb`, paddingTop: 4 }}>
                           <span style={{ fontSize: 10, color: MUTED, fontFamily: F, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>Hồ sơ</span>
@@ -386,22 +511,33 @@ export function QuanLyKhieuNaiView({
 
                     {/* Thao tác */}
                     <td style={{ ...TD_STYLE, textAlign: "center" }}>
-                      <button
-                        onClick={() => onSelectKhieuNai(group.id)}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          padding: 4,
-                          borderRadius: 4,
-                          fontSize: 18,
-                          color: MUTED,
-                          lineHeight: 1,
-                        }}
-                        title="Tùy chọn chi tiết"
-                      >
-                        ⋮
-                      </button>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                        {row.kqGiaiQuyet && row.kqGiaiQuyet !== "chua-co" && (
+                          <button
+                            onClick={() => onSelectKhieuNai(group.id, "giai-quyet-van-ban" as ChiTietTab)}
+                            style={{ background: "none", border: "none", cursor: "pointer", padding: 4, borderRadius: 4, color: "#0f766e", display: "flex", alignItems: "center" }}
+                            title="Xem kết quả giải quyết"
+                          >
+                            <FileText size={15} />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => onSelectKhieuNai(group.id)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: 4,
+                            borderRadius: 4,
+                            fontSize: 18,
+                            color: MUTED,
+                            lineHeight: 1,
+                          }}
+                          title="Tùy chọn chi tiết"
+                        >
+                          ⋮
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
