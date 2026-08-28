@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { F, RED, BORDER, TEXT, MUTED, TH_STYLE, TD_STYLE } from "./shared";
 import { LOAI_AN_OPTIONS } from "./data";
+import { PlatformModalFrame, TableEmptyState } from "./components/platform";
 
 const DANH_SACH_TTV = [
   "Nguyễn Thị Thúy Hường - 12/03/1984 / Thẩm tra viên",
@@ -905,11 +906,7 @@ export function PhanCongTTVView() {
               </thead>
               <tbody>
                 {currentRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={11} style={{ ...TD_CUSTOM, textAlign: "center", padding: 36, color: MUTED }}>
-                      Không có bản ghi nào
-                    </td>
-                  </tr>
+                  <TableEmptyState colSpan={11} text="Không có bản ghi nào" style={{ ...TD_CUSTOM, padding: 36 }} />
                 ) : (
                   currentRows.map((r, index) => {
                     const isSelected = selectedIds.includes(r.id);
@@ -1042,8 +1039,11 @@ export function PhanCongTTVView() {
 
       {/* Modal Phân công chỉ định */}
       {showAssignModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 4000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-          <div style={{ background: "#fff", borderRadius: 10, width: "100%", maxWidth: 560, boxShadow: "0 20px 50px rgba(0,0,0,0.25)", overflow: "hidden", fontFamily: F }}>
+        <PlatformModalFrame
+          zIndex={4000}
+          overlayStyle={{ background: "rgba(0,0,0,0.5)", padding: 20 }}
+          cardStyle={{ borderRadius: 10, width: "100%", maxWidth: 560, boxShadow: "0 20px 50px rgba(0,0,0,0.25)", fontFamily: F }}
+        >
             <div style={{ padding: "14px 20px", background: "#f8fafc", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 700, fontSize: 15, color: RED }}>
                 <UserCheck size={18} /> Phân công chỉ định Thẩm tra viên & Lãnh đạo vụ
@@ -1103,14 +1103,16 @@ export function PhanCongTTVView() {
                 ✓ Xác nhận phân công
               </button>
             </div>
-          </div>
-        </div>
+        </PlatformModalFrame>
       )}
 
       {/* Modal Xem chi tiết vụ án */}
       {showDetailModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 4000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-          <div style={{ background: "#fff", borderRadius: 10, width: "100%", maxWidth: 640, boxShadow: "0 20px 50px rgba(0,0,0,0.25)", overflow: "hidden", fontFamily: F }}>
+        <PlatformModalFrame
+          zIndex={4000}
+          overlayStyle={{ background: "rgba(0,0,0,0.5)", padding: 20 }}
+          cardStyle={{ borderRadius: 10, width: "100%", maxWidth: 640, boxShadow: "0 20px 50px rgba(0,0,0,0.25)", fontFamily: F }}
+        >
             <div style={{ padding: "14px 20px", background: "#f8fafc", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ fontWeight: 700, fontSize: 15, color: RED }}>
                 📄 Xem đơn scan / Thông tin hồ sơ
@@ -1157,8 +1159,7 @@ export function PhanCongTTVView() {
                 Đóng
               </button>
             </div>
-          </div>
-        </div>
+        </PlatformModalFrame>
       )}
     </div>
   );

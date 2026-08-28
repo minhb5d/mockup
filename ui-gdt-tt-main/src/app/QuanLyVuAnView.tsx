@@ -15,6 +15,7 @@ import { HoSoLuuTruView } from "./HoSoLuuTruView";
 import { ThemKetQuaModal, ThemQuyetDinhHoanModal } from "./ThemKetQuaModal";
 import { TaoDuThaoModal } from "./TaoDuThaoModal";
 import { HoSoToTrinhModal, TrinhKyModal } from "./TrinhKyModal";
+import { TableEmptyState } from "./components/platform";
 
 // ── Types & Interfaces ────────────────────────────────────────────────────────
 export interface VuAnRow {
@@ -1404,7 +1405,7 @@ function TabDanhSachDon({ detail }: { detail: VuAnDetailData }) {
           </thead>
           <tbody>
             {danhSachDon.length === 0 && (
-              <tr><td colSpan={8} style={{ ...TD_STYLE, textAlign: "center", color: MUTED, padding: 32 }}>Không có dữ liệu</td></tr>
+              <TableEmptyState colSpan={8} text="Không có dữ liệu" />
             )}
             {danhSachDon.map((d, idx) => (
               <tr key={d.stt} style={{ background: idx % 2 === 0 ? "#fff" : "#fafafa" }}
@@ -1907,7 +1908,7 @@ function TabMuonTraHoSo({ detail }: { detail: VuAnDetailData }) {
           </thead>
           <tbody>
             {muonTraHoSo.length === 0 && (
-              <tr><td colSpan={11} style={{ ...TD_STYLE, textAlign: "center", color: MUTED, padding: 32 }}>Không có dữ liệu</td></tr>
+              <TableEmptyState colSpan={11} text="Không có dữ liệu" />
             )}
             {muonTraHoSo.map((r, idx) => (
               <tr key={r.stt} style={{ background: idx % 2 === 0 ? "#fff" : "#fafafa" }}>

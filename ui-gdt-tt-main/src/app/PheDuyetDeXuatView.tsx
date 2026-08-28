@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Search, Download, Printer, ChevronDown, Eye, RotateCcw, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { F, RED, BORDER, TEXT, MUTED, BG, Badge, TaiKhoanPhanQuyenBar, type UserRoleType } from "./shared";
+import { PlatformModalFrame } from "./components/platform";
 
 type Screen = "list" | "detail" | "bieu-mau";
 type ListTab = "tat-ca" | "cho-duyet" | "da-duyet" | "tu-choi";
@@ -338,8 +339,11 @@ function LichSuModal({ idx, onClose }: { idx: number; onClose: () => void }) {
   const thTd: React.CSSProperties = { padding: "8px 14px", fontSize: 12, fontFamily: F, borderBottom: `1px solid ${BORDER}`, textAlign: "left" as const };
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 1500, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ background: "#fff", borderRadius: 8, width: 520, boxShadow: "0 8px 40px rgba(0,0,0,0.2)", overflow: "hidden", fontFamily: F }}>
+    <PlatformModalFrame
+      zIndex={1500}
+      overlayStyle={{ background: "rgba(0,0,0,0.4)" }}
+      cardStyle={{ width: 520, boxShadow: "0 8px 40px rgba(0,0,0,0.2)", fontFamily: F }}
+    >
         {/* Header */}
         <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
           <div>
@@ -377,8 +381,7 @@ function LichSuModal({ idx, onClose }: { idx: number; onClose: () => void }) {
         <div style={{ padding: "12px 20px", borderTop: `1px solid ${BORDER}`, display: "flex", justifyContent: "flex-end" }}>
           <button onClick={onClose} style={{ padding: "6px 24px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F }}>Đóng</button>
         </div>
-      </div>
-    </div>
+    </PlatformModalFrame>
   );
 }
 
@@ -511,8 +514,10 @@ function CopyYKienModal({ fromIdx, donYKien, donData, onApply, onClose }: {
     prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]
   );
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 4000, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ background: "#fff", borderRadius: 8, width: 340, boxShadow: "0 8px 32px rgba(0,0,0,0.2)", fontFamily: F, overflow: "hidden" }}>
+    <PlatformModalFrame
+      zIndex={4000}
+      cardStyle={{ width: 340, boxShadow: "0 8px 32px rgba(0,0,0,0.2)", fontFamily: F }}
+    >
         {/* Header */}
         <div style={{ background: RED, color: "#fff", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span style={{ fontSize: 14, fontWeight: 700 }}>Áp dụng ý kiến cho đơn khác</span>
@@ -543,8 +548,7 @@ function CopyYKienModal({ fromIdx, donYKien, donData, onApply, onClose }: {
           <button onClick={() => onApply(selected)} style={{ flex: 1, padding: "8px 0", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: F }}>Áp dụng</button>
           <button onClick={onClose} style={{ flex: 1, padding: "8px 0", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F }}>Đóng</button>
         </div>
-      </div>
-    </div>
+    </PlatformModalFrame>
   );
 }
 

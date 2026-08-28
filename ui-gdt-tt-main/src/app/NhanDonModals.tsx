@@ -2,6 +2,7 @@ import React from "react";
 import { X, Search, RotateCcw, Save, Eye } from "lucide-react";
 import { BORDER, F, MUTED, RED, TEXT, TH_STYLE, TD_STYLE } from "./shared";
 import type { DonCase } from "./data";
+import { PlatformModalFrame } from "./components/platform";
 
 const today = () => new Date().toLocaleDateString("vi-VN");
 const field: React.CSSProperties = { width: "100%", boxSizing: "border-box", padding: "7px 9px", border: `1px solid ${BORDER}`, borderRadius: 4, fontFamily: F, fontSize: 12, color: TEXT, background: "#fff" };
@@ -10,15 +11,17 @@ const primary: React.CSSProperties = { border: 0, background: RED, color: "#fff"
 const secondary: React.CSSProperties = { border: `1px solid ${BORDER}`, background: "#fff", color: TEXT, borderRadius: 4, padding: "8px 18px", cursor: "pointer", fontFamily: F, fontWeight: 600, fontSize: 12 };
 
 function Shell({ title, children, onClose, width = 900 }: { title: string; children: React.ReactNode; onClose: () => void; width?: number }) {
-  return <div style={{ position: "fixed", inset: 0, zIndex: 6500, background: "rgba(15,23,42,.48)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-    <div style={{ width: "100%", maxWidth: width, maxHeight: "92vh", overflow: "auto", background: "#fff", borderRadius: 8, boxShadow: "0 24px 70px rgba(0,0,0,.28)", fontFamily: F }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${BORDER}`, position: "sticky", top: 0, background: "#fff", zIndex: 2 }}>
-        <b style={{ color: RED, fontSize: 15 }}>{title}</b>
-        <button onClick={onClose} style={{ border: 0, background: "none", cursor: "pointer" }}><X size={20} /></button>
-      </div>
-      {children}
+  return <PlatformModalFrame
+    zIndex={6500}
+    overlayStyle={{ background: "rgba(15,23,42,.48)", padding: 20 }}
+    cardStyle={{ width: "100%", maxWidth: width, maxHeight: "92vh", overflow: "auto", boxShadow: "0 24px 70px rgba(0,0,0,.28)", fontFamily: F }}
+  >
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${BORDER}`, position: "sticky", top: 0, background: "#fff", zIndex: 2 }}>
+      <b style={{ color: RED, fontSize: 15 }}>{title}</b>
+      <button onClick={onClose} style={{ border: 0, background: "none", cursor: "pointer" }}><X size={20} /></button>
     </div>
-  </div>;
+    {children}
+  </PlatformModalFrame>;
 }
 
 export function TraDonModal({ cases, onClose, onSuccess }: { cases: DonCase[]; onClose: () => void; onSuccess: () => void }) {

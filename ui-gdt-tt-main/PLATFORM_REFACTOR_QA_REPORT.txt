@@ -1,0 +1,31 @@
+PLATFORM REFACTOR QA REPORT
+===========================
+Scope: pure UI refactor shared by Lane A + Lane B.
+
+Changed foundation files:
+- src/app/components/platform/PlatformModalFrame.tsx (new)
+- src/app/components/platform/TableEmptyState.tsx (new)
+- src/app/components/platform/index.ts (new)
+
+Consumers refactored:
+Lane B:
+- src/app/NhanDonModals.tsx
+- src/app/PhanCongTTVView.tsx
+
+Lane A:
+- src/app/PheDuyetDeXuatView.tsx
+- src/app/QuanLyVuAnView.tsx
+
+SRS-safety checks:
+- No business workflow moved into platform components.
+- No business status/permission/validation rule moved into platform components.
+- No SRS-specific combobox/filter schema moved into platform components.
+- Vietnamese/business-facing quoted strings removed from modified files: 0.
+- Existing TS semantic errors in touched Lane A files are unchanged from baseline (same errors, shifted line numbers only).
+- TypeScript transpile syntax check across all source TS/TSX: 0 syntax errors.
+
+Not refactored intentionally:
+- Search/filter panels.
+- Business popups/content.
+- Status mapping/business rules.
+- PrintReportModal behavior (requires SRS schema alignment first).
