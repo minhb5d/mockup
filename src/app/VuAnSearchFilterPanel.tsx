@@ -101,6 +101,10 @@ export interface VuAnFilterValues {
   rutKhangNghi: string;
   ngayRutKhangNghi: string;
   ngayRutKhangNghiDen: string;
+
+  // SRS Quản lý khiếu nại mục A5, A6, A21, A22 — tách riêng khỏi "Kết quả giải quyết"
+  trangThaiThuLy: string;
+  ketQuaThuLy: string;
 }
 
 export const INITIAL_FILTER_VALUES: VuAnFilterValues = {
@@ -145,6 +149,8 @@ export const INITIAL_FILTER_VALUES: VuAnFilterValues = {
   rutKhangNghi: "",
   ngayRutKhangNghi: "",
   ngayRutKhangNghiDen: "",
+  trangThaiThuLy: "",
+  ketQuaThuLy: "",
 };
 
 export const FILTER_LABELS: Record<keyof VuAnFilterValues, string> = {
@@ -189,6 +195,8 @@ export const FILTER_LABELS: Record<keyof VuAnFilterValues, string> = {
   rutKhangNghi: "Rút kháng nghị",
   ngayRutKhangNghi: "Rút KN từ ngày",
   ngayRutKhangNghiDen: "Rút KN đến ngày",
+  trangThaiThuLy: "Trạng thái thụ lý",
+  ketQuaThuLy: "Kết quả thụ lý",
 };
 
 export function VuAnSearchFilterPanel({
@@ -527,6 +535,26 @@ export function VuAnSearchFilterPanel({
             </div>
 
             {/* Giải quyết đơn */}
+            <div>
+              <label style={labelStyle}>Trạng thái thụ lý</label>
+              <select value={filters.trangThaiThuLy} onChange={(e) => handleChange("trangThaiThuLy", e.target.value)} style={selectStyle}>
+                <option value="">– Tất cả –</option>
+                <option value="Thụ lý mới">Thụ lý mới</option>
+                <option value="Đã thụ lý">Đã thụ lý</option>
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Kết quả thụ lý</label>
+              <select value={filters.ketQuaThuLy} onChange={(e) => handleChange("ketQuaThuLy", e.target.value)} style={selectStyle}>
+                <option value="">– Tất cả –</option>
+                <option value="Chưa có kết quả">Chưa có kết quả</option>
+                <optgroup label="Đã có kết quả">
+                  <option value="Trả lời đơn">Trả lời đơn</option>
+                  <option value="Kháng nghị">Kháng nghị</option>
+                  <option value="Xếp đơn">Xếp đơn</option>
+                </optgroup>
+              </select>
+            </div>
             <div>
               <label style={labelStyle}>Kết quả giải quyết</label>
               <select value={filters.ketQuaGiaiQuyet} onChange={(e) => handleChange("ketQuaGiaiQuyet", e.target.value)} style={selectStyle}>

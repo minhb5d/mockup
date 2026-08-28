@@ -493,16 +493,25 @@ export function QuanLyKhieuNaiView({
                           {row.kqGiaiQuyet === "chua-co" && (
                             <span style={{ fontSize: 11, color: "#6b7280", fontFamily: F }}>Chưa có kết quả</span>
                           )}
-                          {(row.kqGiaiQuyet === "da-co" || row.kqGiaiQuyet === "chap-nhan") && (
+                          {row.kqGiaiQuyet === "chap-nhan" && (
                             <Badge color="#065f46" bg="#d1fae5">Chấp nhận khiếu nại</Badge>
                           )}
-                          {(row.kqGiaiQuyet === "da-co-con-don" || row.kqGiaiQuyet === "khong-chap-nhan") && (
+                          {row.kqGiaiQuyet === "khong-chap-nhan" && (
                             <Badge color="#991b1b" bg="#fee2e2">Không chấp nhận khiếu nại</Badge>
                           )}
                           {row.kqGiaiQuyet === "xep-don" && (
                             <Badge color="#4b5563" bg="#f3f4f6">Xếp đơn</Badge>
                           )}
-
+                          {/* SRS: "da-co" là TRẠNG THÁI (đã có KQGQ), không phải LOẠI kết quả —
+                              trước đây bị gộp chung với "chap-nhan" và render nhầm badge kết quả. */}
+                          {row.kqGiaiQuyet === "da-co" && (
+                            <Badge color="#1e40af" bg="#dbeafe">Đã có kết quả giải quyết</Badge>
+                          )}
+                          {/* "da-co-con-don": đã có KQGQ nhưng vụ còn đơn thụ lý mới chưa xử lý —
+                              đây cũng là TRẠNG THÁI, trước đây bị hiển thị nhầm thành "Không chấp nhận khiếu nại". */}
+                          {row.kqGiaiQuyet === "da-co-con-don" && (
+                            <Badge color="#92400e" bg="#fef3c7">Đã có KQGQ - còn đơn thụ lý mới</Badge>
+                          )}
                         </div>
 
 
