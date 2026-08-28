@@ -1504,6 +1504,10 @@ function TabDanhSachDon({ detail }: { detail: VuAnDetailData }) {
           {canhBao && (
             <span style={{ fontSize: 12, color: "#dc2626", fontFamily: F, marginRight: 10 }}>{canhBao}</span>
           )}
+          {/* SRS 1.2.4 [Thấp]: nút In danh sách */}
+          <button onClick={() => window.print()} style={{ marginRight: 8, display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
+            In danh sách
+          </button>
           <button onClick={handleTachVuAn} style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
             Tách vụ án{selectedDon.length > 0 ? ` (${selectedDon.length})` : ""}
           </button>
