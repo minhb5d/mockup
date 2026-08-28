@@ -2096,10 +2096,15 @@ function TaoPhieuModal({ onClose }: { onClose: () => void }) {
             <div style={{ display: "flex", justifyContent: "center", gap: 8, paddingTop: 4, borderTop: `1px solid ${BORDER}` }}>
               <button onClick={onClose} style={{ padding: "7px 20px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>Đóng</button>
               <button style={{ padding: "7px 20px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>Lưu</button>
-              <button onClick={handleToggleLaySo} style={{ padding: "7px 20px", background: daLaySo ? "#fef2f2" : "#fff", color: daLaySo ? "#dc2626" : "#374151", border: `1px solid ${daLaySo ? "#fca5a5" : BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
-                {daLaySo ? "✕ Hủy cấp số" : "Lấy số"}
-              </button>
-              <button style={{ padding: "7px 20px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F }}>Trình ký</button>
+              {/* SRS 1.4.3 mục 5: Phiếu nhận không cần Lấy số/Trình ký (không phải văn bản phát hành) */}
+              {loaiPhieu !== "Nhận hồ sơ" && (
+                <>
+                  <button onClick={handleToggleLaySo} style={{ padding: "7px 20px", background: daLaySo ? "#fef2f2" : "#fff", color: daLaySo ? "#dc2626" : "#374151", border: `1px solid ${daLaySo ? "#fca5a5" : BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
+                    {daLaySo ? "✕ Hủy cấp số" : "Lấy số"}
+                  </button>
+                  <button style={{ padding: "7px 20px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F }}>Trình ký</button>
+                </>
+              )}
               <button onClick={() => setShowBieuMau(true)} style={{ padding: "7px 20px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>Xem biểu mẫu</button>
             </div>
           </div>
@@ -2409,6 +2414,19 @@ function TabGiaiQuyetVB({ detail }: { detail?: VuAnDetailData }) {
           nguoiDuyet: [{ ten: "Nguyễn Thị Bình - Vụ trưởng", status: "Đã duyệt - 10/07/2026" }],
           nguoiKy: { ten: "Nguyễn Văn Quảng - Phó CA", status: "Chưa có hiệu lực", isDone: false },
           nguoiTao: { ten: "Nguyễn Cao Thắng", thoiGian: "09/07/2026 14:43:08" },
+        },
+      ],
+    },
+    {
+      // SRS 1.5.3: nhóm kết quả "Xếp đơn" cho khiếu nại — trước đây mockup chỉ có
+      // Chấp nhận / Không chấp nhận, thiếu hẳn nhóm này.
+      id: "xep-don-khieu-nai", title: "Xếp đơn",
+      items: [
+        {
+          stt: 1, maDon: "1533", soQuyetDinh: "14/QĐ-XD", ngayQuyetDinh: "10/07/2026", ngayPhatHanh: "Chưa cập nhật",
+          nguoiDuyet: [{ ten: "Nguyễn Thị Bình - Vụ trưởng", status: "Đã duyệt - 10/07/2026" }],
+          nguoiKy: { ten: "Nguyễn Thị Hoa - TPB3", status: "Đã có hiệu lực - 10/07/2026", isDone: true },
+          nguoiTao: { ten: "Nguyễn Cao Thắng", thoiGian: "10/07/2026 09:12:00" },
         },
       ],
     },

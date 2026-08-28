@@ -381,10 +381,28 @@ export function QuanLyKhieuNaiView({
                             <span style={{ color: TEXT, fontWeight: 400 }}>QHPL: </span>{getQuanHePhapLuat(row)}
                           </span>
                         )}
+                        {row.thongBaoTinhThe && (
+                          <span style={{ fontSize: 11, color: "#92400e", fontFamily: F }}>{row.thongBaoTinhThe}</span>
+                        )}
+                        {row.congVanChinh && (
+                          <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
+                            <span style={{ color: MUTED }}>CV chính: </span>{row.congVanChinh}
+                          </span>
+                        )}
+                        {row.yKienChiDao && (
+                          <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
+                            <span style={{ color: MUTED }}>Ý kiến chỉ đạo: </span>{row.yKienChiDao}
+                          </span>
+                        )}
+                        {row.congVanChuyenDon && (
+                          <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
+                            <span style={{ color: MUTED }}>CV chuyển đơn: </span>{row.congVanChuyenDon}
+                          </span>
+                        )}
                         <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 2 }}>
                           {row.anLoai === "chi-dao" && <Badge color="#92400e" bg="#fef3c7">Án chỉ đạo</Badge>}
                           {row.anLoai === "quoc-hoi" && <Badge color="#3730a3" bg="#e0e7ff">Án Quốc hội</Badge>}
-                          {row.anLoai === "tvtn" && <Badge color="#065f46" bg="#d1fae5">Án TVTN</Badge>}
+                          {row.anLoai === "tvtn" && <Badge color="#065f46" bg="#d1fae5">Án Người chưa thành niên</Badge>}
                           {row.anLoai === "tu-hinh" && <Badge color="#991b1b" bg="#fee2e2">Án tử hình</Badge>}
                         </div>
                       </div>
@@ -398,6 +416,9 @@ export function QuanLyKhieuNaiView({
                             <span style={{ color: TEXT, fontWeight: 600 }}>Người đứng đơn:</span>{" "}
                             <span style={{ color: TEXT }}>{row.ndd}</span>
                           </span>
+                        )}
+                        {row.diaChiNDD && (
+                          <span style={{ fontSize: 11, color: MUTED, fontFamily: F }}>Địa chỉ: {row.diaChiNDD}</span>
                         )}
                       </div>
                     </td>
@@ -511,6 +532,11 @@ export function QuanLyKhieuNaiView({
                               đây cũng là TRẠNG THÁI, trước đây bị hiển thị nhầm thành "Không chấp nhận khiếu nại". */}
                           {row.kqGiaiQuyet === "da-co-con-don" && (
                             <Badge color="#92400e" bg="#fef3c7">Đã có KQGQ - còn đơn thụ lý mới</Badge>
+                          )}
+                          {row.kqgqDon && (
+                            <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
+                              KQGQ: {row.kqgqDon.loai} - {row.kqgqDon.so} - {row.kqgqDon.ngay}
+                            </span>
                           )}
                         </div>
 
