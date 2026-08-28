@@ -542,10 +542,13 @@ function ThongTinChungBlock({ row }: { row: VuXetXuRow }) {
 
 // ── Tab: Thông tin vụ án ─────────────────────────────────────────────────────
 
-function TabThongTin({ row, userRole }: { row: VuXetXuRow; userRole?: UserRoleType }) {
+function TabThongTin({ row, userRole, onDirtyChange }: { row: VuXetXuRow; userRole?: UserRoleType; onDirtyChange?: (dirty: boolean) => void }) {
   const [sec1Open, setSec1Open] = useState(true);
   const [sec2Open, setSec2Open] = useState(true);
-  const [kSuaOpen, setKSuaOpen] = useState(false);
+  // THIẾU [TB]: cảnh báo "Các thông tin thay đổi chưa được Lưu" khi rời tab lúc đang sửa
+  const [kSuaOpenRaw, setKSuaOpenRaw] = useState(false);
+  const kSuaOpen = kSuaOpenRaw;
+  const setKSuaOpen = (v: boolean) => { setKSuaOpenRaw(v); onDirtyChange?.(v); };
   const TH: React.CSSProperties = { ...TH_STYLE, fontSize: 11, padding: "9px 12px" };
   const TD: React.CSSProperties = { ...TD_STYLE, fontSize: 12, padding: "9px 12px" };
   const inp: React.CSSProperties = { border: `1px solid ${BORDER}`, borderRadius: 4, padding: "7px 10px", fontSize: 12, fontFamily: F, outline: "none", background: "#fff", width: "100%", boxSizing: "border-box" as const };
@@ -592,7 +595,7 @@ function TabThongTin({ row, userRole }: { row: VuXetXuRow; userRole?: UserRoleTy
             <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, overflow: "hidden", marginBottom: 12 }}>
               <div style={{ padding: "10px 14px", background: BG, borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: TEXT, fontFamily: F }}>Thông tin Hồ sơ Kháng nghị</span>
-                <button onClick={() => setKSuaOpen(v => !v)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", background: kSuaOpen ? "#fee2e2" : "#fff", border: `1px solid ${kSuaOpen ? RED : BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F, color: kSuaOpen ? RED : TEXT }}>
+                <button onClick={() => setKSuaOpen(!kSuaOpen)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", background: kSuaOpen ? "#fee2e2" : "#fff", border: `1px solid ${kSuaOpen ? RED : BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F, color: kSuaOpen ? RED : TEXT }}>
                   <Pencil size={12} /> Sửa
                 </button>
               </div>
@@ -975,6 +978,8 @@ function TabPhanCong({ row }: { row: VuXetXuRow }) {
 
   const [thuKyTen, setThuKyTen] = useState("Hoàng Văn Toàn");
   const [isEditingThuKy, setIsEditingThuKy] = useState(false);
+  // THIẾU [Thấp]: biểu mẫu "Phiếu kết quả phân công" cho TTV — SRS Phân công B.7
+  const [showPhieuKQPC, setShowPhieuKQPC] = useState(false);
 
   const DANH_SACH_THU_KY = [
     "Hoàng Văn Toàn",
@@ -985,10 +990,11 @@ function TabPhanCong({ row }: { row: VuXetXuRow }) {
   ];
 
   const PC_ROWS = [
-    { vai: "Thẩm phán", ngay: "10/04/2026\n06/04/2026", ten: "Trịnh Đức Minh", phu: "Lê Đức Hòa", chuc: "Phó Chánh án", nguoi: "Nguyễn Xuân Thành\n10/04/2026 – 10:20:10", hasDoc: true, isThuKy: false },
-    { vai: "Lãnh đạo vụ", ngay: "14/04/2026", ten: "Hoàng Văn Hòa", phu: "", chuc: "Phó Vụ trưởng", nguoi: "Nguyễn Xuân Thành\n14/04/2026 – 10:20:10", hasDoc: false, isThuKy: false },
-    { vai: "Thẩm tra viên", ngay: "16/04/2026", ten: "Nguyễn Ngọc Ngan", phu: "", chuc: "Thẩm tra viên chính", nguoi: "Nguyễn Xuân Thành\n14/04/2026 – 10:20:10", hasDoc: false, isThuKy: false },
-    { vai: "Thư ký phiên tòa", ngay: "18/04/2026", ten: thuKyTen, phu: "", chuc: "Thư ký tòa án", nguoi: "Nguyễn Xuân Thành\n18/04/2026 – 08:30:00", hasDoc: true, isThuKy: true },
+    { vai: "Thẩm phán", ngay: "10/04/2026\n06/04/2026", ten: "Trịnh Đức Minh", phu: "Lê Đức Hòa", chuc: "Phó Chánh án", nguoi: "Nguyễn Xuân Thành\n10/04/2026 – 10:20:10", hasDoc: true, isThuKy: false, isTTV: false },
+    { vai: "Lãnh đạo vụ", ngay: "14/04/2026", ten: "Hoàng Văn Hòa", phu: "", chuc: "Phó Vụ trưởng", nguoi: "Nguyễn Xuân Thành\n14/04/2026 – 10:20:10", hasDoc: false, isThuKy: false, isTTV: false },
+    // THIẾU [Thấp]: hasDoc=true cho TTV để mở biểu mẫu "Phiếu kết quả phân công" — SRS Phân công B.7
+    { vai: "Thẩm tra viên", ngay: "16/04/2026", ten: "Nguyễn Ngọc Ngan", phu: "", chuc: "Thẩm tra viên chính", nguoi: "Nguyễn Xuân Thành\n14/04/2026 – 10:20:10", hasDoc: true, isThuKy: false, isTTV: true },
+    { vai: "Thư ký phiên tòa", ngay: "18/04/2026", ten: thuKyTen, phu: "", chuc: "Thư ký tòa án", nguoi: "Nguyễn Xuân Thành\n18/04/2026 – 08:30:00", hasDoc: true, isThuKy: true, isTTV: false },
   ];
   const HDXX_ROWS = [
     { vai: "Thẩm phán chủ tọa", nguoi: "Nguyễn Hoàng Hòa – 16/02/1989", chuc: "Phó Chánh án – Thẩm phán TAND tối cao", ngay: "12/02/2026" },
@@ -999,6 +1005,8 @@ function TabPhanCong({ row }: { row: VuXetXuRow }) {
   ];
   const QD_ROWS = [
     { so: "12345681/2026/QĐ-TA", ngay: "31/03/2026", ten: "Quyết định thành lập hội đồng xét xử", nguoiKy: "Trần Văn Hành", chucVu: "Chánh tòa", tt: "Đã cấp số" },
+    // THIẾU [Thấp]: trạng thái "Hủy Quyết Định" ở bảng QĐ phân công — SRS Phân công C.6
+    { so: "12345650/2026/QĐ-TA", ngay: "15/02/2026", ten: "Quyết định thành lập hội đồng xét xử", nguoiKy: "Trần Văn Hành", chucVu: "Chánh tòa", tt: "Hủy Quyết Định" },
   ];
 
   const Sec = ({ title }: { title: string }) => (
@@ -1053,7 +1061,15 @@ function TabPhanCong({ row }: { row: VuXetXuRow }) {
                 <td style={{ ...TD, whiteSpace: "pre-line" as const, fontSize: 11 }}>{r.nguoi}</td>
                 <td style={{ ...TD, textAlign: "center" as const }}>
                   <div style={{ display: "flex", gap: 6, justifyContent: "center", alignItems: "center" }}>
-                    {r.hasDoc && <button style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }} title="Xem tài liệu"><FileText size={14} /></button>}
+                    {r.hasDoc && (
+                      <button
+                        onClick={() => { if (r.isTTV) setShowPhieuKQPC(true); }}
+                        style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}
+                        title={r.isTTV ? "Xem Phiếu kết quả phân công" : "Xem tài liệu"}
+                      >
+                        <FileText size={14} />
+                      </button>
+                    )}
                     {r.isThuKy && (
                       isEditingThuKy ? (
                         <button
@@ -1109,7 +1125,11 @@ function TabPhanCong({ row }: { row: VuXetXuRow }) {
                 <td style={{ ...TD, whiteSpace: "nowrap" as const }}>{r.ngay}</td>
                 <td style={TD}>{r.ten}</td>
                 <td style={TD}><div style={{ fontWeight: 600 }}>{r.nguoiKy}</div><div style={{ fontSize: 11, color: MUTED }}>{r.chucVu}</div></td>
-                <td style={TD}><Badge color="#15803d" bg="#dcfce7">{r.tt}</Badge></td>
+                <td style={TD}>
+                  {r.tt === "Hủy Quyết Định"
+                    ? <Badge color="#991b1b" bg="#fee2e2">{r.tt}</Badge>
+                    : <Badge color="#15803d" bg="#dcfce7">{r.tt}</Badge>}
+                </td>
                 <td style={{ ...TD, textAlign: "center" as const }}>
                   <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
                     <button style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}><Eye size={14} /></button>
@@ -1121,6 +1141,30 @@ function TabPhanCong({ row }: { row: VuXetXuRow }) {
           </tbody>
         </table>
       </div>
+
+      {/* THIẾU [Thấp]: biểu mẫu "Phiếu kết quả phân công" cho TTV — SRS Phân công B.7 */}
+      {showPhieuKQPC && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1500, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.3)" }}
+          onClick={() => setShowPhieuKQPC(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: 8, width: 460, boxShadow: "0 8px 48px rgba(0,0,0,0.22)", fontFamily: F, overflow: "hidden" }}>
+            <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>Phiếu kết quả phân công</span>
+              <button onClick={() => setShowPhieuKQPC(false)} style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}><X size={18} /></button>
+            </div>
+            <div style={{ padding: "16px 20px" }}>
+              <InfoGrid rows={[
+                ["Vụ án", row.tenVuAn || row.maVuAn, "Số – Ngày thụ lý XX", row.soNgayThuLy || "–"],
+                ["Thẩm tra viên", "Nguyễn Ngọc Ngan", "Chức danh", "Thẩm tra viên chính"],
+                ["Ngày phân công", "16/04/2026", "Người phân công", "Nguyễn Xuân Thành"],
+              ]} />
+            </div>
+            <div style={{ padding: "12px 20px", borderTop: `1px solid ${BORDER}`, display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <button onClick={() => setShowPhieuKQPC(false)} style={{ padding: "7px 22px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F, color: TEXT }}>Đóng</button>
+              <button style={{ padding: "7px 22px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: F }}>In phiếu</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -4276,6 +4320,9 @@ function TabQuyetDinhBiCao({ row }: { row?: VuXetXuRow }) {
             maVuAn: row?.maVuAn || "VA26-002148",
             tenVuAn: row?.tenVuAn || "Vụ án Trần Văn Hải",
             soBA: "5469 - 03/07/2026",
+            // THIẾU [TB]: đánh dấu loại văn bản để TaoDuThaoModal hiện thêm bảng Căn cứ điều luật
+            // + Cơ sở trại giam/trại tạm giam — SRS QĐ Bị cáo C.5, C.6
+            loaiVanBan: "tiep-tuc-tam-giam",
           }}
           onSave={d => {
             const nextId = Date.now();
@@ -4624,6 +4671,12 @@ function TabTaiLieuVuAn({ row }: { row?: VuXetXuRow }) {
 
 function ChiTietVuXetXuView({ row, userRole, onBack, initialTab }: { row: VuXetXuRow; userRole?: UserRoleType; onBack: () => void; initialTab?: DetailTab }) {
   const [tab, setTab] = useState<DetailTab>(initialTab || "thong-tin");
+  // THIẾU [TB]: cảnh báo "Các thông tin thay đổi chưa được Lưu" khi rời tính năng lúc đang sửa dở
+  const [thongTinDangSua, setThongTinDangSua] = useState(false);
+  const handleBackWithConfirm = () => {
+    if (thongTinDangSua && !window.confirm("Các thông tin thay đổi chưa được Lưu. Bạn có chắc chắn muốn rời khỏi màn hình?")) return;
+    onBack();
+  };
 
   const isHinhSuDetail =
     userRole === "vu-1" ||
@@ -4643,7 +4696,7 @@ function ChiTietVuXetXuView({ row, userRole, onBack, initialTab }: { row: VuXetX
         Trang chủ › Quản lý GĐT/TT › Quản lý vụ xét xử GĐT › Chi tiết vụ xét xử
       </div>
       <div style={{ background: "#fff", padding: "14px 20px 0", borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
-        <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: F, padding: 0, marginBottom: 12 }}>
+        <button onClick={handleBackWithConfirm} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: F, padding: 0, marginBottom: 12 }}>
           ← Chi tiết án xét xử – {row.maVuAn}
         </button>
         <div style={{ display: "flex", flexWrap: "nowrap" as const, overflowX: "auto" as const }}>
@@ -4659,7 +4712,7 @@ function ChiTietVuXetXuView({ row, userRole, onBack, initialTab }: { row: VuXetX
         </div>
       </div>
       <div style={{ flex: 1, overflow: "auto", padding: 20 }}>
-        {tab === "thong-tin" && <TabThongTin row={row} userRole={userRole} />}
+        {tab === "thong-tin" && <TabThongTin row={row} userRole={userRole} onDirtyChange={setThongTinDangSua} />}
         {tab === "thu-ly" && <TabThuLy row={row} />}
         {tab === "don-gdt-tt" && !laHoSoKhangNghi && <TabDonGDTTT row={row} />}
         {tab === "to-trinh" && <TabToTrinhXX row={row} />}

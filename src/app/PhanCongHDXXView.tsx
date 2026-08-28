@@ -59,7 +59,8 @@ export type HDXXRow = {
   danhSachVuAn?: VuAnDetail[];
 };
 
-type PCTab = "tat-ca" | "cho-ky-duyet";
+// THIẾU [TB]: tab "Danh sách tham mưu Hội đồng xét xử" — SRS mục 1.4
+type PCTab = "tat-ca" | "cho-ky-duyet" | "tham-muu";
 
 const ROWS: HDXXRow[] = [
   {
@@ -2895,6 +2896,12 @@ function SuaDanhSachModal({
   onSave: (updatedData: Partial<HDXXRow>) => void;
 }) {
   const [showLichPicker, setShowLichPicker] = useState(false);
+  // THIẾU [TB]: Lịch sử chỉnh sửa phân công HĐXX — SRS mục 8
+  const [showLichSu, setShowLichSu] = useState(false);
+  const [lichSuChinhSua, setLichSuChinhSua] = useState<{ id: number; thoiGian: string; noiDung: string; giaTriCu: string; giaTriMoi: string }[]>([]);
+  const ghiLichSu = (noiDung: string, giaTriCu: string, giaTriMoi: string) => {
+    setLichSuChinhSua(prev => [{ id: Date.now(), thoiGian: new Date().toLocaleString("vi-VN"), noiDung, giaTriCu, giaTriMoi }, ...prev]);
+  };
   const [caseList, setCaseList] = useState([
     {
       id: 1,
@@ -2959,16 +2966,21 @@ function SuaDanhSachModal({
   ]);
 
   const handleUpdateChuToa = (id: number, val: string) => {
+    const old = caseList.find(c => c.id === id)?.chuToa || "";
     setCaseList(prev => prev.map(c => c.id === id ? { ...c, chuToa: val } : c));
+    ghiLichSu("Đổi chủ tọa", old, val);
   };
 
   const handleRemoveMember = (id: number, memberName: string) => {
     setCaseList(prev => prev.map(c => c.id === id ? { ...c, members: c.members.filter(m => m !== memberName) } : c));
+    ghiLichSu("Bớt thành viên hội đồng", memberName, "(đã xóa)");
   };
 
   const handleDeleteRow = (id: number) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa vụ án này khỏi danh sách xét xử?")) {
+      const vu = caseList.find(c => c.id === id);
       setCaseList(prev => prev.filter(c => c.id !== id));
+      ghiLichSu("Bỏ vụ án khỏi danh sách", vu?.soBA || `#${id}`, "(đã bỏ)");
     }
   };
 
@@ -3006,6 +3018,44 @@ function SuaDanhSachModal({
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 3500, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       {showLichPicker && <LichXetXuModal onClose={() => setShowLichPicker(false)} />}
+      {/* THIẾU [TB]: popup Lịch sử chỉnh sửa — SRS mục 8 */}
+      {showLichSu && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 4000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)" }}
+          onClick={() => setShowLichSu(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: 8, width: 620, maxHeight: "80vh", display: "flex", flexDirection: "column" as const, boxShadow: "0 8px 48px rgba(0,0,0,0.25)", fontFamily: F }}>
+            <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>Lịch sử chỉnh sửa</span>
+              <button onClick={() => setShowLichSu(false)} style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}><X size={18} /></button>
+            </div>
+            <div style={{ overflowY: "auto" as const, flex: 1 }}>
+              {lichSuChinhSua.length === 0 ? (
+                <div style={{ padding: 32, textAlign: "center" as const, color: MUTED, fontSize: 12 }}>Chưa có thay đổi nào được ghi nhận.</div>
+              ) : (
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr>{["Thời gian", "Nội dung", "Giá trị cũ", "Giá trị mới"].map(h => (
+                      <th key={h} style={{ ...TH_STYLE, fontSize: 11, padding: "8px 10px" }}>{h}</th>
+                    ))}</tr>
+                  </thead>
+                  <tbody>
+                    {lichSuChinhSua.map((h, i) => (
+                      <tr key={h.id} style={{ background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
+                        <td style={{ ...TD_STYLE, fontSize: 11, whiteSpace: "nowrap" as const }}>{h.thoiGian}</td>
+                        <td style={{ ...TD_STYLE, fontSize: 12 }}>{h.noiDung}</td>
+                        <td style={{ ...TD_STYLE, fontSize: 12, color: "#991b1b" }}>{h.giaTriCu}</td>
+                        <td style={{ ...TD_STYLE, fontSize: 12, color: "#166534" }}>{h.giaTriMoi}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+            <div style={{ padding: "12px 20px", borderTop: `1px solid ${BORDER}`, display: "flex", justifyContent: "flex-end" }}>
+              <button onClick={() => setShowLichSu(false)} style={{ padding: "7px 22px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F, color: TEXT }}>Đóng</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div style={{ background: "#fff", width: "95vw", maxWidth: 1280, borderRadius: 10, boxShadow: "0 16px 40px rgba(0,0,0,0.25)", overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "90vh", fontFamily: F }}>
         {/* Header */}
         <div style={{ padding: "14px 24px", background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -3031,6 +3081,17 @@ function SuaDanhSachModal({
               }}
             >
               <Calendar size={14} /> Chọn lịch xét xử
+            </button>
+            {/* THIẾU [TB]: nút "Lịch sử chỉnh sửa" — SRS mục 8 */}
+            <button
+              onClick={() => setShowLichSu(true)}
+              style={{
+                display: "flex", alignItems: "center", gap: 6, padding: "6px 14px",
+                background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 6,
+                fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: F,
+              }}
+            >
+              🕐 Lịch sử chỉnh sửa {lichSuChinhSua.length > 0 && `(${lichSuChinhSua.length})`}
             </button>
             <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 4 }}>
               <X size={22} />
@@ -4716,7 +4777,13 @@ export default function PhanCongHDXXView({
     return true;
   });
 
-  const rows = tab === "cho-ky-duyet" ? filteredByRole.filter(r => r.trangThaiXX === "cho-ky-duyet") : filteredByRole;
+  // THIẾU [TB]: tab "Danh sách tham mưu Hội đồng xét xử" — SRS mục 1.4
+  // (danh sách đã lập tham mưu, chưa trình ký — tái dùng trạng thái "chua-phan-cong")
+  const rows = tab === "cho-ky-duyet"
+    ? filteredByRole.filter(r => r.trangThaiXX === "cho-ky-duyet")
+    : tab === "tham-muu"
+      ? filteredByRole.filter(r => r.trangThaiXX === "chua-phan-cong")
+      : filteredByRole;
   const allChecked = rows.length > 0 && rows.every(r => checked.has(r.id));
   const toggleAll = () => setChecked(allChecked ? new Set() : new Set(rows.map(r => r.id)));
   const toggle = (id: number) => setChecked(p => { const s = new Set(p); s.has(id) ? s.delete(id) : s.add(id); return s; });
@@ -4727,6 +4794,8 @@ export default function PhanCongHDXXView({
   const tabs: { id: PCTab; label: string; count: number }[] = [
     { id: "tat-ca", label: "Tất cả", count: filteredByRole.length },
     { id: "cho-ky-duyet", label: "Chờ ký duyệt", count: filteredByRole.filter(r => r.trangThaiXX === "cho-ky-duyet").length },
+    // THIẾU [TB]: tab "Danh sách tham mưu Hội đồng xét xử" — SRS mục 1.4
+    { id: "tham-muu", label: "Danh sách tham mưu HĐXX", count: filteredByRole.filter(r => r.trangThaiXX === "chua-phan-cong").length },
   ];
 
   return (

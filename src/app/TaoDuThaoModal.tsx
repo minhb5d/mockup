@@ -375,6 +375,26 @@ export function TaoDuThaoModal({
   const toaAnGiaiQuyet = "Tòa án nhân dân tối cao";
   const trangThai = "Chưa có kết quả xét xử";
 
+  // THIẾU [TB]: bảng Căn cứ điều luật + Cơ sở trại giam/trại tạm giam cho popup
+  // "Quyết định tiếp tục tạm giam" — SRS QĐ Bị cáo C.5, C.6
+  const isTiepTucTamGiam = detail?.loaiVanBan === "tiep-tuc-tam-giam";
+  const [tamGiamDieuLuatRows, setTamGiamDieuLuatRows] = useState([
+    { id: 1, boLuat: "Bộ luật Tố tụng hình sự 2015", dieuLuat: "Điều 173", khoan: "2", diem: "" },
+  ]);
+  const [coSoTramGiam, setCoSoTramGiam] = useState("");
+  const COSO_TRAM_GIAM_OPTIONS = [
+    "Trại tạm giam Công an tỉnh Bắc Ninh",
+    "Trại tạm giam T16 - Bộ Công an",
+    "Trại giam Thanh Xuân",
+    "Trại giam Nam Hà",
+  ];
+  const themDongDieuLuat = () => {
+    setTamGiamDieuLuatRows(prev => [...prev, { id: Date.now(), boLuat: "Bộ luật Tố tụng hình sự 2015", dieuLuat: "", khoan: "", diem: "" }]);
+  };
+  const xoaDongDieuLuat = (id: number) => {
+    setTamGiamDieuLuatRows(prev => prev.filter(r => r.id !== id));
+  };
+
   // Section 1: Thông tin đơn
   const [donLienQuan, setDonLienQuan] = useState("2 đơn/người được chọn");
   const [ketQuaGQ, setKetQuaGQ] = useState<"tra-loi" | "khang-nghi" | "chap-nhan" | "khong-chap-nhan" | "xep-don">("tra-loi");
@@ -1282,6 +1302,51 @@ export function TaoDuThaoModal({
             </div>
           </div>
         </div>
+
+        {/* THIẾU [TB]: bảng Căn cứ điều luật + Cơ sở trại giam/trại tạm giam — SRS QĐ Bị cáo C.5, C.6 */}
+        {isTiepTucTamGiam && (
+          <div style={{ padding: "0 20px 16px" }}>
+            <div style={{ border: "1px solid #e5e7eb", borderRadius: 6, overflow: "hidden", marginBottom: 12 }}>
+              <div style={{ padding: "8px 12px", background: "#f8fafc", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#374151", textTransform: "uppercase", fontFamily: F }}>Căn cứ điều luật</span>
+                <button type="button" onClick={themDongDieuLuat} style={{ padding: "4px 12px", background: "#fff", border: "1px solid #d1d5db", borderRadius: 4, cursor: "pointer", fontSize: 11, fontFamily: F, color: "#374151" }}>+ Thêm dòng</button>
+              </div>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>{["Bộ luật", "Điều luật", "Khoản", "Điểm", "Thao tác"].map(h => (
+                    <th key={h} style={{ padding: "8px 10px", fontSize: 11, fontWeight: 700, color: "#374151", background: "#f8fafc", borderBottom: "1px solid #e5e7eb", textAlign: "left", fontFamily: F }}>{h}</th>
+                  ))}</tr>
+                </thead>
+                <tbody>
+                  {tamGiamDieuLuatRows.map((r, i) => (
+                    <tr key={r.id} style={{ background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
+                      <td style={{ padding: "8px 10px", fontSize: 12, fontFamily: F }}>{r.boLuat}</td>
+                      <td style={{ padding: "8px 10px", fontSize: 12, fontFamily: F }}>
+                        <input value={r.dieuLuat} onChange={e => setTamGiamDieuLuatRows(prev => prev.map(x => x.id === r.id ? { ...x, dieuLuat: e.target.value } : x))} placeholder="Nhập điều luật" style={inSt} />
+                      </td>
+                      <td style={{ padding: "8px 10px", fontSize: 12, fontFamily: F, width: 70 }}>
+                        <input value={r.khoan} onChange={e => setTamGiamDieuLuatRows(prev => prev.map(x => x.id === r.id ? { ...x, khoan: e.target.value } : x))} style={inSt} />
+                      </td>
+                      <td style={{ padding: "8px 10px", fontSize: 12, fontFamily: F, width: 70 }}>
+                        <input value={r.diem} onChange={e => setTamGiamDieuLuatRows(prev => prev.map(x => x.id === r.id ? { ...x, diem: e.target.value } : x))} style={inSt} />
+                      </td>
+                      <td style={{ padding: "8px 10px", textAlign: "center" }}>
+                        <button type="button" onClick={() => xoaDongDieuLuat(r.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", fontSize: 12 }}>Xóa</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div>
+              <label style={lblSt}><span style={{ color: "#dc2626", marginRight: 3 }}>*</span>Cơ sở trại giam/trại tạm giam</label>
+              <select value={coSoTramGiam} onChange={e => setCoSoTramGiam(e.target.value)} style={{ ...inSt, cursor: "pointer" }}>
+                <option value="">-- Chọn cơ sở trại giam/trại tạm giam --</option>
+                {COSO_TRAM_GIAM_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* Modal Footer */}
         <div
