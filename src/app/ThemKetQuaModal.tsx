@@ -234,6 +234,13 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
   const [nguoiKy, setNguoiKy] = useState("Nguyễn Biên Thuỳ - Thẩm phán TANDTC");
   const [ngayPhatHanh, setNgayPhatHanh] = useState("");
   const [noiDung, setNoiDung] = useState("");
+  // SRS [Thấp]: cảnh báo "Các thông tin thay đổi chưa được Lưu" khi đóng popup lúc chưa lưu
+  const ketQuaMacDinh: KetQua = isKhieuNai ? "chap-nhan" : "tra-loi";
+  const isDirty = soQuyetDinh.trim() !== "" || noiDung.trim() !== "" || ketQua !== ketQuaMacDinh;
+  const handleClose = () => {
+    if (isDirty && !window.confirm("Các thông tin thay đổi chưa được Lưu. Bạn có chắc chắn muốn Đóng?")) return;
+    onClose();
+  };
   const [selectedVKS, setSelectedVKS] = useState("VKSND Tối cao");
   const [ngayXepDon, setNgayXepDon] = useState("09/08/2026");
   const [nguoiXepDon, setNguoiXepDon] = useState("Nguyễn Hòa Bình – Chánh án");
@@ -318,6 +325,14 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
   };
 
   const handleSave = () => {
+    // SRS [Thấp]: cảnh báo khi thiếu thông tin bắt buộc trước khi lưu
+    const thieuThongTinBatBuoc =
+      (showNoiNhan && !noiDung.trim()) ||
+      (isKhieuNai && !ketQuaXacDinhThamQuyen);
+    if (thieuThongTinBatBuoc) {
+      alert("Bổ sung các thông tin bắt buộc để tiếp tục thao tác");
+      return;
+    }
     alert("Đã lưu kết quả giải quyết văn bản đề nghị thành công!");
     onClose();
   };
@@ -401,7 +416,7 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
             <span style={{ fontSize: 15, fontWeight: 700, color: TEXT, flex: 1 }}>
               {isKhieuNai ? "Thêm kết quả giải quyết khiếu nại" : "Tạo kết quả giải quyết văn bản đề nghị"}
             </span>
-            <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex" }}>
+            <button onClick={handleClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex" }}>
               <X size={18} color={MUTED} />
             </button>
           </div>
@@ -1185,7 +1200,7 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
           <div style={{ display: "flex", justifyContent: "center", gap: 10, padding: "12px 20px", borderTop: `1px solid ${BORDER}`, flexShrink: 0, flexWrap: "wrap" }}>
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               style={{ padding: "7px 20px", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}
             >
               Đóng
