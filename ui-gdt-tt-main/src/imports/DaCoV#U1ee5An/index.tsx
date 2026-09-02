@@ -1,5 +1,5 @@
 import svgPaths from "./svg-ze2ahnuae6";
-// import imgImage1 from "./ff1d113cee80a948cc05d656387792dca2734042.png";
+import imgImage1 from "./ff1d113cee80a948cc05d656387792dca2734042.png";
 import { countByTab } from "../../app/data";
 // import { countByTab as countByTab2 } from "../../app/data";
 

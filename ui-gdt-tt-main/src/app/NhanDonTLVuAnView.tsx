@@ -482,33 +482,19 @@ function CaseTable({
     : "THÔNG TIN BA/QĐ ĐỂ NGHỊ GĐT,TT";
 
   // Đối chiếu 27.08: bỏ cột THÔNG TIN NHẬN/TRẢ và NGÀY DUYỆT TỜ TRÌNH khỏi bảng danh sách.
-  const hasNhanTraCol = false;
 
   return (
     <div style={{ flex: 1, overflow: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
-        {hasNhanTraCol ? (
-          <colgroup>
-            <col style={{ width: 36 }} />
-            <col style={{ width: 36 }} />
-            <col style={{ width: "22%" }} />
-            <col style={{ width: "17%" }} />
-            <col style={{ width: "18%" }} />
-            <col style={{ width: "20%" }} />
-            <col style={{ width: "15%" }} />
-            <col style={{ width: 52 }} />
-          </colgroup>
-        ) : (
-          <colgroup>
-            <col style={{ width: 36 }} />
-            <col style={{ width: 36 }} />
-            <col style={{ width: "26%" }} />
-            <col style={{ width: "22%" }} />
-            <col style={{ width: "22%" }} />
-            <col style={{ width: "24%" }} />
-            <col style={{ width: 52 }} />
-          </colgroup>
-        )}
+        <colgroup>
+          <col style={{ width: 36 }} />
+          <col style={{ width: 36 }} />
+          <col style={{ width: "26%" }} />
+          <col style={{ width: "22%" }} />
+          <col style={{ width: "22%" }} />
+          <col style={{ width: "24%" }} />
+          <col style={{ width: 52 }} />
+        </colgroup>
         <thead>
           <tr>
             <th style={TH_STYLE}>
@@ -519,14 +505,13 @@ function CaseTable({
             <th style={TH_STYLE}>{duongSuHeader}</th>
             <th style={TH_STYLE}>{baHeader}</th>
             <th style={TH_STYLE}>{lastColHeader}</th>
-            {hasNhanTraCol && <th style={TH_STYLE}>{nhanTraHeader}</th>}
             <th style={{ ...TH_STYLE, textAlign: "center" }}>THAO TÁC</th>
           </tr>
         </thead>
         <tbody>
           {cases.length === 0 && (
             <tr>
-              <td colSpan={hasNhanTraCol ? 8 : 7} style={{ ...TD_STYLE, textAlign: "center", color: MUTED, padding: 32 }}>
+              <td colSpan={7} style={{ ...TD_STYLE, textAlign: "center", color: MUTED, padding: 32 }}>
                 Không có dữ liệu phù hợp với điều kiện tìm kiếm.
               </td>
             </tr>
@@ -556,27 +541,6 @@ function CaseTable({
                   <CellVuAn c={c} onThemHoSo={onThemHoSo} onVuAnAction={onVuAnAction} onXuLyTBGQ={onXuLyTBGQ} />
                 )}
               </td>
-              {hasNhanTraCol && (
-                <td style={TD_STYLE}>
-                  {tab === "tra-lai" ? (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: RED, fontFamily: F }}>
-                        Lý do trả:
-                      </span>
-                      <span style={{ fontSize: 11, color: TEXT, fontFamily: F, lineHeight: 1.4 }}>
-                        {c.lyDoTraLai || "Đơn không thuộc thẩm quyền giải quyết theo thủ tục giám đốc thẩm, tái thẩm"}
-                      </span>
-                      {c.ngayTra && (
-                        <span style={{ fontSize: 11, color: TEXT, fontFamily: F, marginTop: 2 }}>
-                          Ngày trả: {c.ngayTra}
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <CellNhanTra c={c} tab={tab} />
-                  )}
-                </td>
-              )}
               <td style={{ ...TD_STYLE, textAlign: "center" }}>
                 <div style={{ display: "flex", justifyContent: "center", gap: 3 }}>
                   <button

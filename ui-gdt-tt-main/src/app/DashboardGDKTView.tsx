@@ -9,7 +9,7 @@ const VU_LABEL: Record<string, string> = {
   "vu-2": "Vụ II - Dân sự", "dan-su": "Vụ II - Dân sự",
   "vu-3": "Vụ III - KDTM/Lao động/HNGĐ",
   "vu-4": "Vụ IV - Hành chính", "hanh-chinh": "Vụ IV - Hành chính",
-  all: "Vụ GĐ,KT",
+  "toan-bo": "Vụ GĐ,KT",
 };
 
 const processRows = [
@@ -54,10 +54,10 @@ function MiniBars({ title, items, onClick }: { title: string; items: { label: st
   </div>;
 }
 
-export default function DashboardGDKTView({ userRole = "all", onNavigate }: { userRole?: UserRoleType; onNavigate?: (v: DashboardTarget) => void }) {
+export default function DashboardGDKTView({ userRole = "toan-bo", onNavigate }: { userRole?: UserRoleType; onNavigate?: (v: DashboardTarget) => void }) {
   const [period, setPeriod] = useState("Tháng");
   const [staffFilter, setStaffFilter] = useState("Tất cả");
-  const vu = VU_LABEL[userRole] || VU_LABEL.all;
+  const vu = VU_LABEL[userRole] || VU_LABEL["toan-bo"];
   const stats = useMemo(() => ({ don: 37, vu: 86, qh: 14, th: 19 }), [period, userRole]);
   const gqd = [
     { label: "Đã giải quyết", value: 42 }, { label: "Đã có tờ trình", value: 18 }, { label: "Chưa có tờ trình", value: 14 }, { label: "Chưa phân công TTV", value: 12 }, { label: "Tổng vụ GQĐ", value: 86 },
