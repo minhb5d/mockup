@@ -1032,13 +1032,13 @@ function TabPhanCong({ row }: { row: VuXetXuRow }) {
       <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, overflow: "hidden", marginBottom: 16 }}>
         <Sec title="Phân công giải quyết" />
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead><tr>{["STT", "Vai trò", "Ngày phân công", "Họ và tên", "Chức danh/Chức vụ", "Người phân công/sửa", "Thao tác"].map(h => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+          {/* LỆCH (SRS mục 8): gộp "Họ và tên – ngày phân công" thành 1 cột thay vì tách 2 cột */}
+          <thead><tr>{["STT", "Vai trò", "Họ và tên – Ngày phân công", "Chức danh/Chức vụ", "Người phân công/sửa", "Thao tác"].map(h => <th key={h} style={TH}>{h}</th>)}</tr></thead>
           <tbody>
             {PC_ROWS.map((r, i) => (
               <tr key={i} style={{ background: r.isThuKy ? "#f0f9ff" : i % 2 === 0 ? "#fff" : "#fafafa" }}>
                 <td style={{ ...TD, textAlign: "center" as const, color: MUTED }}>{i + 1}</td>
                 <td style={{ ...TD, fontWeight: r.isThuKy ? 700 : 400, color: r.isThuKy ? "#0369a1" : TEXT }}>{r.vai}</td>
-                <td style={{ ...TD, whiteSpace: "pre-line" as const, fontSize: 11, color: MUTED }}>{r.ngay}</td>
                 <td style={TD}>
                   {r.isThuKy && isEditingThuKy ? (
                     <select
@@ -1054,6 +1054,7 @@ function TabPhanCong({ row }: { row: VuXetXuRow }) {
                     <div>
                       {r.ten && <div style={{ fontWeight: 600, color: r.isThuKy ? "#0369a1" : TEXT }}>{r.ten}</div>}
                       {r.phu && <div style={{ fontSize: 11, color: MUTED }}>{r.phu}</div>}
+                      {r.ngay && <div style={{ fontSize: 11, color: MUTED, whiteSpace: "pre-line" as const }}>{r.ngay}</div>}
                     </div>
                   )}
                 </td>
@@ -6211,7 +6212,9 @@ function ThemVuXetXuModal({ userRole = "hinh-su", onClose }: { userRole?: string
               Lấy số
             </button>
           )}
-          {btn("Trình ký", RED, "#fff", RED, () => setShowTrinhKyModal(true))}
+          {/* LỆCH (SRS): popup tạo DS tham mưu dùng nút "Trình duyệt" (gửi đồng thời sang
+              Công tác lãnh đạo của PCA và màn DS phân công HĐXX), không phải "Trình ký". */}
+          {btn("Trình duyệt", RED, "#fff", RED, () => setShowTrinhKyModal(true))}
           {btn("Xem biểu mẫu", "#fff", TEXT, BORDER, () => setShowBieuMauWord(true))}
         </div>
       </div>
