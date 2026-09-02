@@ -4799,6 +4799,10 @@ function TabKetQua({ row }: { row: VuXetXuRow }) {
           ["Số – Ngày thụ lý XX", row.soNgayThuLy || "–", "Số – Ngày Kháng nghị", row.soNgayKhangNghi],
           ["Số – Ngày BAST (hoặc QĐST)", row.soNgayBAQD, "Người kháng nghị", row.nguoiKhangNghi || "Viện trưởng Viện kiểm sát nhân dân tối cao"],
           ["Tòa ra BA/QĐ", row.toaRABAQD, "Tòa án giải quyết", row.toaAnGiaiQuyet],
+          // LỆCH (SRS): InfoGrid tab Kết quả trước dùng lại y hệt InfoGrid tab Thông tin,
+          // thiếu Thủ tục giải quyết/Trạng thái/VKS giải quyết — bổ sung ở đây.
+          ["Thủ tục giải quyết", "Giám đốc thẩm, tái thẩm", "Trạng thái", row.trangThai],
+          ["VKS giải quyết", row.vienKiemSat || "–", "", ""],
         ]} />
       </div>
 
