@@ -6,6 +6,8 @@ import {
   ArrowLeftRight, FileSpreadsheet, Paperclip, FolderPlus, Trash2,
 } from "lucide-react";
 import Sidebar, { type View } from "./Sidebar";
+import DashboardGDKTView from "./DashboardGDKTView";
+import HoSoTongHopVuAnView from "./HoSoTongHopVuAnView";
 import {
   TAB_CONFIG, getCasesByTab, countByTab, LOAI_AN_OPTIONS,
   type DonCase, type TabId, type VuAnAction,
@@ -16,7 +18,7 @@ import { SectionCard, InfoGrid, TabThongTin } from "./TabThongTin";
 import { HoSoToTrinhModal, TrinhKyModal } from "./TrinhKyModal";
 import { TaoDuThaoModal } from "./TaoDuThaoModal";
 import { ThemKetQuaModal, ThemQuyetDinhHoanModal } from "./ThemKetQuaModal";
-import PhanCongHDXXView from "./PhanCongHDXXView";
+import PhanCongHDXXView, { LichXetXuModal } from "./PhanCongHDXXView";
 import CongVanTraoDoiView, { XemBieuMauCongVanModal } from "./CongVanTraoDoiView";
 import QuanLyVuXetXuView from "./QuanLyVuXetXuView";
 import PheDuyetDeXuatView, { XemBieuMauScreen } from "./PheDuyetDeXuatView";
@@ -33,7 +35,7 @@ import { VuAnSearchFilterPanel } from "./VuAnSearchFilterPanel";
 import HoSoKhangNghiView, { WordEditorView } from "./HoSoKhangNghiView";
 import QuanLyVuAnView, { ChiTietVuAnView, filterVuAnListByRole, ThongTinChungVuAnCard, type ChiTietTab, type VuAnDetailData } from "./QuanLyVuAnView";
 import NhanDonTLVuAnView, { GiaoTieuHoSoView } from "./NhanDonTLVuAnView";
-import { ThemMoiVuAnScreen } from "./NhanDonModals";
+import LuuSoVanBanView from "./LuuSoVanBanView";
 
 // ── Thông tin đơn cell ───────────────────────────────────────────────────────
 
@@ -816,7 +818,13 @@ function CauHinhTTVCore() {
             <button onClick={() => setShowBanner(false)} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "#166534", fontSize: 16, lineHeight: 1 }}>×</button>
           </div>
         )}
-        {!showBanner && <div style={{ flex: 1 }} />}
+        {!showBanner && (isDirty ? (
+          <div style={{flex:1,display:"flex",alignItems:"center",gap:10,padding:"7px 10px",background:"#fff7ed",border:"1px solid #fdba74",borderRadius:6,fontSize:11,color:"#9a3412"}}>
+            <b>Chưa Lưu cấu hình</b><span>Các thay đổi chưa được ghi nhận. Theo SRS, trước khi rời tính năng phải Lưu hoặc Thoát không lưu.</span>
+            <button onClick={saveConfig} style={{marginLeft:"auto",background:RED,color:"#fff",border:0,borderRadius:4,padding:"5px 10px"}}>Lưu</button>
+            <button onClick={()=>{setRows(savedRows.map(r=>({...r})));setDirtyIds(new Set());setShowBanner(false);}} style={{background:"#fff",border:`1px solid ${BORDER}`,borderRadius:4,padding:"5px 10px"}}>Thoát không lưu</button>
+          </div>
+        ) : <div style={{ flex: 1 }} />)}
         <button
           onClick={saveConfig}
           disabled={!isDirty}
@@ -2779,18 +2787,20 @@ function ModalNhanHoSoKhangNghi({
 // ── Main App ──────────────────────────────────────────────────────────────────
 
 
-type AppView = "list" | "giao-tieu-ho-so" | "them-ho-so" | "phan-cong-ttv" | "phan-cong-tham-phan" | "phan-cong-tptc" | "cau-hinh-ttv" | "quan-ly-vu-an" | "chi-tiet-vu-an" | "cong-van-trao-doi" | "phan-cong-hdxx" | "quan-ly-vu-xet-xu" | "phe-duyet-de-xuat" | "quan-ly-khieu-nai" | "chi-tiet-khieu-nai" | "ho-so-khang-nghi" | "ho-so-tu-hinh" | "don-xin-an-giam" | "tao-cong-van" | "an-quoc-hoi" | "an-thoi-hieu";
+type AppView = "luu-so-van-ban" | "dashboard-gdkt" | "ho-so-tong-hop" | "list" | "giao-tieu-ho-so" | "phan-cong-ttv" | "phan-cong-tham-phan" | "phan-cong-tptc" | "cau-hinh-ttv" | "quan-ly-vu-an" | "chi-tiet-vu-an" | "cong-van-trao-doi" | "phan-cong-hdxx" | "lich-xet-xu" | "quan-ly-vu-xet-xu" | "phe-duyet-de-xuat" | "quan-ly-khieu-nai" | "chi-tiet-khieu-nai" | "ho-so-khang-nghi" | "ho-so-tu-hinh" | "don-xin-an-giam" | "tao-cong-van" | "an-quoc-hoi" | "an-thoi-hieu";
 
 export default function App() {
   const [globalUserRole, setGlobalUserRole] = useState<UserRoleType>("hinh-su");
-  const [appView, setAppView] = useState<AppView>("list");
+  const [appView, setAppView] = useState<AppView>("dashboard-gdkt");
   const [activeTab, setActiveTab] = useState<TabId>("don-cho-phe-duyet");
   const [filterExpanded, setFilterExpanded] = useState(false);
   const [selectedVuAnId, setSelectedVuAnId] = useState<string>("VA26-002621");
 
   const sidebarView: View =
-    appView === "giao-tieu-ho-so" ? "giao-tieu-ho-so"
-      : appView === "them-ho-so" ? "them-ho-so"
+    appView === "luu-so-van-ban" ? "luu-so-van-ban"
+      : appView === "dashboard-gdkt" ? "dashboard-gdkt"
+      : appView === "ho-so-tong-hop" ? "ho-so-tong-hop"
+      : appView === "giao-tieu-ho-so" ? "giao-tieu-ho-so"
         : appView === "phan-cong-tham-phan" ? "phan-cong-tham-phan"
           : appView === "phan-cong-ttv" ? "phan-cong-ttv"
             : appView === "phan-cong-tptc" ? "phan-cong-tptc"
@@ -2799,6 +2809,7 @@ export default function App() {
                   : appView === "quan-ly-khieu-nai" || appView === "chi-tiet-khieu-nai" ? "quan-ly-khieu-nai"
                     : appView === "cong-van-trao-doi" ? "cong-van-trao-doi"
                       : appView === "phan-cong-hdxx" ? "phan-cong-hdxx"
+                        : appView === "lich-xet-xu" ? "lich-xet-xu"
                         : appView === "quan-ly-vu-xet-xu" ? "quan-ly-vu-xet-xu"
                           : appView === "phe-duyet-de-xuat" ? "phe-duyet-de-xuat"
                             : appView === "don-xin-an-giam" ? "don-xin-an-giam"
@@ -2811,6 +2822,9 @@ export default function App() {
                                           : "don-cho-phe-duyet";
 
   const handleSidebarNav = (v: View) => {
+    if (v === "luu-so-van-ban") { setAppView("luu-so-van-ban"); return; }
+    if (v === "dashboard-gdkt") { setAppView("dashboard-gdkt"); return; }
+    if (v === "ho-so-tong-hop") { setAppView("ho-so-tong-hop"); return; }
     if (v === "phan-cong-tham-phan") { setAppView("phan-cong-tham-phan"); return; }
     if (v === "phan-cong-ttv") { setAppView("phan-cong-ttv"); return; }
     if (v === "phan-cong-tptc") { setAppView("phan-cong-tptc"); return; }
@@ -2818,9 +2832,9 @@ export default function App() {
     if (v === "quan-ly-vu-an") { setAppView("quan-ly-vu-an"); return; }
     if (v === "quan-ly-khieu-nai") { setAppView("quan-ly-khieu-nai"); return; }
     if (v === "giao-tieu-ho-so") { setAppView("giao-tieu-ho-so"); return; }
-    if (v === "them-ho-so") { setAppView("them-ho-so"); return; }
     if (v === "cong-van-trao-doi") { setAppView("cong-van-trao-doi"); return; }
     if (v === "phan-cong-hdxx") { setAppView("phan-cong-hdxx"); return; }
+    if (v === "lich-xet-xu") { setAppView("lich-xet-xu"); return; }
     if (v === "quan-ly-vu-xet-xu") { setAppView("quan-ly-vu-xet-xu"); return; }
     if (v === "phe-duyet-de-xuat") { setAppView("phe-duyet-de-xuat"); return; }
     if (v === "ho-so-khang-nghi") { setAppView("ho-so-khang-nghi"); return; }
@@ -2862,7 +2876,13 @@ export default function App() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
         <TopBar userRole={globalUserRole} setUserRole={setGlobalUserRole} />
 
-        {appView === "phan-cong-tham-phan" ? (
+        {appView === "luu-so-van-ban" ? (
+          <LuuSoVanBanView />
+        ) : appView === "dashboard-gdkt" ? (
+          <DashboardGDKTView userRole={globalUserRole} onNavigate={(v) => handleSidebarNav(v as View)} />
+        ) : appView === "ho-so-tong-hop" ? (
+          <HoSoTongHopVuAnView />
+        ) : appView === "phan-cong-tham-phan" ? (
           <PhanCongThamPhanView />
         ) : appView === "phan-cong-ttv" ? (
           <PhanCongTTVView />
@@ -2887,6 +2907,8 @@ export default function App() {
             detailLabel="Chi tiết khiếu nại"
             entityWord="Khiếu nại"
           />
+        ) : appView === "lich-xet-xu" ? (
+          <LichXetXuModal embedded onClose={() => setAppView("phan-cong-hdxx")} />
         ) : appView === "phan-cong-hdxx" ? (
           <PhanCongHDXXView userRole={globalUserRole} setUserRole={setGlobalUserRole} />
         ) : appView === "quan-ly-vu-xet-xu" ? (
@@ -2909,8 +2931,6 @@ export default function App() {
           <WordEditorView record={activeCongVanConfig} onBack={() => setAppView(activeCongVanConfig?.returnView || "ho-so-khang-nghi")} />
         ) : appView === "giao-tieu-ho-so" ? (
           <GiaoTieuHoSoView onClose={() => setAppView("list")} userRole={globalUserRole} />
-        ) : appView === "them-ho-so" ? (
-          <ThemMoiVuAnScreen onClose={() => setAppView("list")} />
         ) : (
           <NhanDonTLVuAnView
             userRole={globalUserRole}
@@ -2919,7 +2939,7 @@ export default function App() {
             filterExpanded={filterExpanded}
             setFilterExpanded={setFilterExpanded}
             onGiaoTieuHoSo={() => setAppView("giao-tieu-ho-so")}
-            onThemHoSo={() => setAppView("them-ho-so")}
+            onThemHoSo={() => undefined}
             onInBaoCao={() => window.print()}
           />
         )}

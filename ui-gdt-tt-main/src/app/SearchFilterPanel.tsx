@@ -28,7 +28,7 @@ const SEARCH_ROWS: RowCell[][] = [
   [
     "diaChi",
     { label: "Chi tiết", type: "input", placeholder: "Chi tiết" },
-    { label: "Phân loại đơn", type: "select", placeholder: "--- Tất cả ---", options: ["Đơn mới", "Đơn khiếu nại sau khi đã giải quyết"] },
+    null, // 27.08 đỏ: bỏ Phân loại đơn
   ],
   [
     { label: "Số CMND", type: "input", placeholder: "Số CMND / CCCD" },
@@ -36,7 +36,7 @@ const SEARCH_ROWS: RowCell[][] = [
     { label: "Hình thức đơn", type: "select", placeholder: "--- Tất cả ---" },
   ],
   [
-    { label: "Thời gian chuyển", type: "dateRange" },
+    null, // 27.08 đỏ: bỏ Thời gian chuyển
     { label: "Thời gian thụ lý", type: "dateRange" },
     { label: "Số thụ lý", type: "input", placeholder: "Số thụ lý" },
   ],
@@ -52,11 +52,11 @@ const SEARCH_ROWS: RowCell[][] = [
   ],
   [
     "trangThai",
-    "anDacThu",
-    { label: "Nơi chuyển", type: "select", placeholder: "--Tất cả--" },
+    null, // 27.08 đỏ: bỏ Thuộc án ở màn Nhận đơn
+    null, // 27.08 đỏ: bỏ Nơi chuyển
   ],
   [
-    "thoiHieu",
+    null, // 27.08 đỏ: bỏ Thời hiệu ở màn Nhận đơn
     { label: "Số tờ trình phân công", type: "input", placeholder: "Số tờ trình phân công" },
     { label: "Ngày tờ trình phân công", type: "date" },
   ],

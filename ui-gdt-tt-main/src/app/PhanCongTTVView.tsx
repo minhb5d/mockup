@@ -46,6 +46,32 @@ const LD_BY_TTV: Record<string, string> = {
   "Đặng Thị Mai": DANH_SACH_LANH_DAO[0],
 };
 const getName = (v: string) => v.split(" - ")[0];
+
+// Drawio 2.6 – metadata phục vụ phân công tự động TTV/LĐV.
+// Không phân công cán bộ đang nghỉ/không đủ điều kiện; ưu tiên người đã xử lý vụ việc trước đó,
+// sau đó cân bằng số vụ đang xử lý và cuối cùng theo thứ tự tên tiếng Việt.
+type TTVMeta = { value: string; currentCases: number; unavailableReason?: string };
+const TTV_META: TTVMeta[] = DANH_SACH_TTV.map((value, index) => ({
+  value,
+  currentCases: [6, 3, 5, 4, 2, 7, 3, 5, 4, 6][index] ?? 0,
+  unavailableReason: index === 7 ? "Đang tham gia đào tạo trên 01 tháng" : undefined,
+}));
+
+const chooseTTVByDrawio = (row: CaseRow, dynamicLoad: Record<string, number>): string => {
+  const previous = row.previousTTV;
+  const previousMeta = previous ? TTV_META.find(m => m.value === previous) : undefined;
+  if (previousMeta && !previousMeta.unavailableReason) return previousMeta.value;
+
+  const eligible = TTV_META
+    .filter(m => !m.unavailableReason)
+    .sort((a, b) => {
+      const loadA = a.currentCases + (dynamicLoad[a.value] || 0);
+      const loadB = b.currentCases + (dynamicLoad[b.value] || 0);
+      if (loadA !== loadB) return loadA - loadB;
+      return getName(a.value).localeCompare(getName(b.value), "vi");
+    });
+  return eligible[0]?.value || DANH_SACH_TTV[0];
+};
 const toInputDate = (v: string) => {
   if (!v || v === "-") return TODAY_ISO;
   if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
@@ -387,9 +413,13 @@ export function PhanCongTTVView() {
       return;
     }
     if (phanCongMode === "ngau-nhien") {
-      const assignedRows = chuaPCRows.map((r, i) => {
-        const ttv = DANH_SACH_TTV[(r.id + i) % DANH_SACH_TTV.length];
-        const ld = LD_BY_TTV[getName(ttv)] || DANH_SACH_LANH_DAO[(r.id + i) % DANH_SACH_LANH_DAO.length];
+      const dynamicLoad: Record<string, number> = {};
+      const assignedRows = chuaPCRows.map((r) => {
+        const ttv = chooseTTVByDrawio(r, dynamicLoad);
+        dynamicLoad[ttv] = (dynamicLoad[ttv] || 0) + 1;
+        const ld = r.previousTTV === ttv && r.previousLD
+          ? r.previousLD
+          : (LD_BY_TTV[getName(ttv)] || DANH_SACH_LANH_DAO[0]);
         return { ...r, giaiDoanPC: r.isKhieuNai ? "Giải quyết khiếu nại" : "Giai đoạn giải quyết đơn", ngayPCTTV: TODAY_ISO, ttv, ngayPCLD: TODAY_ISO, lanhDao: ld };
       });
       setChuaPCRows([]); setDaPCRows(prev => [...assignedRows, ...prev]); setSelectedIds([]); setDirtyIds([]);

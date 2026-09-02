@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Eye, Trash2, Sliders } from "lucide-react";
+import { Eye, Trash2, Sliders, Search, Pencil } from "lucide-react";
 import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge, getThoiHieuOptions, type UserRoleType } from "./shared";
-import type { VuAnDetailData } from "./App";
+import type { VuAnDetailData } from "./QuanLyVuAnView";
 import { LOAI_AN_OPTIONS, LoaiAn } from "./data";
 
 export function SectionCard({ title, children, collapsible = false }: { title: string; children: React.ReactNode; collapsible?: boolean }) {
@@ -32,7 +32,16 @@ export function InfoGrid({ rows }: { rows: Array<[string, React.ReactNode]> }) {
   );
 }
 
-export type NguoiLienQuanRow = { stt: number; hoTen: string; ngaySinh: string; cccd: string; diaChi: string; toiDanh?: string };
+export type NguoiLienQuanRow = { stt: number; hoTen: string; ngaySinh: string; cccd: string; diaChi: string; toiDanh?: string; nguoiDuocKhieuNai?: string; noiDungKhieuNai?: string; labels?: string[]; duocGDT?: boolean };
+
+// TH-069: gợi ý người liên quan lấy từ các quá trình giải quyết trước của vụ án
+const NGUOI_LIEN_QUAN_GOI_Y = [
+  "Đặng Thị Dương – 1995 – Bị cáo (Sơ thẩm)",
+  "Nguyễn Văn Bình – 1992 – Bị hại (Sơ thẩm)",
+  "Trần Anh Tuấn – 1988 – Người có quyền lợi, nghĩa vụ liên quan (Phúc thẩm)",
+  "Lê Thị Hồng – 1990 – Người làm chứng (Phúc thẩm)",
+  "Công ty TNHH Minh Long – MSDN 0101234567 – Người có quyền lợi liên quan",
+];
 
 export interface QuaTrinhGiaiQuyetRow {
   stt: number;
@@ -148,7 +157,7 @@ export const MOCK_DATA_BY_LOAI_AN: Record<LoaiAn, TabThongTinMockData> = {
       nhom1: {
         title: "* Bị cáo",
         required: true,
-        rows: [{ stt: 1, hoTen: "Đặng Thị Dương", ngaySinh: "1995", cccd: "036302091038", toiDanh: "Cố ý gây thương tích (Khoản 2 Điều 134 BLHS)", diaChi: "Số nhà 7, Xã Trường Sơn, Tỉnh Bắc Ninh" }],
+        rows: [{ stt: 1, hoTen: "Đặng Thị Dương", ngaySinh: "1995", cccd: "036302091038", toiDanh: "Cố ý gây thương tích (Khoản 2 Điều 134 BLHS)", diaChi: "Số nhà 7, Xã Trường Sơn, Tỉnh Bắc Ninh", labels: ["Đầu vụ", "Tái phạm"], duocGDT: true }],
       },
       nhom2: {
         title: "* Bị hại",
@@ -600,14 +609,26 @@ export const MOCK_DATA_BY_LOAI_AN: Record<LoaiAn, TabThongTinMockData> = {
   },
 };
 
-function NguoiLienQuanTable({ rows, noMarginBottom = false, showToiDanh = false }: { rows: NguoiLienQuanRow[]; noMarginBottom?: boolean; showToiDanh?: boolean }) {
-  const headers = showToiDanh
+function NguoiLienQuanTable({ rows, noMarginBottom = false, showToiDanh = false, isKhieuNai = false }: { rows: NguoiLienQuanRow[]; noMarginBottom?: boolean; showToiDanh?: boolean; isKhieuNai?: boolean }) {
+  const headers = isKhieuNai
+    ? ["STT", "Họ và tên / Đơn vị", "Ngày sinh / MSDN", "Người được khiếu nại", "Nội dung khiếu nại", "Địa chỉ", "Thao tác"]
+    : showToiDanh
     ? ["STT", "Họ và tên / Đơn vị", "Ngày sinh / MSDN", "Tội danh", "Địa chỉ", "Thao tác"]
     : ["STT", "Họ và tên / Đơn vị", "Ngày sinh / MSDN", "Địa chỉ", "Thao tác"];
 
   return (
     <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", marginBottom: noMarginBottom ? 0 : 16 }}>
-      {showToiDanh ? (
+      {isKhieuNai ? (
+        <colgroup>
+          <col style={{ width: 40 }} />
+          <col style={{ width: "18%" }} />
+          <col style={{ width: "11%" }} />
+          <col style={{ width: "17%" }} />
+          <col style={{ width: "22%" }} />
+          <col style={{ width: "22%" }} />
+          <col style={{ width: 70 }} />
+        </colgroup>
+      ) : showToiDanh ? (
         <colgroup>
           <col style={{ width: 40 }} />
           <col style={{ width: "22%" }} />
@@ -636,15 +657,35 @@ function NguoiLienQuanTable({ rows, noMarginBottom = false, showToiDanh = false 
         {rows.map((r, idx) => (
           <tr key={r.stt} style={{ background: idx % 2 === 0 ? "#fff" : "#fafafa" }}>
             <td style={{ ...TD_STYLE, textAlign: "center", color: MUTED, fontSize: 12 }}>{r.stt}</td>
-            <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT }}>{r.hoTen}</td>
+            <td style={TD_STYLE}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2, fontFamily: F }}>
+                <span style={{ fontSize: 12, color: TEXT, fontWeight: 600 }}>{r.hoTen}</span>
+                {r.cccd && <span style={{ fontSize: 10.5, color: MUTED }}>CCCD: {r.cccd}</span>}
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                  {r.labels?.map(l => (
+                    <Badge key={l} color="#1e40af" bg="#dbeafe">{l}</Badge>
+                  ))}
+                  {r.duocGDT && <Badge color="#065f46" bg="#d1fae5">Được GĐT,TT</Badge>}
+                </div>
+              </div>
+            </td>
             <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT, textAlign: "center" }}>{r.ngaySinh}</td>
-            {showToiDanh && (
+            {isKhieuNai && (
+              <>
+                <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT }}>{r.nguoiDuocKhieuNai || "-"}</td>
+                <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT }}>
+                  {r.noiDungKhieuNai || <span style={{ color: "#dc2626" }}>Chưa nhập (bắt buộc)</span>}
+                </td>
+              </>
+            )}
+            {showToiDanh && !isKhieuNai && (
               <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT, textAlign: "center" }}>{r.toiDanh || "-"}</td>
             )}
             <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT }}>{r.diaChi}</td>
             <td style={{ ...TD_STYLE, textAlign: "center" }}>
               <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
                 <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Xem"><Eye size={13} color={MUTED} /></button>
+                <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Sửa"><Pencil size={13} color={MUTED} /></button>
                 <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }} title="Xóa"><Trash2 size={13} color={MUTED} /></button>
               </div>
             </td>
@@ -655,7 +696,11 @@ function NguoiLienQuanTable({ rows, noMarginBottom = false, showToiDanh = false 
   );
 }
 
-export function TabThongTin({ detail, userRole }: { detail?: VuAnDetailData; userRole?: UserRoleType }) {
+export function TabThongTin({ detail, userRole, onRequiredChange }: { detail?: VuAnDetailData; userRole?: UserRoleType; onRequiredChange?: (ok: boolean) => void }) {
+  const [nguoiLienQuanChon, setNguoiLienQuanChon] = useState<string[]>([]);
+  const [dangSua, setDangSua] = useState(false);
+  const [coThayDoi, setCoThayDoi] = useState(false);
+  const [canhBaoLuu, setCanhBaoLuu] = useState("");
   // Lấy Loại án mặc định từ detail (nếu có) hoặc dựa trên userRole
   const getInitialLoaiAn = (): LoaiAn => {
     if (detail?.loaiAn && LOAI_AN_OPTIONS.includes(detail.loaiAn as LoaiAn)) {
@@ -708,6 +753,13 @@ export function TabThongTin({ detail, userRole }: { detail?: VuAnDetailData; use
   const displayMaVuAn = detail ? `${detail.maVuAn}: ${detail.tenVuAn}` : mock.thongTinChung.maVuAn;
   const displayLoaiBanAn = detail?.loaiBienAn || mock.thongTinChung.loaiBanAn;
   const displayThuTuc = detail?.namGiaiQuyet || mock.thongTinChung.thuTucGiaiQuyet;
+  const [thuTucGiaiQuyet, setThuTucGiaiQuyet] = useState(displayThuTuc);
+  const [soNgayBA, setSoNgayBA] = useState("");
+
+  // TH-090: báo cho màn chi tiết biết thông tin bắt buộc đã đủ hay chưa
+  useEffect(() => {
+    onRequiredChange?.(Boolean(quanHePL && thuTucGiaiQuyet));
+  }, [quanHePL, thuTucGiaiQuyet]);
   const displaySoNgayBA = detail?.soNgayBanAn || mock.thongTinChung.soNgayBanAn;
   const displayToa = detail?.toaXetXu || mock.thongTinChung.toaRaBanAn;
 
@@ -745,19 +797,33 @@ export function TabThongTin({ detail, userRole }: { detail?: VuAnDetailData; use
             <col style={{ width: "34%" }} />
           </colgroup>
           <tbody>
-            {/* row 1 */}
-            <tr>
-              <td style={{ ...TD_STYLE, background: BG, fontWeight: 600, fontSize: 11, color: MUTED, borderRight: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>Mã vụ án</td>
-              <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT, borderRight: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>{displayMaVuAn}</td>
-              <td style={{ ...TD_STYLE, background: BG, fontWeight: 600, fontSize: 11, color: MUTED, borderRight: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>Loại bản án</td>
-              <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT, borderBottom: `1px solid ${BORDER}` }}>{displayLoaiBanAn}</td>
-            </tr>
+            {/* row 1: Mã vụ án + Loại bản án đã bỏ theo đối chiếu 27.08 */}
             {/* row 2 */}
             <tr>
               <td style={{ ...TD_STYLE, background: BG, fontWeight: 600, fontSize: 11, color: MUTED, borderRight: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>Thủ tục giải quyết</td>
-              <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT, borderRight: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>{displayThuTuc}</td>
+              <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT, borderRight: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
+                {dangSua ? (
+                  <select value={thuTucGiaiQuyet} onChange={e => { setThuTucGiaiQuyet(e.target.value); setCoThayDoi(true); }}
+                    style={{ width: "100%", padding: "3px 6px", border: `1px solid ${BORDER}`, borderRadius: 4, fontSize: 12, fontFamily: F }}>
+                    <option value="">– Chọn –</option>
+                    <option value="Giám đốc thẩm">Giám đốc thẩm</option>
+                    <option value="Tái thẩm">Tái thẩm</option>
+                  </select>
+                ) : displayThuTuc}
+              </td>
               <td style={{ ...TD_STYLE, background: BG, fontWeight: 600, fontSize: 11, color: MUTED, borderRight: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>Số – Ngày bản án</td>
-              <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT, borderBottom: `1px solid ${BORDER}` }}>{displaySoNgayBA}</td>
+              <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT, borderBottom: `1px solid ${BORDER}` }}>
+                {dangSua ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <input value={soNgayBA || displaySoNgayBA} onChange={e => { setSoNgayBA(e.target.value); setCoThayDoi(true); }}
+                      style={{ flex: 1, padding: "3px 6px", border: `1px solid ${BORDER}`, borderRadius: 4, fontSize: 12, fontFamily: F }} />
+                    <button title="Tra cứu bản án để cập nhật lại thông tin"
+                      style={{ background: "none", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", padding: "3px 6px" }}>
+                      <Search size={13} color={MUTED} />
+                    </button>
+                  </div>
+                ) : displaySoNgayBA}
+              </td>
             </tr>
             {/* row 3 */}
             <tr>
@@ -792,18 +858,13 @@ export function TabThongTin({ detail, userRole }: { detail?: VuAnDetailData; use
         </div>
         <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
           <colgroup>
-            <col style={{ width: 40 }} />
-            <col style={{ width: "22%" }} />
-            <col style={{ width: "8%" }} />
-            <col style={{ width: "8%" }} />
-            <col style={{ width: "9%" }} />
-            <col style={{ width: "9%" }} />
-            <col style={{ width: "22%" }} />
-            <col style={{ width: "18%" }} />
+            <col style={{ width: 50 }} />
+            <col style={{ width: "55%" }} />
+            <col style={{ width: "40%" }} />
           </colgroup>
           <thead>
             <tr>
-              {["STT", "VỤ ÁN", "LOẠI BA/QĐ", "GIAI ĐOẠN", "SỐ BẢN ÁN", "NGÀY RA BẢN ÁN", "TÒA ÁN RA BẢN ÁN", "THẨM PHÁN XÉT XỬ"].map(h => (
+              {["STT", "THÔNG TIN BẢN ÁN/QUYẾT ĐỊNH", "THẨM PHÁN XÉT XỬ"].map(h => (
                 <th key={h} style={TH_STYLE}>{h}</th>
               ))}
             </tr>
@@ -812,12 +873,13 @@ export function TabThongTin({ detail, userRole }: { detail?: VuAnDetailData; use
             {mock.quaTrinhGiaiQuyet.map((r, idx) => (
               <tr key={r.stt} style={{ background: idx % 2 === 0 ? "#fff" : "#fafafa" }}>
                 <td style={{ ...TD_STYLE, textAlign: "center", color: MUTED, fontSize: 12 }}>{r.stt}</td>
-                <td style={{ ...TD_STYLE, fontSize: 11, color: "#2563eb" }}>{r.vuAn}</td>
-                <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT, textAlign: "center" }}>{r.loai}</td>
-                <td style={{ ...TD_STYLE, fontSize: 11, textAlign: "center" }}>{r.giai}</td>
-                <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT, textAlign: "center" }}>{r.soBA}</td>
-                <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT, textAlign: "center" }}>{r.ngayBA}</td>
-                <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT }}>{r.toa}</td>
+                <td style={TD_STYLE}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 1, fontSize: 11, fontFamily: F }}>
+                    <span style={{ color: TEXT, fontWeight: 600 }}>Số: {r.soBA}</span>
+                    <span style={{ color: MUTED }}>Ngày: {r.ngayBA}</span>
+                    <span style={{ color: MUTED }}>Tòa: {r.toa}</span>
+                  </div>
+                </td>
                 <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT }}>
                   {r.thamPhans.reduce<React.ReactNode[]>((acc, tp, i) => {
                     if (i % 2 === 0) {
@@ -916,17 +978,56 @@ export function TabThongTin({ detail, userRole }: { detail?: VuAnDetailData; use
                 </div>
                 <button style={{ padding: "3px 10px", background: "none", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 11, fontFamily: F }}>+ Thêm mới</button>
               </div>
-              <NguoiLienQuanTable rows={mock.nguoiThamGiaToTung.nhom3.rows} noMarginBottom showToiDanh={false} />
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{ fontSize: 12, color: MUTED, fontFamily: F }}>Tìm người liên quan từ các quá trình giải quyết trước:</span>
+                <select multiple value={nguoiLienQuanChon}
+                  onChange={e => setNguoiLienQuanChon(Array.from(e.target.selectedOptions, o => o.value))}
+                  style={{ flex: 1, maxWidth: 380, minHeight: 56, padding: "4px 8px", border: `1px solid ${BORDER}`, borderRadius: 4, fontSize: 12, fontFamily: F }}>
+                  {NGUOI_LIEN_QUAN_GOI_Y.map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+                <button style={{ padding: "6px 14px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F }}>
+                  Thêm vào danh sách
+                </button>
+              </div>
+              <NguoiLienQuanTable rows={mock.nguoiThamGiaToTung.nhom3.rows} noMarginBottom isKhieuNai />
             </>
           )}
         </div>
       </div>
 
-      {/* ── Nút Sửa thông tin ── */}
-      <div style={{ display: "flex", justifyContent: "center", paddingBottom: 12 }}>
-        <button style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 32px", background: RED, color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: F }}>
-          ✏ Sửa thông tin
-        </button>
+      {/* ── TH-067/068: Sửa thông tin – Lưu – Đóng ── */}
+      {canhBaoLuu && (
+        <div style={{ margin: "0 20px 10px", padding: "8px 12px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, fontSize: 12, color: "#b91c1c", fontFamily: F }}>
+          {canhBaoLuu}
+        </div>
+      )}
+      <div style={{ display: "flex", justifyContent: "center", gap: 10, paddingBottom: 12 }}>
+        {!dangSua ? (
+          <button onClick={() => { setDangSua(true); setCanhBaoLuu(""); }}
+            style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 32px", background: RED, color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: F }}>
+            ✏ Sửa thông tin
+          </button>
+        ) : (
+          <>
+            <button
+              onClick={() => {
+                if (!thuTucGiaiQuyet) { setCanhBaoLuu("Thủ tục giải quyết là bắt buộc"); return; }
+                setDangSua(false); setCoThayDoi(false);
+                setCanhBaoLuu("Đã gửi thông báo tới VP HCTP: Vụ GĐ,KT có thay đổi thông tin vụ án.");
+              }}
+              style={{ padding: "9px 32px", background: RED, color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: F }}>
+              Lưu
+            </button>
+            <button
+              onClick={() => {
+                if (coThayDoi) { setCanhBaoLuu("Các thông tin thay đổi chưa được Lưu"); return; }
+                setDangSua(false); setCanhBaoLuu("");
+              }}
+              style={{ padding: "9px 32px", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 6, cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: F }}>
+              Đóng
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

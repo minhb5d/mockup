@@ -516,7 +516,7 @@ function buildCase(loaiIdx: number, recIdx: number, globalId: number): DonCase {
         capThamPhan: "TPB3",
         ttv: ttvList[1],
         trangThai: statusOptions[1],
-        vuAnActions: ["ghep-vu-an", "them-vu-an"],
+        vuAnActions: [], // 27.08: đỏ -> bỏ Ghép vụ án / Thêm vụ án khỏi mockup
         yKienLD: [leadershipOptions[1]],
         ...(recIdx % 2 === 1 && loaiIdx % 2 === 0 ? { daThuLy: true } : {}),
       };
@@ -536,7 +536,7 @@ function buildCase(loaiIdx: number, recIdx: number, globalId: number): DonCase {
         capThamPhan: "TPB3",
         ttv: ttvList[2],
         trangThai: statusOptions[2],
-        vuAnActions: ["chuyen-vu-an", "huy-ghep"],
+        vuAnActions: ["huy-ghep"], // 27.08: đỏ -> bỏ Chuyển vụ án; giữ Hủy ghép theo dòng xanh CẦ-045
         ngayNhan: `${10 + (recIdx % 10)}/6/2026`,
         yKienLD: [leadershipOptions[2]],
         daThuLy: true,

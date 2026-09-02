@@ -1987,6 +1987,23 @@ function HoSoTuHinhDetailView({ id, onBack }: { id: string; onBack: () => void }
         </div>
       </div>
 
+      {/* Draw.io page 13 — tiến trình chuẩn án tử hình */}
+      <div style={{padding:"8px 20px",background:"#fff",borderBottom:`1px solid ${BORDER}`,overflowX:"auto",flexShrink:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:6,minWidth:"max-content",fontFamily:F}}>
+          {[
+            "Bản án tử hình có hiệu lực",
+            "Tiếp nhận / thẩm định hồ sơ",
+            "Xem xét kháng nghị GĐT/TT",
+            "Xét xử GĐT/TT (nếu có KN)",
+            "Đơn xin ân giảm",
+            "TANDTC + VKSNDTC xem xét",
+            "Trình Chủ tịch nước",
+            "Chấp nhận / Bác ân giảm",
+            "Thi hành án / cập nhật kết quả",
+          ].map((x,i,arr)=><React.Fragment key={x}><span style={{padding:"4px 7px",border:"1px solid #cbd5e1",borderRadius:12,fontSize:10,color:i<4?"#7c2d12":i<8?"#1d4ed8":"#166534",background:i<4?"#fff7ed":i<8?"#eff6ff":"#f0fdf4",fontWeight:600}}>{i+1}. {x}</span>{i<arr.length-1&&<span style={{color:"#94a3b8"}}>→</span>}</React.Fragment>)}
+        </div>
+      </div>
+
       {/* Content */}
       <div style={{ flex: 1, overflow: "auto", padding: "20px", background: BG }}>
 

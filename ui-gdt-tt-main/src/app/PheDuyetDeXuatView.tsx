@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Search, Download, Printer, ChevronDown, Eye, RotateCcw, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { F, RED, BORDER, TEXT, MUTED, BG, Badge, TaiKhoanPhanQuyenBar, type UserRoleType } from "./shared";
-import { PlatformModalFrame } from "./components/platform";
 
 type Screen = "list" | "detail" | "bieu-mau";
 type ListTab = "tat-ca" | "cho-duyet" | "da-duyet" | "tu-choi";
@@ -41,7 +40,7 @@ const ROWS = [
 
 // ── Màn 3: Xem biểu mẫu (Word editor mock) ───────────────────────────────────
 
-export function XemBieuMauScreen({ onClose, loaiPhieu }: { onClose: () => void; loaiPhieu?: string }) {
+export function XemBieuMauScreen({ onClose, loaiPhieu, daTrinhKy = false }: { onClose: () => void; loaiPhieu?: string; daTrinhKy?: boolean }) {
   const menuItems = ["Tệp", "Trang chủ", "Chèn", "Vẽ", "Bố cục", "Tham khảo", "Công tác", "Bảo vệ", "View", "Plugin"];
   const tools = ["B", "I", "U", "abo", "≡", "≡", "≡"];
 
@@ -60,12 +59,22 @@ export function XemBieuMauScreen({ onClose, loaiPhieu }: { onClose: () => void; 
           <ChevronLeft size={16} /> Quay lại
         </button>
         <span style={{ fontSize: 13, fontWeight: 600, flex: 1 }}>{docTitle}</span>
-        <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 16px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
-          ✏ Trình ký
-        </button>
+        {daTrinhKy ? (
+          <>
+            <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 10, background: "rgba(255,255,255,0.18)", color: "#fff" }}>PDF · Chỉ đọc</span>
+            <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 16px", background: "rgba(255,255,255,0.15)", color: "#fff", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+              ⬇ Tải PDF
+            </button>
+          </>
+        ) : (
+          <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 16px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+            ✏ Trình ký
+          </button>
+        )}
       </div>
 
-      {/* Menu bar */}
+      {/* Menu bar – LỆ-174: chỉ hiển thị khi chưa trình ký (soạn thảo Word) */}
+      {!daTrinhKy && (
       <div style={{ background: "#1e3a5f", borderTop: "1px solid rgba(255,255,255,0.15)", display: "flex", alignItems: "center", padding: "0 16px", height: 32 }}>
         {menuItems.map(m => (
           <button key={m} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.85)", fontSize: 12, padding: "0 10px", height: "100%" }}
@@ -75,8 +84,10 @@ export function XemBieuMauScreen({ onClose, loaiPhieu }: { onClose: () => void; 
           </button>
         ))}
       </div>
+      )}
 
       {/* Toolbar */}
+      {!daTrinhKy && (
       <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", padding: "4px 16px", gap: 6, height: 36 }}>
         <button style={{ padding: "2px 6px", border: "none", background: "none", cursor: "pointer", fontSize: 12, color: MUTED }}>↩</button>
         <button style={{ padding: "2px 6px", border: "none", background: "none", cursor: "pointer", fontSize: 12, color: MUTED }}>↪</button>
@@ -97,6 +108,18 @@ export function XemBieuMauScreen({ onClose, loaiPhieu }: { onClose: () => void; 
         <span style={{ fontSize: 11, color: MUTED, marginLeft: 6 }}>FakeCharac</span>
         <span style={{ fontSize: 11, color: MUTED, marginLeft: 6 }}>ParagraphStyle</span>
       </div>
+      )}
+
+      {/* LỆ-174: thanh công cụ PDF chỉ đọc khi văn bản đã trình ký */}
+      {daTrinhKy && (
+        <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", padding: "4px 16px", gap: 10, height: 36 }}>
+          <Search size={14} color={MUTED} />
+          <span style={{ fontSize: 12, color: TEXT }}>100%</span>
+          <ZoomIn size={14} color={MUTED} />
+          <div style={{ flex: 1 }} />
+          <span style={{ fontSize: 11, color: MUTED, fontStyle: "italic" as const }}>Văn bản đã trình ký – không cho phép chỉnh sửa</span>
+        </div>
+      )}
 
       {/* Document area */}
       <div style={{ flex: 1, overflowY: "auto", display: "flex", justifyContent: "center", padding: "32px 16px", background: "#e8e8e8" }}>
@@ -339,11 +362,8 @@ function LichSuModal({ idx, onClose }: { idx: number; onClose: () => void }) {
   const thTd: React.CSSProperties = { padding: "8px 14px", fontSize: 12, fontFamily: F, borderBottom: `1px solid ${BORDER}`, textAlign: "left" as const };
 
   return (
-    <PlatformModalFrame
-      zIndex={1500}
-      overlayStyle={{ background: "rgba(0,0,0,0.4)" }}
-      cardStyle={{ width: 520, boxShadow: "0 8px 40px rgba(0,0,0,0.2)", fontFamily: F }}
-    >
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 1500, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ background: "#fff", borderRadius: 8, width: 520, boxShadow: "0 8px 40px rgba(0,0,0,0.2)", overflow: "hidden", fontFamily: F }}>
         {/* Header */}
         <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
           <div>
@@ -381,7 +401,8 @@ function LichSuModal({ idx, onClose }: { idx: number; onClose: () => void }) {
         <div style={{ padding: "12px 20px", borderTop: `1px solid ${BORDER}`, display: "flex", justifyContent: "flex-end" }}>
           <button onClick={onClose} style={{ padding: "6px 24px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F }}>Đóng</button>
         </div>
-    </PlatformModalFrame>
+      </div>
+    </div>
   );
 }
 
@@ -514,10 +535,8 @@ function CopyYKienModal({ fromIdx, donYKien, donData, onApply, onClose }: {
     prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]
   );
   return (
-    <PlatformModalFrame
-      zIndex={4000}
-      cardStyle={{ width: 340, boxShadow: "0 8px 32px rgba(0,0,0,0.2)", fontFamily: F }}
-    >
+    <div style={{ position: "fixed", inset: 0, zIndex: 4000, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ background: "#fff", borderRadius: 8, width: 340, boxShadow: "0 8px 32px rgba(0,0,0,0.2)", fontFamily: F, overflow: "hidden" }}>
         {/* Header */}
         <div style={{ background: RED, color: "#fff", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span style={{ fontSize: 14, fontWeight: 700 }}>Áp dụng ý kiến cho đơn khác</span>
@@ -548,11 +567,21 @@ function CopyYKienModal({ fromIdx, donYKien, donData, onApply, onClose }: {
           <button onClick={() => onApply(selected)} style={{ flex: 1, padding: "8px 0", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: F }}>Áp dụng</button>
           <button onClick={onClose} style={{ flex: 1, padding: "8px 0", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontFamily: F }}>Đóng</button>
         </div>
-    </PlatformModalFrame>
+      </div>
+    </div>
   );
 }
 
 const Y_KIEN_DON_OPTIONS = ["Kháng nghị", "Trả lời đơn", "Xếp đơn", "Nghiên cứu, xác minh, bổ sung", "Viện kiểm sát đang giải quyết"];
+// LỆ-170: danh mục ý kiến lãnh đạo dùng chung, đặt tên theo SRS
+const Y_KIEN_LANH_DAO_OPTIONS = [
+  "Kháng nghị",
+  "Không kháng nghị",
+  "Trả lời đơn",
+  "Xếp đơn",
+  "Nghiên cứu, xác minh, bổ sung",
+  "Viện kiểm sát đang giải quyết",
+];
 
 function PheDuyetDetail({ onClose, onXemBieuMau, userRole, noiDung }: { onClose: () => void; onXemBieuMau: () => void; userRole: UserRoleType; noiDung: string }) {
   const isVu1 = userRole === "vu-1" || userRole === "hinh-su";
@@ -562,6 +591,9 @@ function PheDuyetDetail({ onClose, onXemBieuMau, userRole, noiDung }: { onClose:
   const [gqRutGon, setGqRutGon] = useState(false);
   const [lichSuIdx, setLichSuIdx] = useState<number | null>(null);
   const [donYKien, setDonYKien] = useState<string[]>(DON_DATA.map(d => d.yKien));
+  // LỆ-178 / BR-07: từ chối tờ trình → trả lại toàn bộ dự thảo đính kèm
+  const [xacNhanTuChoi, setXacNhanTuChoi] = useState(false);
+  const [lyDoTuChoi, setLyDoTuChoi] = useState("");
   const [yKienOption, setYKienOption] = useState("Kháng nghị");
   const [copyFromIdx, setCopyFromIdx] = useState<number | null>(null);
 
@@ -675,7 +707,7 @@ function PheDuyetDetail({ onClose, onXemBieuMau, userRole, noiDung }: { onClose:
                 {/* Radio buttons: chỉ hiển thị với Tờ trình của Vụ 2, 3, 4 */}
                 {!isVu1 && isToTrinh && (
                   <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "8px 20px", marginBottom: 10 }}>
-                    {["Kháng nghị", "Không kháng nghị", "Nghiên cứu, xác minh, bổ sung", "Xếp đơn", "VKS đang xử lý"].map(opt => (
+                    {Y_KIEN_LANH_DAO_OPTIONS.map(opt => (
                       <label key={opt} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, cursor: "pointer", color: TEXT }}>
                         <input
                           type="radio"
@@ -729,9 +761,37 @@ function PheDuyetDetail({ onClose, onXemBieuMau, userRole, noiDung }: { onClose:
             <button style={{ padding: "6px 18px", background: RED, color: "#fff", border: `2px solid ${RED}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F }}>Lưu</button>
             <button style={{ padding: "6px 18px", background: "#fff", color: RED, border: `2px dashed ${RED}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F }}>Sửa biểu mẫu</button>
             <button style={{ padding: "6px 18px", background: RED, color: "#fff", border: `2px solid ${RED}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F }}>Lưu và ký</button>
-            <button style={{ padding: "6px 18px", background: "#fff", color: TEXT, border: `2px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>Trả lại</button>
+            <button onClick={() => setXacNhanTuChoi(true)} style={{ padding: "6px 18px", background: "#fff", color: TEXT, border: `2px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>Từ chối</button>
             <button onClick={onClose} style={{ padding: "6px 18px", background: "#fff", color: TEXT, border: `2px dashed ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>Đóng</button>
           </div>
+
+          {/* LỆ-178 + BR-07: xác nhận từ chối tờ trình */}
+          {xacNhanTuChoi && (
+            <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 2200, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: F }}>
+              <div style={{ background: "#fff", borderRadius: 6, width: 460, padding: 18, boxShadow: "0 8px 28px rgba(0,0,0,0.2)" }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: RED, marginBottom: 10 }}>Từ chối tờ trình</div>
+                <div style={{ fontSize: 12, color: TEXT, lineHeight: 1.6, marginBottom: 10 }}>
+                  Khi từ chối tờ trình, <b>toàn bộ dự thảo văn bản đính kèm</b> của lần trình này sẽ được trả lại cho người trình để chỉnh sửa. Bạn có chắc chắn không?
+                </div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, marginBottom: 4, textTransform: "uppercase" as const }}>Lý do từ chối</div>
+                <textarea
+                  value={lyDoTuChoi}
+                  onChange={e => setLyDoTuChoi(e.target.value)}
+                  rows={3}
+                  placeholder="Nhập lý do từ chối..."
+                  style={{ width: "100%", padding: "8px 10px", fontSize: 12, fontFamily: F, border: `1px solid ${BORDER}`, borderRadius: 4, outline: "none", resize: "vertical" as const, boxSizing: "border-box" as const, marginBottom: 12 }}
+                />
+                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                  <button onClick={() => setXacNhanTuChoi(false)} style={{ padding: "6px 16px", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>Hủy</button>
+                  <button
+                    disabled={!lyDoTuChoi.trim()}
+                    onClick={() => { setXacNhanTuChoi(false); setLyDoTuChoi(""); onClose(); }}
+                    style={{ padding: "6px 16px", background: lyDoTuChoi.trim() ? RED : "#d1d5db", color: "#fff", border: "none", borderRadius: 4, cursor: lyDoTuChoi.trim() ? "pointer" : "not-allowed", fontSize: 12, fontWeight: 700, fontFamily: F }}
+                  >Xác nhận từ chối</button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right panel: PDF preview */}
@@ -814,7 +874,10 @@ export default function PheDuyetDeXuatView({
   const [activeTab, setActiveTab] = useState<ListTab>("da-duyet");
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
 
-  if (screen === "bieu-mau") return <XemBieuMauScreen onClose={() => setScreen("detail")} />;
+  // LỆ-174: đã trình ký (đã duyệt/đã ký) → xem PDF chỉ đọc; chưa trình ký → soạn thảo Word
+  const rowBieuMau = ROWS.find(r => r.id === selectedRow);
+  if (screen === "bieu-mau")
+    return <XemBieuMauScreen onClose={() => setScreen("detail")} daTrinhKy={rowBieuMau?.trangThai === "da-duyet"} />;
   if (screen === "detail") {
     const selRow = ROWS.find(r => r.id === selectedRow);
     const noiDungSel = selRow?.noiDung ?? "Tờ trình";
@@ -938,7 +1001,7 @@ export default function PheDuyetDeXuatView({
                   <td style={{ ...TD, fontWeight: 600, whiteSpace: "pre-line" as const }}>{r.tenDA}</td>
                   <td style={TD}>
                     <span style={{ color: r.noiDung.startsWith("Dự thảo") ? "#2563eb" : TEXT }}>{r.noiDung}</span>
-                    {r.uuTien && <Badge color="#92400e" bg="#fef3c7" style={{ marginLeft: 6 }}>Ưu tiên</Badge>}
+                    {r.uuTien && <span style={{ marginLeft: 6 }}><Badge color="#92400e" bg="#fef3c7">Ưu tiên</Badge></span>}
                   </td>
                   <td style={TD}>{r.nguoi}</td>
                   <td style={{ ...TD, whiteSpace: "pre-line" as const, fontSize: 11 }}>{r.ngay}</td>

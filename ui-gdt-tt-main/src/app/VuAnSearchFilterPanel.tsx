@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Search, RotateCcw, Calendar, ChevronDown, ChevronUp, X } from "lucide-react";
 import { F, RED, BORDER, TEXT, MUTED } from "./shared";
 import { LOAI_AN_OPTIONS } from "./data";
-import { UserRoleType } from "./App";
+import type { UserRoleType } from "./shared";
 
 export const DANH_SACH_TOA_AN_FILTER = [
   "Tòa án nhân dân tối cao",
@@ -59,6 +59,8 @@ export interface VuAnFilterValues {
   soBA: string;
   ngayBA: string;
   biCao: string;
+  nguyenDon: string;
+  biDon: string;
   soThuLy: string;
   lanhDaoVu: string;
   thamTraVien: string;
@@ -80,6 +82,16 @@ export interface VuAnFilterValues {
 
   ketQuaGiaiQuyet: string;
   hinhThucDon: string;
+  loaiBaGDT: string;
+  thuocVu: string;
+  hoSoTuNgay: string;
+  hoSoDenNgay: string;
+  ketQuaTuNgay: string;
+  ketQuaDenNgay: string;
+  ketQuaXXTuNgay: string;
+  ketQuaXXDenNgay: string;
+  thongBao: string;
+  loaiCongVan: string;
   phanLoaiDon: string;
 
   capXetXu: string;
@@ -88,6 +100,11 @@ export interface VuAnFilterValues {
 
   rutKhangNghi: string;
   ngayRutKhangNghi: string;
+  ngayRutKhangNghiDen: string;
+
+  // SRS Quản lý khiếu nại mục A5, A6, A21, A22 — tách riêng khỏi "Kết quả giải quyết"
+  trangThaiThuLy: string;
+  ketQuaThuLy: string;
 }
 
 export const INITIAL_FILTER_VALUES: VuAnFilterValues = {
@@ -96,6 +113,8 @@ export const INITIAL_FILTER_VALUES: VuAnFilterValues = {
   soBA: "",
   ngayBA: "",
   biCao: "",
+  nguyenDon: "",
+  biDon: "",
   soThuLy: "",
   lanhDaoVu: "",
   thamTraVien: "",
@@ -113,12 +132,25 @@ export const INITIAL_FILTER_VALUES: VuAnFilterValues = {
   yKienToTrinh: "",
   ketQuaGiaiQuyet: "",
   hinhThucDon: "",
+  loaiBaGDT: "",
+  thuocVu: "",
+  hoSoTuNgay: "",
+  hoSoDenNgay: "",
+  ketQuaTuNgay: "",
+  ketQuaDenNgay: "",
+  ketQuaXXTuNgay: "",
+  ketQuaXXDenNgay: "",
+  thongBao: "",
+  loaiCongVan: "",
   phanLoaiDon: "",
   capXetXu: "",
   ketQuaXetXu: "",
   ngayTuyenAn: "",
   rutKhangNghi: "",
   ngayRutKhangNghi: "",
+  ngayRutKhangNghiDen: "",
+  trangThaiThuLy: "",
+  ketQuaThuLy: "",
 };
 
 export const FILTER_LABELS: Record<keyof VuAnFilterValues, string> = {
@@ -126,7 +158,9 @@ export const FILTER_LABELS: Record<keyof VuAnFilterValues, string> = {
   toaRaBA: "Tòa ra BA/QĐ",
   soBA: "Số BA/QĐ",
   ngayBA: "Ngày BA/QĐ",
-  biCao: "Bị cáo/Đương sự",
+  biCao: "Bị cáo",
+  nguyenDon: "Nguyên đơn",
+  biDon: "Bị đơn",
   soThuLy: "Số thụ lý",
   lanhDaoVu: "Lãnh đạo phụ trách",
   thamTraVien: "Cán bộ giải quyết",
@@ -144,12 +178,25 @@ export const FILTER_LABELS: Record<keyof VuAnFilterValues, string> = {
   yKienToTrinh: "Ý kiến tờ trình",
   ketQuaGiaiQuyet: "Kết quả giải quyết",
   hinhThucDon: "Hình thức đơn",
+  loaiBaGDT: "Loại BA GĐT",
+  thuocVu: "Thuộc Vụ",
+  hoSoTuNgay: "Hồ sơ từ ngày",
+  hoSoDenNgay: "Hồ sơ đến ngày",
+  ketQuaTuNgay: "Kết quả từ ngày",
+  ketQuaDenNgay: "Kết quả đến ngày",
+  ketQuaXXTuNgay: "KQ xét xử từ ngày",
+  ketQuaXXDenNgay: "KQ xét xử đến ngày",
+  thongBao: "Thông báo",
+  loaiCongVan: "Loại công văn",
   phanLoaiDon: "Phân loại đơn",
   capXetXu: "Cấp xét xử",
   ketQuaXetXu: "Kết quả xét xử",
   ngayTuyenAn: "Ngày tuyên án",
   rutKhangNghi: "Rút kháng nghị",
-  ngayRutKhangNghi: "Ngày rút KN",
+  ngayRutKhangNghi: "Rút KN từ ngày",
+  ngayRutKhangNghiDen: "Rút KN đến ngày",
+  trangThaiThuLy: "Trạng thái thụ lý",
+  ketQuaThuLy: "Kết quả thụ lý",
 };
 
 export function VuAnSearchFilterPanel({
@@ -264,10 +311,36 @@ export function VuAnSearchFilterPanel({
             </div>
           </div>
 
-          {/* 5. Bị cáo / Đương sự */}
+          {/* 5. Bị cáo */}
+
           <div>
-            <label style={labelStyle}>Bị cáo / Đương sự</label>
-            <input placeholder="Nhập tên bị cáo/đương sự" value={filters.biCao} onChange={(e) => handleChange("biCao", e.target.value)} style={inputStyle} />
+
+            <label style={labelStyle}>Bị cáo</label>
+
+            <input placeholder="Nhập tên bị cáo" value={filters.biCao} onChange={(e) => handleChange("biCao", e.target.value)} style={inputStyle} />
+
+          </div>
+
+
+          {/* 5b. Nguyên đơn */}
+
+          <div>
+
+            <label style={labelStyle}>Nguyên đơn</label>
+
+            <input placeholder="Nhập tên nguyên đơn" value={filters.nguyenDon} onChange={(e) => handleChange("nguyenDon", e.target.value)} style={inputStyle} />
+
+          </div>
+
+
+          {/* 5c. Bị đơn */}
+
+          <div>
+
+            <label style={labelStyle}>Bị đơn</label>
+
+            <input placeholder="Nhập tên bị đơn" value={filters.biDon} onChange={(e) => handleChange("biDon", e.target.value)} style={inputStyle} />
+
           </div>
 
           {/* 6. Số thụ lý */}
@@ -309,6 +382,18 @@ export function VuAnSearchFilterPanel({
             </select>
           </div>
 
+          {/* TH-053: Thuộc Vụ */}
+          <div>
+            <label style={labelStyle}>Thuộc Vụ</label>
+            <select value={filters.thuocVu} onChange={(e) => handleChange("thuocVu", e.target.value)} style={selectStyle}>
+              <option value="">– Tất cả –</option>
+              <option value="Vụ Giám đốc, kiểm tra I">Vụ Giám đốc, kiểm tra I</option>
+              <option value="Vụ Giám đốc, kiểm tra II">Vụ Giám đốc, kiểm tra II</option>
+              <option value="Vụ Giám đốc, kiểm tra III">Vụ Giám đốc, kiểm tra III</option>
+              <option value="Vụ Giám đốc, kiểm tra IV">Vụ Giám đốc, kiểm tra IV</option>
+            </select>
+          </div>
+
           {/* 10. Thuộc án */}
           <div>
             <label style={labelStyle}>Thuộc án</label>
@@ -316,7 +401,7 @@ export function VuAnSearchFilterPanel({
               <option value="">– Tất cả –</option>
               <option value="Án Quốc hội">Án Quốc hội</option>
               <option value="Án chỉ đạo">Án chỉ đạo</option>
-              <option value="Án TVTN">Án TVTN</option>
+              <option value="Người chưa thành niên">Người chưa thành niên</option>
               <option value="Án tử hình">Án tử hình</option>
             </select>
           </div>
@@ -326,9 +411,12 @@ export function VuAnSearchFilterPanel({
             <label style={labelStyle}>Án thời hiệu</label>
             <select value={filters.thoiHieu} onChange={(e) => handleChange("thoiHieu", e.target.value)} style={selectStyle}>
               <option value="">– Tất cả –</option>
-              <option value="Không có thời hiệu giải quyết">Không có thời hiệu giải quyết</option>
-              <option value="Còn thời hiệu">Còn thời hiệu</option>
-              <option value="Hết thời hiệu">Hết thời hiệu</option>
+              <option value="Đã hết thời hiệu">Đã hết thời hiệu</option>
+              <option value="Còn thời hiệu dưới một tháng">Còn thời hiệu dưới một tháng</option>
+              <option value="Còn thời hiệu dưới hai tháng">Còn thời hiệu dưới hai tháng</option>
+              <option value="Còn thời hiệu dưới ba tháng">Còn thời hiệu dưới ba tháng</option>
+              <option value="Còn thời hiệu dưới sáu tháng">Còn thời hiệu dưới sáu tháng</option>
+              <option value="Còn thời hiệu dưới 1 năm">Còn thời hiệu dưới 1 năm</option>
             </select>
           </div>
 
@@ -351,11 +439,11 @@ export function VuAnSearchFilterPanel({
               <label style={labelStyle}>Trạng thái hồ sơ</label>
               <select value={filters.trangThaiHoSo} onChange={(e) => handleChange("trangThaiHoSo", e.target.value)} style={selectStyle}>
                 <option value="">– Tất cả –</option>
-                <option value="Chưa có hồ sơ">Chưa có hồ sơ</option>
-                <option value="Đang mượn hồ sơ">Đang mượn hồ sơ</option>
                 <option value="Đã có hồ sơ">Đã có hồ sơ</option>
-                <option value="Đã trả hồ sơ">Đã trả hồ sơ</option>
-                <option value="Đã chuyển hồ sơ">Đã chuyển hồ sơ</option>
+                <optgroup label="Chưa có hồ sơ">
+                  <option value="Chưa có hồ sơ - Đã có phiếu mượn">Đã có phiếu mượn</option>
+                  <option value="Chưa có hồ sơ - Chưa có phiếu mượn">Chưa có phiếu mượn</option>
+                </optgroup>
               </select>
             </div>
             {/* Thụ lý từ ngày – Đến ngày (Gộp 2 cột thành 1 ô khoảng thời gian) */}
@@ -386,11 +474,9 @@ export function VuAnSearchFilterPanel({
               <label style={labelStyle}>Tờ trình lãnh đạo</label>
               <select value={filters.toTrinhLanhDao} onChange={(e) => handleChange("toTrinhLanhDao", e.target.value)} style={selectStyle}>
                 <option value="">– Tất cả –</option>
-                <option value="Trình Thẩm phán">Trình Thẩm phán</option>
-                <option value="Trình Vụ trưởng">Trình Vụ trưởng</option>
-                <option value="Trình Phó Chánh án">Trình Phó Chánh án</option>
-                <option value="Trình Chánh án">Trình Chánh án</option>
-                <option value="Trình HĐTP">Trình HĐTP</option>
+                <option value="Chưa có tờ trình">Chưa có tờ trình</option>
+                <option value="Đã có tờ trình">Đã có tờ trình</option>
+                <option value="Đã có tờ trình lần 1">Đã có tờ trình lần 1</option>
               </select>
             </div>
             <div>
@@ -418,10 +504,14 @@ export function VuAnSearchFilterPanel({
               <label style={labelStyle}>Ý kiến tờ trình</label>
               <select value={filters.yKienToTrinh} onChange={(e) => handleChange("yKienToTrinh", e.target.value)} style={selectStyle}>
                 <option value="">– Tất cả –</option>
-                <option value="Trả lời đơn">Trả lời đơn</option>
-                <option value="Kháng nghị">Kháng nghị</option>
-                <option value="Xếp đơn">Xếp đơn</option>
-                <option value="VKS đang giải quyết">VKS đang giải quyết</option>
+                <option value="Chưa có ý kiến">Chưa có ý kiến</option>
+                <optgroup label="Đã có ý kiến">
+                  <option value="Trả lời đơn">Trả lời đơn</option>
+                  <option value="Kháng nghị">Kháng nghị</option>
+                  <option value="Xếp đơn">Xếp đơn</option>
+                  <option value="Nghiên cứu xác minh, bổ sung">Nghiên cứu xác minh, bổ sung</option>
+                  <option value="Yêu cầu trình tiếp">Yêu cầu trình tiếp</option>
+                </optgroup>
               </select>
             </div>
             <div>
@@ -429,22 +519,123 @@ export function VuAnSearchFilterPanel({
               <select value={filters.yeuCauTrinhTiep} onChange={(e) => handleChange("yeuCauTrinhTiep", e.target.value)} style={selectStyle}>
                 <option value="">– Tất cả –</option>
                 <option value="Trình Thẩm phán">Trình Thẩm phán</option>
-                <option value="Trình Vụ trưởng">Trình Vụ trưởng</option>
                 <option value="Trình Phó Chánh án">Trình Phó Chánh án</option>
                 <option value="Trình Chánh án">Trình Chánh án</option>
+                <option value="Báo cáo Tổ Thẩm phán">Báo cáo Tổ Thẩm phán</option>
+                <option value="Báo cáo Ủy ban thẩm phán">Báo cáo Ủy ban thẩm phán</option>
+                <option value="Trình dự thảo trả lời đơn">Trình dự thảo trả lời đơn</option>
+                <option value="Trình dự thảo kháng nghị">Trình dự thảo kháng nghị</option>
+                <option value="Trả lời đơn">Trả lời đơn</option>
+                <option value="Kháng nghị">Kháng nghị</option>
+                <option value="Thụ lý xét xử GĐT,TT">Thụ lý xét xử GĐT,TT</option>
+                <option value="Xếp đơn">Xếp đơn</option>
+                <option value="Xử lý khác">Xử lý khác</option>
+                <option value="VKS đang GQ">VKS đang GQ</option>
               </select>
             </div>
 
             {/* Giải quyết đơn */}
             <div>
+              <label style={labelStyle}>Trạng thái thụ lý</label>
+              <select value={filters.trangThaiThuLy} onChange={(e) => handleChange("trangThaiThuLy", e.target.value)} style={selectStyle}>
+                <option value="">– Tất cả –</option>
+                <option value="Thụ lý mới">Thụ lý mới</option>
+                <option value="Đã thụ lý">Đã thụ lý</option>
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Kết quả thụ lý</label>
+              <select value={filters.ketQuaThuLy} onChange={(e) => handleChange("ketQuaThuLy", e.target.value)} style={selectStyle}>
+                <option value="">– Tất cả –</option>
+                <option value="Chưa có kết quả">Chưa có kết quả</option>
+                <optgroup label="Đã có kết quả">
+                  <option value="Trả lời đơn">Trả lời đơn</option>
+                  <option value="Kháng nghị">Kháng nghị</option>
+                  <option value="Xếp đơn">Xếp đơn</option>
+                </optgroup>
+              </select>
+            </div>
+            <div>
               <label style={labelStyle}>Kết quả giải quyết</label>
               <select value={filters.ketQuaGiaiQuyet} onChange={(e) => handleChange("ketQuaGiaiQuyet", e.target.value)} style={selectStyle}>
                 <option value="">– Tất cả –</option>
-                <option value="Trả lời đơn">Trả lời đơn</option>
-                <option value="Kháng nghị">Kháng nghị</option>
-                <option value="Xếp đơn">Xếp đơn</option>
+                <option value="Chưa có kết quả">Chưa có kết quả</option>
+                <optgroup label="Đã có kết quả">
+                  <option value="Trả lời đơn">Trả lời đơn</option>
+                  <option value="Kháng nghị (CA + VKS)">Kháng nghị (CA + VKS)</option>
+                  <option value="Kháng nghị (CA)">Kháng nghị (CA)</option>
+                  <option value="Kháng nghị (VKS)">Kháng nghị (VKS)</option>
+                  <option value="Xếp đơn">Xếp đơn</option>
+                  <option value="VKS đang nghiên cứu">VKS đang nghiên cứu</option>
+                  <option value="Xử lý khác">Xử lý khác</option>
+                </optgroup>
               </select>
             </div>
+            {/* TH-054: Hồ sơ từ ngày – Đến ngày */}
+            <div>
+              <label style={labelStyle}>Hồ sơ từ ngày – Đến ngày</label>
+              <div style={{ display: "flex", gap: 6 }}>
+                <input placeholder="Từ ngày" value={filters.hoSoTuNgay} onChange={(e) => handleChange("hoSoTuNgay", e.target.value)} style={inputStyle} />
+                <input placeholder="Đến ngày" value={filters.hoSoDenNgay} onChange={(e) => handleChange("hoSoDenNgay", e.target.value)} style={inputStyle} />
+              </div>
+            </div>
+
+            {/* TH-055: Kết quả từ ngày – Đến ngày */}
+            <div>
+              <label style={labelStyle}>Kết quả từ ngày – Đến ngày</label>
+              <div style={{ display: "flex", gap: 6 }}>
+                <input placeholder="Từ ngày" value={filters.ketQuaTuNgay} onChange={(e) => handleChange("ketQuaTuNgay", e.target.value)} style={inputStyle} />
+                <input placeholder="Đến ngày" value={filters.ketQuaDenNgay} onChange={(e) => handleChange("ketQuaDenNgay", e.target.value)} style={inputStyle} />
+              </div>
+            </div>
+
+            {/* TH-056: Kết quả xét xử từ ngày – Đến ngày */}
+            <div>
+              <label style={labelStyle}>Kết quả xét xử từ ngày – Đến ngày</label>
+              <div style={{ display: "flex", gap: 6 }}>
+                <input placeholder="Từ ngày" value={filters.ketQuaXXTuNgay} onChange={(e) => handleChange("ketQuaXXTuNgay", e.target.value)} style={inputStyle} />
+                <input placeholder="Đến ngày" value={filters.ketQuaXXDenNgay} onChange={(e) => handleChange("ketQuaXXDenNgay", e.target.value)} style={inputStyle} />
+              </div>
+            </div>
+
+            {/* TH-057: Thông báo */}
+            <div>
+              <label style={labelStyle}>Thông báo</label>
+              <select value={filters.thongBao} onChange={(e) => handleChange("thongBao", e.target.value)} style={selectStyle}>
+                <option value="">– Tất cả –</option>
+                <option value="Chưa có thông báo TT">Chưa có thông báo TT</option>
+                <option value="Có thông báo TT">Có thông báo TT</option>
+                <option value="Chưa có thông báo KQ">Chưa có thông báo KQ</option>
+                <option value="Có thông báo KQ">Có thông báo KQ</option>
+              </select>
+            </div>
+
+            {/* TH-058: Loại công văn */}
+            <div>
+              <label style={labelStyle}>Loại công văn</label>
+              <select value={filters.loaiCongVan} onChange={(e) => handleChange("loaiCongVan", e.target.value)} style={selectStyle}>
+                <option value="">– Tất cả –</option>
+                <option value="Công văn chuyển đơn">Công văn chuyển đơn</option>
+                <option value="Công văn kiến nghị GĐT/TT">Công văn kiến nghị GĐT/TT</option>
+                <option value="Công văn trao đổi">Công văn trao đổi</option>
+                <option value="Công văn xác minh, bổ sung">Công văn xác minh, bổ sung</option>
+                <option value="Công văn khác">Công văn khác</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={labelStyle}>Loại BA GĐT</label>
+              <select value={filters.loaiBaGDT} onChange={(e) => handleChange("loaiBaGDT", e.target.value)} style={selectStyle}>
+                <option value="">– Tất cả –</option>
+                <optgroup label="Đơn đề nghị GĐT,TT">
+                  <option value="Đơn đề nghị GĐT">Đơn đề nghị GĐT</option>
+                  <option value="Đơn đề nghị TT">Đơn đề nghị TT</option>
+                </optgroup>
+                <option value="Rút hồ sơ đoàn kiểm tra">Rút hồ sơ đoàn kiểm tra</option>
+                <option value="Chủ động GĐT qua Bản án">Chủ động GĐT qua Bản án</option>
+              </select>
+            </div>
+
             <div>
               <label style={labelStyle}>Hình thức đơn</label>
               <select value={filters.hinhThucDon} onChange={(e) => handleChange("hinhThucDon", e.target.value)} style={selectStyle}>
@@ -453,20 +644,14 @@ export function VuAnSearchFilterPanel({
                 <option value="CV">Công văn</option>
               </select>
             </div>
-            <div>
-              <label style={labelStyle}>Phân loại đơn</label>
-              <select value={filters.phanLoaiDon} onChange={(e) => handleChange("phanLoaiDon", e.target.value)} style={selectStyle}>
-                <option value="">– Tất cả –</option>
-                <option value="Đơn đề nghị">Đơn đề nghị</option>
-                <option value="Công văn kiến nghị">Công văn kiến nghị</option>
-              </select>
-            </div>
 
             {/* Xét xử */}
             <div>
               <label style={labelStyle}>Cấp xét xử</label>
               <select value={filters.capXetXu} onChange={(e) => handleChange("capXetXu", e.target.value)} style={selectStyle}>
                 <option value="">– Tất cả –</option>
+                <option value="Sơ thẩm">Sơ thẩm</option>
+                <option value="Phúc thẩm">Phúc thẩm</option>
                 <option value="Giám đốc thẩm">Giám đốc thẩm</option>
                 <option value="Tái thẩm">Tái thẩm</option>
               </select>
@@ -490,8 +675,11 @@ export function VuAnSearchFilterPanel({
               </select>
             </div>
             <div>
-              <label style={labelStyle}>Ngày rút kháng nghị</label>
-              <input placeholder="dd/mm/yyyy" value={filters.ngayRutKhangNghi} onChange={(e) => handleChange("ngayRutKhangNghi", e.target.value)} style={inputStyle} />
+              <label style={labelStyle}>Rút kháng nghị từ ngày – Đến ngày</label>
+              <div style={{ display: "flex", gap: 6 }}>
+                <input placeholder="Từ ngày" value={filters.ngayRutKhangNghi} onChange={(e) => handleChange("ngayRutKhangNghi", e.target.value)} style={inputStyle} />
+                <input placeholder="Đến ngày" value={filters.ngayRutKhangNghiDen} onChange={(e) => handleChange("ngayRutKhangNghiDen", e.target.value)} style={inputStyle} />
+              </div>
             </div>
           </div>
         )}

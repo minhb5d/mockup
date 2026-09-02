@@ -262,6 +262,9 @@ export function PhanCongTPTCView() {
   const [inputCapTrinh, setInputCapTrinh] = useState("Phó Chánh án");
   const [inputNguoiDaTrinh, setInputNguoiDaTrinh] = useState("Nguyễn Như Thắng - Vụ trưởng");
   const [inputTPTCDeXuat, setInputTPTCDeXuat] = useState("Hoàng Ngọc Chiêu - TPTC");
+  // Draw.io page 10 / 2.9: tờ trình có cả nhánh phân công TPTC lần đầu và
+  // nhánh phân công lại khi TPB3/Lãnh đạo Vụ/Phó Chánh án không đồng quan điểm.
+  const [inputNguonDeXuat, setInputNguonDeXuat] = useState("Phân công TPTC lần đầu");
   const [inputCanCu, setInputCanCu] = useState("Quyết định số 75/QĐ-CA ngày 06/4/2026 của TANDTC; Điều 15");
   const [noiNhanTT, setNoiNhanTT] = useState([
     { id: 1, noiNhan: "Khác", chiTiet: "Như kính gửi", ghiChu: "" },
@@ -893,6 +896,20 @@ export function PhanCongTPTCView() {
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                 <div><label style={labelStyle}>Thẩm phán tối cao đề xuất (*)</label><select value={inputTPTCDeXuat} onChange={e=>setInputTPTCDeXuat(e.target.value)} style={inputStyle}><option>Hoàng Ngọc Chiêu - TPTC</option><option>Nguyễn Văn Cường - TPTC</option></select></div>
                 <div><label style={labelStyle}>Căn cứ quyết định (*)</label><input value={inputCanCu} onChange={e=>setInputCanCu(e.target.value)} style={inputStyle}/></div>
+              </div>
+              <div>
+                <label style={labelStyle}>Nguồn / lý do đề xuất TPTC (*)</label>
+                <select value={inputNguonDeXuat} onChange={e=>setInputNguonDeXuat(e.target.value)} style={inputStyle}>
+                  <option>Phân công TPTC lần đầu</option>
+                  <option>Phân công lại TPTC do TPB3 không đồng quan điểm với Vụ trưởng</option>
+                  <option>Phân công lại TPTC theo ý kiến Phó Chánh án</option>
+                  <option>Phân công lại TPTC sau phiên họp Tổ Thẩm phán</option>
+                </select>
+                {inputNguonDeXuat.includes("Phân công lại") && (
+                  <div style={{marginTop:6,padding:"7px 10px",border:"1px solid #fde68a",background:"#fffbeb",borderRadius:5,fontSize:11,color:"#92400e"}}>
+                    Theo Draw.io 2.9/2.14: đây là tờ trình <b>phân công lại TPTC</b>; sau khi Vụ trưởng và Phó Chánh án ký, Phó Chánh án thực hiện phân công và hồ sơ được chuyển cho TPTC mới.
+                  </div>
+                )}
               </div>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: TEXT, display: "block", marginBottom: 6 }}>

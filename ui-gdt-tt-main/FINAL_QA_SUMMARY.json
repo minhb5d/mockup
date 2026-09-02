@@ -1,0 +1,12 @@
+{
+  "typescript_tsx_files": 102,
+  "syntax_errors": 0,
+  "missing_relative_imports": 0,
+  "drawio_pages_total": 13,
+  "drawio_page_3_empty": true,
+  "drawio_pages_with_flow": 12,
+  "node_modules_in_final_zip": false,
+  "backup_files_in_final_zip": false,
+  "production_build_verified_in_container": false,
+  "production_build_blocker": "offline dependency cache missing yallist-3.1.1; original ZIP node_modules was incomplete"
+}

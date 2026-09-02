@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X, FileText, Calendar, Paperclip, FolderPlus, Eye, Send } from "lucide-react";
-import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE } from "./shared";
+import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, type UserRoleType } from "./shared";
 import { TrinhKyModal } from "./TrinhKyModal";
 import { XemBieuMauCongVanModal } from "./CongVanTraoDoiView";
 
@@ -335,3 +335,62 @@ export function TabPlaceholder({ label }: { label: string }) {
     </div>
   );
 }
+
+// ── Helper nghiệp vụ dùng chung (chuyển từ App.tsx) ─────────────────────────
+export function getPartyLabels(loaiAnStr?: string, role?: UserRoleType) {
+  const loai = (loaiAnStr || "").toLowerCase();
+  const isHinhSu = loai.includes("hình sự") || role === "vu-1" || role === "hinh-su";
+  const isHanhChinh = loai.includes("hành chính") || role === "vu-4" || role === "hanh-chinh";
+
+  if (isHinhSu) {
+    return { label1: "Người khiếu nại", label2: "Bị cáo" };
+  } else if (isHanhChinh) {
+    return { label1: "Người khởi kiện", label2: "Người bị kiện" };
+  } else {
+    return { label1: "Nguyên đơn", label2: "Bị đơn" };
+  }
+}
+
+
+export function isVu234(role?: UserRoleType, loaiAnStr?: string) {
+  if (role === "vu-2" || role === "dan-su" || role === "vu-3" || role === "vu-4" || role === "hanh-chinh") {
+    return true;
+  }
+  if (role === "vu-1" || role === "hinh-su") {
+    return false;
+  }
+  if (loaiAnStr && loaiAnStr.toLowerCase().includes("hình sự")) {
+    return false;
+  }
+  return true;
+}
+
+
+export function getQuanHePhapLuat(c: { quanHePhapLuat?: string; tenVuAn?: string; loaiAn?: string }) {
+  if (c.quanHePhapLuat) return c.quanHePhapLuat;
+  if (c.tenVuAn && c.tenVuAn.includes(" - ")) {
+    return c.tenVuAn.split(" - ")[1];
+  }
+  switch (c.loaiAn) {
+    case "Dân sự":
+      return "Tranh chấp hợp đồng chuyển nhượng đất đai";
+    case "Hành chính":
+      return "Khiếu kiện quyết định hành chính về thu hồi đất";
+    case "Kinh doanh thương mại":
+      return "Tranh chấp hợp đồng mua bán hàng hóa";
+    case "Hôn nhân gia đình":
+      return "Tranh chấp chia tài sản khi ly hôn";
+    case "Lao động":
+      return "Tranh chấp đơn phương chấm dứt HĐLĐ";
+    case "Sở hữu trí tuệ":
+      return "Tranh chấp bản quyền nhãn hiệu";
+    case "Phá sản":
+      return "Yêu cầu mở thủ tục phá sản";
+    default:
+      return "Tranh chấp hợp đồng dân sự / kinh doanh";
+  }
+}
+
+// ── Đương sự cell ────────────────────────────────────────────────────────────
+
+

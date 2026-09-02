@@ -11,7 +11,7 @@ import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge, VuAnBtn, Ta
 import { formatSoBA } from "./AppHelpers";
 import { getPartyLabels, isVu234, getQuanHePhapLuat } from "./App";
 import { SearchFilterPanel } from "./SearchFilterPanel";
-import { TraDonModal, GhepVuAnModal, ChuyenVuAnModal } from "./NhanDonModals";
+import { TraDonModal } from "./NhanDonModals";
 
 // ── Thông tin đơn cell ───────────────────────────────────────────────────────
 
@@ -192,16 +192,6 @@ function CellBA({ c, userRole }: { c: DonCase; userRole?: UserRoleType }) {
           <span style={{ color: TEXT, fontWeight: 400 }}>QHPL: </span>{qhplText}
         </span>
       )}
-      {c.hoiDongThamPhanPhucTham && (
-        <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
-          <span style={{ color: TEXT }}>HĐTP cấp phúc thẩm: </span>{c.hoiDongThamPhanPhucTham}
-        </span>
-      )}
-      {c.thamPhanChuToaPhucTham && (
-        <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
-          <span style={{ color: TEXT }}>Thẩm phán chủ tọa cấp phúc thẩm: </span>{c.thamPhanChuToaPhucTham}
-        </span>
-      )}
       <span style={{ fontSize: 10, color: "#9ca3af", fontFamily: F, fontStyle: "italic" }}>Các bản án khác liên quan</span>
       {c.loaiAn === "Hình sự" ? (
         <span style={{ fontSize: 11, color: TEXT, fontFamily: F }} title={c.biCao ? `${c.biCao}, Nguyễn Văn B, Trần Văn C, Lê Văn D` : ""}>
@@ -218,7 +208,7 @@ function CellBA({ c, userRole }: { c: DonCase; userRole?: UserRoleType }) {
 
 // ── Thông tin vụ án cell ─────────────────────────────────────────────────────
 
-function CellVuAn({ c, onThemHoSo, onVuAnAction }: { c: DonCase; onThemHoSo?: () => void; onVuAnAction?: (action: VuAnAction, c: DonCase) => void }) {
+function CellVuAn({ c, onThemHoSo, onVuAnAction, onXuLyTBGQ }: { c: DonCase; onThemHoSo?: () => void; onVuAnAction?: (action: VuAnAction, c: DonCase) => void; onXuLyTBGQ?: (c: DonCase) => void }) {
   const hasGiaiQuyet = !!(c.thongBaoBoSung || c.ttvGiaiQuyet || c.tpGiaiQuyet);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -267,6 +257,11 @@ function CellVuAn({ c, onThemHoSo, onVuAnAction }: { c: DonCase; onThemHoSo?: ()
             </span>
           )}
         </div>
+      )}
+      {hasGiaiQuyet && onXuLyTBGQ && (
+        <button onClick={() => onXuLyTBGQ(c)} style={{alignSelf:"flex-start",padding:"3px 7px",fontSize:10,border:"1px solid #93c5fd",background:"#eff6ff",color:"#1d4ed8",borderRadius:4,cursor:"pointer"}}>
+          Xử lý vụ việc đã có TBGQ
+        </button>
       )}
       {c.vuAnActions && c.vuAnActions.length > 0 && (
         <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center" }}>
@@ -456,6 +451,7 @@ function CaseTable({
   selectedIds,
   onSelectedIdsChange,
   onVuAnAction,
+  onXuLyTBGQ,
 }: {
   tab: TabId;
   onGiaoTieuHoSo: () => void;
@@ -465,6 +461,7 @@ function CaseTable({
   selectedIds: number[];
   onSelectedIdsChange: (ids: number[]) => void;
   onVuAnAction?: (action: VuAnAction, c: DonCase) => void;
+  onXuLyTBGQ?: (c: DonCase) => void;
 }) {
   const cases = overrideCases ?? getCasesByTab(tab, userRole);
 
@@ -484,14 +481,8 @@ function CaseTable({
     ? "THÔNG TIN BA/QĐ ĐỀ NGHỊ GĐT,TT & QHPL"
     : "THÔNG TIN BA/QĐ ĐỂ NGHỊ GĐT,TT";
 
-  const nhanTraHeader =
-    tab === "tra-lai"
-      ? "LÝ DO TRẢ LẠI"
-      : tab === "da-co-vu-an"
-        ? "NGÀY DUYỆT TỜ TRÌNH"
-        : "THÔNG TIN NHẬN/TRẢ";
-
-  const hasNhanTraCol = tab !== "cho-y-kien" && tab !== "don-cho-phe-duyet" && tab != "tat-ca";
+  // Đối chiếu 27.08: bỏ cột THÔNG TIN NHẬN/TRẢ và NGÀY DUYỆT TỜ TRÌNH khỏi bảng danh sách.
+  const hasNhanTraCol = false;
 
   return (
     <div style={{ flex: 1, overflow: "auto" }}>
@@ -562,7 +553,7 @@ function CaseTable({
                 {tab === "cho-y-kien" ? (
                   <CellYKienLD c={c} />
                 ) : (
-                  <CellVuAn c={c} onThemHoSo={onThemHoSo} onVuAnAction={onVuAnAction} />
+                  <CellVuAn c={c} onThemHoSo={onThemHoSo} onVuAnAction={onVuAnAction} onXuLyTBGQ={onXuLyTBGQ} />
                 )}
               </td>
               {hasNhanTraCol && (
@@ -595,15 +586,6 @@ function CaseTable({
                   >
                     <Eye size={15} color="#6b7280" />
                   </button>
-                  {tab === "cho-y-kien" && (
-                    <button
-                      onClick={() => alert(`Mở chức năng Tạo tờ trình cho đơn ${c.maDon || c.id}`)}
-                      style={{ background: "none", border: "none", cursor: "pointer", padding: 4, borderRadius: 4, color: RED }}
-                      title="Xem đơn và Tạo tờ trình"
-                    >
-                      📝
-                    </button>
-                  )}
                 </div>
               </td>
             </tr>
@@ -1178,6 +1160,35 @@ function TabBar({
   );
 }
 
+
+function XuLyTBGQCuModal({ c, onClose }: { c: DonCase; onClose: () => void }) {
+  const [buoc, setBuoc] = useState(1);
+  const [ketQua, setKetQua] = useState<"tiep-tuc" | "tra-ket-qua" | "">("");
+  const steps = [
+    "Vụ GĐ,KT nhận danh sách đơn từ VPHCTP",
+    "Kiểm tra điều kiện và xác định vụ việc đã có Thông báo giải quyết",
+    "Vụ trưởng tạo tờ trình trình Phó Chánh án",
+    "Phó Chánh án xem xét, cho ý kiến",
+    "Vụ trưởng gửi kết quả lại VPHCTP",
+    "VPHCTP quyết định tiếp tục thụ lý hoặc trả lời kết quả cũ",
+  ];
+  return <div style={{position:"fixed",inset:0,zIndex:4500,background:"rgba(0,0,0,.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+    <div style={{width:"min(760px,96vw)",background:"#fff",borderRadius:9,overflow:"hidden",boxShadow:"0 20px 50px rgba(0,0,0,.25)",fontFamily:F}}>
+      <div style={{padding:"12px 16px",borderBottom:`1px solid ${BORDER}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <b style={{color:RED}}>Xử lý đơn thuộc vụ việc đã có Thông báo giải quyết</b><button onClick={onClose}>×</button>
+      </div>
+      <div style={{padding:16}}>
+        <div style={{padding:"8px 10px",background:"#f0f9ff",border:"1px solid #bae6fd",borderRadius:5,fontSize:11,color:"#075985",marginBottom:12}}>
+          Luồng chuẩn Draw.io page 7 / mục 2.4. Đơn: <b>{c.maDon || c.maVanThuDen || c.id}</b>. TBGQ hiện có: <b>{c.thongBaoBoSung || "Thông báo giải quyết trước"}</b>.
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>{steps.map((x,i)=><button key={x} onClick={()=>setBuoc(i+1)} style={{textAlign:"left",padding:8,border:`1px solid ${buoc>=i+1?"#86efac":BORDER}`,background:buoc>=i+1?"#f0fdf4":"#fff",borderRadius:5,fontSize:11}}><b>{i+1}.</b> {x}</button>)}</div>
+        <div style={{marginTop:14,padding:12,border:`1px solid ${BORDER}`,borderRadius:6}}><b style={{fontSize:12}}>Kết quả tại VPHCTP</b><div style={{display:"flex",gap:14,marginTop:8,fontSize:12}}><label><input type="radio" name="tbgq-kq" checked={ketQua==="tiep-tuc"} onChange={()=>setKetQua("tiep-tuc")}/> Tiếp tục thụ lý → Thụ lý đơn → chuyển lại Vụ GĐ,KT</label><label><input type="radio" name="tbgq-kq" checked={ketQua==="tra-ket-qua"} onChange={()=>setKetQua("tra-ket-qua")}/> Không tiếp tục → trả lời kết quả giải quyết đơn</label></div></div>
+      </div>
+      <div style={{padding:"10px 16px",borderTop:`1px solid ${BORDER}`,textAlign:"right"}}><button onClick={onClose} style={{marginRight:8}}>Đóng</button><button onClick={()=>{if(!ketQua){alert("Chọn kết quả xử lý tại VPHCTP");return;} alert(ketQua==="tiep-tuc"?"Đã ghi nhận tiếp tục thụ lý và chuyển lại Vụ GĐ,KT":"Đã ghi nhận trả lời theo kết quả giải quyết trước");onClose();}} style={{background:RED,color:"#fff",border:0,padding:"7px 14px",borderRadius:4}}>Lưu kết quả</button></div>
+    </div>
+  </div>;
+}
+
 // ── Main "Nhận đơn và TL vụ án" view ─────────────────────────────────────────
 
 export default function NhanDonTLVuAnView({
@@ -1201,10 +1212,9 @@ export default function NhanDonTLVuAnView({
 }) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [showTraDon, setShowTraDon] = useState(false);
-  const [vuAnModal, setVuAnModal] = useState<{ type: "ghep" | "chuyen"; source: DonCase } | null>(null);
-  const [onlyToday, setOnlyToday] = useState(false);
+  const [tbgqCase, setTbgqCase] = useState<DonCase | null>(null);
   const currentCases = getCasesByTab(activeTab, userRole);
-  const visibleCases = onlyToday ? currentCases.filter((_, i) => i < 3) : currentCases;
+  const visibleCases = currentCases;
   const selectedCases = currentCases.filter((c) => selectedIds.includes(c.id));
 
   const handleTraDon = () => {
@@ -1220,10 +1230,8 @@ export default function NhanDonTLVuAnView({
     setShowTraDon(true);
   };
 
-  const handleVuAnAction = (action: VuAnAction, c: DonCase) => {
-    if (action === "ghep-vu-an") setVuAnModal({ type: "ghep", source: c });
-    if (action === "chuyen-vu-an") setVuAnModal({ type: "chuyen", source: c });
-    // Hủy ghép (case 18) cố ý chưa xử lý theo chỉ đạo hiện tại.
+  const handleVuAnAction = (_action: VuAnAction, _c: DonCase) => {
+    // CẦ-045: giữ nguyên nút Hủy ghép như mockup hiện tại; TH-018 màu đỏ nên không bổ sung popup/handler mới.
   };
 
   return (
@@ -1231,20 +1239,10 @@ export default function NhanDonTLVuAnView({
       <Breadcrumb />
       <TabBar activeTab={activeTab} userRole={userRole} onTabChange={setActiveTab} />
       <SearchFilterPanel expanded={filterExpanded} userRole={userRole} onToggle={() => setFilterExpanded((v) => !v)} />
-      {(activeTab === "da-co-vu-an" || activeTab === "don-cho-phe-duyet") && (
-        <div style={{ display: "flex", alignItems: "center", gap: 18, padding: "8px 20px", background: "#fff", borderBottom: `1px solid ${BORDER}`, fontFamily: F, fontSize: 12 }}>
-          <label style={{ display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}>
-            <input type="checkbox" checked={onlyToday} onChange={(e) => setOnlyToday(e.target.checked)} />
-            Tổng đơn mới trong ngày: <b>03 đơn</b>
-          </label>
-          <span>Tổng đơn: <b>{currentCases.length.toLocaleString("vi-VN")} đơn</b></span>
-        </div>
-      )}
       <ActionBar tab={activeTab} selectedCases={selectedCases} onTraDon={handleTraDon} onGiaoTieuHoSo={onGiaoTieuHoSo} onInBaoCao={() => onInBaoCao?.(activeTab)} />
-      <CaseTable tab={activeTab} userRole={userRole} onGiaoTieuHoSo={onGiaoTieuHoSo} onThemHoSo={onThemHoSo} overrideCases={visibleCases} selectedIds={selectedIds} onSelectedIdsChange={setSelectedIds} onVuAnAction={handleVuAnAction} />
+      <CaseTable tab={activeTab} userRole={userRole} onGiaoTieuHoSo={onGiaoTieuHoSo} onThemHoSo={onThemHoSo} overrideCases={visibleCases} selectedIds={selectedIds} onSelectedIdsChange={setSelectedIds} onVuAnAction={handleVuAnAction} onXuLyTBGQ={setTbgqCase} />
       {showTraDon && <TraDonModal cases={selectedCases} onClose={() => setShowTraDon(false)} onSuccess={() => setSelectedIds([])} />}
-      {vuAnModal?.type === "ghep" && <GhepVuAnModal source={vuAnModal.source} onClose={() => setVuAnModal(null)} />}
-      {vuAnModal?.type === "chuyen" && <ChuyenVuAnModal source={vuAnModal.source} onClose={() => setVuAnModal(null)} />}
+      {tbgqCase && <XuLyTBGQCuModal c={tbgqCase} onClose={() => setTbgqCase(null)} />}
     </>
   );
 }

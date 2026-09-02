@@ -14,6 +14,8 @@ import {
   ChevronRight,
   ZoomIn,
   ZoomOut,
+  Pencil,
+  Calendar,
 } from "lucide-react";
 import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge } from "./shared";
 
@@ -467,6 +469,12 @@ function ChonTaiLieuBoSungModal({
     "bl-02": true,
   });
   const [showHistory, setShowHistory] = useState(false);
+  const soTaiLieuDaChon = Object.values(selectedKeys).filter(Boolean).length; // TH-149
+  // TH-148: bộ lọc Ngày + Loại tài liệu trong popup Thêm tài liệu
+  const [tuNgay, setTuNgay] = useState("");
+  const [denNgay, setDenNgay] = useState("");
+  const [loaiTaiLieu, setLoaiTaiLieu] = useState("Tất cả");
+  const LOAI_TAI_LIEU_OPTIONS = ["Tất cả", "Đơn đề nghị", "Bản án/Quyết định", "Tài liệu chứng cứ", "Công văn", "Biên bản", "Tài liệu khác"];
 
   const sampleItems = [
     {
@@ -604,7 +612,10 @@ function ChonTaiLieuBoSungModal({
               <ArrowLeft size={17} />
             </button>
             <span style={{ fontSize: 14, fontWeight: 700, color: TEXT, fontFamily: F }}>
-              Hồ sơ lưu trữ - Vụ án: {tenVuAn}
+              Thêm tài liệu vào hồ sơ tờ trình – {tenVuAn}
+              {soTaiLieuDaChon > 0 && (
+                <span style={{ fontSize: 12, fontWeight: 400, marginLeft: 10 }}>— Đã chọn {soTaiLieuDaChon} tài liệu</span>
+              )}
             </span>
           </div>
 
@@ -706,7 +717,7 @@ function ChonTaiLieuBoSungModal({
                 {(
                   [
                     { id: "hien-tai", label: "Giai đoạn hiện tại" },
-                    { id: "tat-ca", label: "Tất cả giai đoạn" },
+                    { id: "tat-ca", label: "Các giai đoạn còn lại" },
                   ] as const
                 ).map(tab => {
                   const active = phamViTai === tab.id;
@@ -781,6 +792,41 @@ function ChonTaiLieuBoSungModal({
                   );
                 })}
               </div>
+            </div>
+
+            {/* TH-148: Filter 3 – Ngày + Loại tài liệu */}
+            <div style={{ padding: "0 14px 10px" }}>
+              <div style={{ fontSize: 11, color: MUTED, fontWeight: 600, marginBottom: 5 }}>Ngày tài liệu</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                <Calendar size={13} color={MUTED} />
+                <input
+                  type="date"
+                  value={tuNgay}
+                  onChange={e => setTuNgay(e.target.value)}
+                  style={{ flex: 1, minWidth: 0, padding: "4px 6px", fontSize: 11, fontFamily: F, border: `1px solid ${BORDER}`, borderRadius: 4, outline: "none" }}
+                />
+                <span style={{ fontSize: 11, color: MUTED }}>–</span>
+                <input
+                  type="date"
+                  value={denNgay}
+                  onChange={e => setDenNgay(e.target.value)}
+                  style={{ flex: 1, minWidth: 0, padding: "4px 6px", fontSize: 11, fontFamily: F, border: `1px solid ${BORDER}`, borderRadius: 4, outline: "none" }}
+                />
+              </div>
+              <div style={{ fontSize: 11, color: MUTED, fontWeight: 600, marginBottom: 5 }}>Loại tài liệu</div>
+              <select
+                value={loaiTaiLieu}
+                onChange={e => setLoaiTaiLieu(e.target.value)}
+                style={{ width: "100%", padding: "5px 6px", fontSize: 11, fontFamily: F, border: `1px solid ${BORDER}`, borderRadius: 4, outline: "none", background: "#fff", cursor: "pointer" }}
+              >
+                {LOAI_TAI_LIEU_OPTIONS.map(o => <option key={o}>{o}</option>)}
+              </select>
+              {(tuNgay || denNgay || loaiTaiLieu !== "Tất cả") && (
+                <button
+                  onClick={() => { setTuNgay(""); setDenNgay(""); setLoaiTaiLieu("Tất cả"); }}
+                  style={{ marginTop: 6, background: "none", border: "none", color: "#2563eb", fontSize: 11, fontFamily: F, cursor: "pointer", padding: 0 }}
+                >Xoá bộ lọc</button>
+              )}
             </div>
 
             {/* Content Area: Empty State OR Document List with Checkboxes */}
@@ -1043,7 +1089,7 @@ function ChonTaiLieuBoSungModal({
               fontFamily: F,
             }}
           >
-            Xác nhận bổ sung tài liệu
+            Lưu
           </button>
         </div>
       </div>
@@ -1054,12 +1100,15 @@ function ChonTaiLieuBoSungModal({
 // ── Trình ký – Tab Thông tin tờ trình ─────────────────────────────────────────
 export function TrinhKyThongTinTab() {
   const [selected, setSelected] = useState("tong-hop");
-  const docs = [
+  // TH-150: bản tổng hợp (tờ trình gốc + các phiếu ký đã gộp) luôn đứng đầu và là mặc định
+  // TH-146: tài liệu thuộc thủ tục rút gọn được gắn nhãn "Rút gọn"
+  const docs: Array<{ key: string; label: string; date: string | null; isDefault: boolean; rutGon?: boolean }> = [
     {
       key: "tong-hop",
-      label: "Tờ trình thẩm tra vụ việc",
+      label: "Tờ trình tổng hợp (tờ trình + các phiếu ký)",
       date: null,
       isDefault: true,
+      rutGon: true,
     },
     {
       key: "phieu-chanh-an",
@@ -1111,9 +1160,14 @@ export function TrinhKyThongTinTab() {
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 12, fontWeight: selected === d.key ? 700 : 500, color: d.isDefault ? RED : TEXT, fontFamily: F, wordBreak: "break-word" }}>{d.label}</div>
-            {d.isDefault && (
-              <span style={{ display: "inline-block", fontSize: 10, background: "#fee2e2", color: RED, borderRadius: 10, padding: "1px 7px", marginTop: 2, fontFamily: F }}>Mặc định</span>
-            )}
+            <div style={{ display: "flex", gap: 5, flexWrap: "wrap" as const, marginTop: 2 }}>
+              {d.isDefault && (
+                <span style={{ display: "inline-block", fontSize: 10, background: "#fee2e2", color: RED, borderRadius: 10, padding: "1px 7px", fontFamily: F }}>Mặc định</span>
+              )}
+              {d.rutGon && (
+                <span style={{ display: "inline-block", fontSize: 10, background: "#fef3c7", color: "#92400e", borderRadius: 10, padding: "1px 7px", fontFamily: F }}>Rút gọn</span>
+              )}
+            </div>
           </div>
           {d.date && <div style={{ fontSize: 10, color: MUTED, fontFamily: F, flexShrink: 0, marginTop: 2 }}>{d.date}</div>}
         </div>
@@ -1184,7 +1238,40 @@ export function TrinhKyHoSoTab() {
 }
 
 // ── Trình ký modal ─────────────────────────────────────────────────────────────
-export function TrinhKyModal({ onClose }: { onClose: () => void }) {
+// TH-145: thứ tự cấp trình – lãnh đạo trước phải cho ý kiến mới được trình lãnh đạo sau
+const THU_TU_CAP_TRINH = [
+  "Trình Phó vụ trưởng",
+  "Trình Vụ trưởng",
+  "Trình thẩm phán",
+  "Trình phó chánh án",
+  "Trình chánh án",
+];
+
+// TH-152: danh sách lãnh đạo phụ trách theo từng Loại án (thay cho danh sách cứng)
+const LANH_DAO_THEO_LOAI_AN: Record<string, { phoVuTruong: string[]; vuTruong: string[]; thamPhan: string[] }> = {
+  "Hình sự": {
+    phoVuTruong: ["Trần Thị Hoa – Phó Vụ trưởng Vụ 1"],
+    vuTruong: ["Lê Quang Minh – Vụ trưởng Vụ 1"],
+    thamPhan: ["Nguyễn Tiến Hiệp – Thẩm phán phân công", "Lê Văn Tùng – Thẩm phán tái phân công"],
+  },
+  "Dân sự": {
+    phoVuTruong: ["Nguyễn Thị Lan – Phó Vụ trưởng Vụ 2"],
+    vuTruong: ["Phạm Văn Hùng – Vụ trưởng Vụ 2"],
+    thamPhan: ["Đỗ Thị Hương – Thẩm phán phân công"],
+  },
+  "Kinh doanh, thương mại": {
+    phoVuTruong: ["Vũ Minh Khoa – Phó Vụ trưởng Vụ 3"],
+    vuTruong: ["Bùi Quang Giang – Vụ trưởng Vụ 3"],
+    thamPhan: ["Đinh Thị Lan – Thẩm phán phân công"],
+  },
+  "Hành chính": {
+    phoVuTruong: ["Ngô Thị Phượng – Phó Vụ trưởng Vụ 4"],
+    vuTruong: ["Hoàng Văn Em – Vụ trưởng Vụ 4"],
+    thamPhan: ["Phạm Thị Dung – Thẩm phán phân công"],
+  },
+};
+
+export function TrinhKyModal({ onClose, loaiAn = "Hình sự", title, onSuccess }: { onClose: () => void; loaiAn?: string; title?: string; onSuccess?: () => void; record?: { loaiVB?: string; soHoSo?: string; donViSoan?: string } }) {
   const [leftTab, setLeftTab] = useState<"noi-dung" | "thong-tin" | "ho-so">("noi-dung");
   const [capTrinh, setCapTrinh] = useState("Trình Phó vụ trưởng");
   const [uuTien, setUuTien] = useState("Binh-thuong");
@@ -1243,10 +1330,13 @@ export function TrinhKyModal({ onClose }: { onClose: () => void }) {
   const isCheckboxType = ["Báo cáo tổ Thẩm phán", "Báo cáo Hội đồng thẩm phán", "Trình dự thảo trả lời đơn", "Trình dự thảo kháng nghị"].includes(capTrinh);
   const checkboxList = capTrinh === "Báo cáo tổ Thẩm phán" ? TO_TP_LIST : capTrinh === "Báo cáo Hội đồng thẩm phán" ? HDTP_LIST : DU_THAO_LIST;
 
+  // TH-152: lấy theo Loại án của vụ đang trình ký
+  const lanhDaoVu = LANH_DAO_THEO_LOAI_AN[loaiAn] || LANH_DAO_THEO_LOAI_AN["Hình sự"];
+
   const getSingleOptions = () => {
-    if (capTrinh === "Trình Phó vụ trưởng") return ["Trần Thị Hoa – Phó Vụ trưởng", "Nguyễn Thị Lan – Phó Vụ trưởng"];
-    if (capTrinh === "Trình Vụ trưởng") return ["Lê Quang Minh – Vụ trưởng"];
-    if (capTrinh === "Trình thẩm phán") return ["Nguyễn Tiến Hiệp – Thẩm phán phân công", "Lê Văn Tùng – Thẩm phán tái phân công"];
+    if (capTrinh === "Trình Phó vụ trưởng") return lanhDaoVu.phoVuTruong;
+    if (capTrinh === "Trình Vụ trưởng") return lanhDaoVu.vuTruong;
+    if (capTrinh === "Trình thẩm phán") return lanhDaoVu.thamPhan;
     if (capTrinh === "Trình phó chánh án") return ["Nguyễn Thị Mai – Phó Chánh án", "Lê Minh Trí – Phó Chánh án", "Nguyễn Văn Du – Phó Chánh án"];
     if (capTrinh === "Trình chánh án") return ["Nguyễn Hòa Bình – Chánh án TANDTC"];
     if (capTrinh === "Nghiên cứu lại, xác minh, bổ sung") return ["Lý Thái Phúc – Thẩm tra viên", "Nguyễn Minh Tú – Thẩm tra viên"];
@@ -1271,7 +1361,28 @@ export function TrinhKyModal({ onClose }: { onClose: () => void }) {
     setCheckedPeople(p => ({ ...p, [name]: !p[name] }));
   };
 
+  const [loiTrinh, setLoiTrinh] = useState("");
+  // TH-145: cấp cao nhất đã có ý kiến -> chỉ được trình cấp kế tiếp
+  const capDaTrinhIdx = danhSach.reduce((max, r) => Math.max(max, THU_TU_CAP_TRINH.indexOf(r.cap)), -1);
+  const capKeTiepIdx = capDaTrinhIdx + 1;
+  const capBiKhoa = (cap: string) => {
+    const i = THU_TU_CAP_TRINH.indexOf(cap);
+    return i >= 0 && i > capKeTiepIdx;
+  };
+  const [fileKyTay, setFileKyTay] = useState("");
+  const [fileTongHopKy, setFileTongHopKy] = useState("");
+
   const handleAddDanhSach = () => {
+    // BR-04: mỗi lần trình chỉ được thêm MỘT cấp lãnh đạo tiếp theo
+    if (danhSach.length >= 1) {
+      setLoiTrinh("Mỗi lần trình chỉ được chọn một cấp lãnh đạo tiếp theo. Xoá cấp đã chọn nếu muốn đổi.");
+      return;
+    }
+    if (capBiKhoa(capTrinh)) {
+      setLoiTrinh(`Phải có ý kiến của ${THU_TU_CAP_TRINH[capKeTiepIdx]} trước khi trình ${capTrinh}.`);
+      return;
+    }
+    setLoiTrinh("");
     const uu = UU_TIEN_CONFIG[uuTien] || UU_TIEN_CONFIG["Binh-thuong"];
     const base = Date.now();
     if (isCheckboxType) {
@@ -1292,7 +1403,7 @@ export function TrinhKyModal({ onClose }: { onClose: () => void }) {
     <div style={{ position: "fixed", inset: 0, zIndex: 1600, display: "flex", flexDirection: "column" }}>
       {/* Dark red header */}
       <div style={{ background: "#7f1d1d", padding: "12px 20px", flexShrink: 0 }}>
-        <span style={{ fontSize: 15, fontWeight: 700, color: "#fff", fontFamily: F }}>Trình ký</span>
+        <span style={{ fontSize: 15, fontWeight: 700, color: "#fff", fontFamily: F }}>{title || "Trình ký"}</span>
       </div>
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {/* Left panel */}
@@ -1314,7 +1425,7 @@ export function TrinhKyModal({ onClose }: { onClose: () => void }) {
                   <div>
                     <span style={{ fontSize: 11, color: MUTED, fontFamily: F, display: "block", marginBottom: 3 }}><span style={{ color: RED }}>*</span> Cấp trình</span>
                     <select value={capTrinh} onChange={e => handleCapTrinhChange(e.target.value)} style={selSt}>
-                      {CAP_TRINH_OPTIONS.map(o => <option key={o}>{o}</option>)}
+                      {CAP_TRINH_OPTIONS.map(o => <option key={o} disabled={capBiKhoa(o)}>{capBiKhoa(o) ? `${o} (chưa đến lượt)` : o}</option>)}
                     </select>
                   </div>
                   <div>
@@ -1354,6 +1465,29 @@ export function TrinhKyModal({ onClose }: { onClose: () => void }) {
                   style={{ width: "100%", padding: "7px", background: "#fff", color: RED, border: `1px solid ${RED}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F, fontWeight: 600, marginBottom: 14 }}>
                   Thêm người được trình
                 </button>
+                {loiTrinh && (
+                  <div style={{ marginBottom: 10, padding: "6px 10px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 4, fontSize: 11, color: "#b91c1c", fontFamily: F }}>
+                    {loiTrinh}
+                  </div>
+                )}
+                {/* TH-139 (BR-03): bắt buộc tải file Word đã ký tay trước khi trình ký */}
+                <div style={{ marginBottom: 12, padding: "8px 10px", border: `1px dashed ${BORDER}`, borderRadius: 4 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: TEXT, fontFamily: F, marginBottom: 6 }}>
+                    <span style={{ color: RED }}>* </span>File tờ trình đã ký tay (bắt buộc trước khi trình ký)
+                  </div>
+                  <input type="file" onChange={e => setFileKyTay(e.target.files?.[0]?.name || "")}
+                    style={{ fontSize: 11, fontFamily: F }} />
+                  {fileKyTay && <div style={{ fontSize: 11, color: "#065f46", marginTop: 4 }}>Đã tải: {fileKyTay}</div>}
+                </div>
+                {/* TH-140: file tổng hợp chữ ký của lãnh đạo sau khi kết thúc quá trình trình */}
+                <div style={{ marginBottom: 14, padding: "8px 10px", border: `1px dashed ${BORDER}`, borderRadius: 4 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: TEXT, fontFamily: F, marginBottom: 6 }}>
+                    File tổng hợp chữ ký lãnh đạo (tải sau khi kết thúc quá trình trình)
+                  </div>
+                  <input type="file" onChange={e => setFileTongHopKy(e.target.files?.[0]?.name || "")}
+                    style={{ fontSize: 11, fontFamily: F }} />
+                  {fileTongHopKy && <div style={{ fontSize: 11, color: "#065f46", marginTop: 4 }}>Đã tải: {fileTongHopKy}</div>}
+                </div>
                 {/* Danh sách đã thêm */}
                 <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", fontSize: 11 }}>
                   <colgroup><col style={{ width: "32%" }} /><col style={{ width: "33%" }} /><col style={{ width: "22%" }} /><col style={{ width: 36 }} /></colgroup>
@@ -1374,8 +1508,22 @@ export function TrinhKyModal({ onClose }: { onClose: () => void }) {
                           <td style={{ ...TD_STYLE }}>
                             <Badge color={uuCfg.color} bg={uuCfg.bg}>{uuCfg.label}</Badge>
                           </td>
-                          <td style={{ ...TD_STYLE, textAlign: "center" }}>
-                            <button onClick={() => setDanhSach(p => p.filter(x => x.id !== r.id))} style={{ background: "none", border: "none", cursor: "pointer", padding: 1, color: "#ef4444" }}>🗑</button>
+                          <td style={{ ...TD_STYLE, textAlign: "center", whiteSpace: "nowrap" as const }}>
+                            {/* TH-147: icon Sửa cho phép chỉnh lại cấp trình / người được trình */}
+                            <button
+                              title="Sửa"
+                              onClick={() => {
+                                setCapTrinh(r.cap);
+                                setNguoiDon(r.lanh);
+                                setUuTien(r.uuKey);
+                                setDanhSach(p => p.filter(x => x.id !== r.id));
+                                setLoiTrinh("");
+                              }}
+                              style={{ background: "none", border: "none", cursor: "pointer", padding: 1, color: "#2563eb", marginRight: 4 }}
+                            >
+                              <Pencil size={13} />
+                            </button>
+                            <button title="Xoá" onClick={() => setDanhSach(p => p.filter(x => x.id !== r.id))} style={{ background: "none", border: "none", cursor: "pointer", padding: 1, color: "#ef4444" }}>🗑</button>
                           </td>
                         </tr>
                       );
@@ -1393,7 +1541,13 @@ export function TrinhKyModal({ onClose }: { onClose: () => void }) {
           </div>
           <div style={{ display: "flex", gap: 8, padding: "12px 16px", borderTop: `1px solid ${BORDER}`, flexShrink: 0 }}>
             <button onClick={onClose} style={{ padding: "7px 20px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>Đóng</button>
-            <button style={{ padding: "7px 24px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F }}>Trình ký</button>
+            <button
+              disabled={!fileKyTay}
+              onClick={() => { onSuccess?.(); onClose(); }}
+              title={!fileKyTay ? "Phải tải file tờ trình đã ký tay trước khi trình ký (BR-03)" : "Trình ký"}
+              style={{ padding: "7px 24px", background: fileKyTay ? RED : "#d1d5db", color: "#fff", border: "none", borderRadius: 4, cursor: fileKyTay ? "pointer" : "not-allowed", fontSize: 12, fontWeight: 700, fontFamily: F }}>
+              Trình ký
+            </button>
           </div>
         </div>
 
