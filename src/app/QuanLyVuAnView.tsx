@@ -2240,9 +2240,9 @@ function TabPhanCong({ detail }: { detail: VuAnDetailData }) {
   ];
 
   const ttvRows = [
-    { stt: 3, giaiDoan: "Giải quyết đơn", hoTenTTV: "Hoàng Ngọc Chiêu", chucDanhTTV: "Thẩm tra viên", ngayPCTTV: "21/07/2026", hoTenLD: "Nguyễn Văn Hiển", chucVuLD: "Phó Vụ trưởng", ngayPCLD: "21/07/2026" },
-    { stt: 2, giaiDoan: "Giải quyết đơn", hoTenTTV: "Hoàng Ngọc Ngã", chucDanhTTV: "Thẩm tra viên", ngayPCTTV: "01/07/2026", hoTenLD: "Nguyễn Văn Hòa", chucVuLD: "Phó Vụ trưởng", ngayPCLD: "01/07/2026" },
-    { stt: 1, giaiDoan: "Giải quyết đơn", hoTenTTV: "Hoàng Ngọc Hoa", chucDanhTTV: "Thẩm tra viên", ngayPCTTV: "21/06/2026", hoTenLD: "Nguyễn Văn Hiển", chucVuLD: "Phó Vụ trưởng", ngayPCLD: "21/06/2026" },
+    { stt: 3, giaiDoan: "Giải quyết đơn", hoTenTTV: "Hoàng Ngọc Chiêu", chucDanhTTV: "Thẩm tra viên", ngayPCTTV: "21/07/2026", hoTenLD: "Nguyễn Văn Hiển", chucVuLD: "Phó Vụ trưởng", ngayPCLD: "21/07/2026", nguoiThaoTac: "Nguyễn Cao Thắng" },
+    { stt: 2, giaiDoan: "Giải quyết đơn", hoTenTTV: "Hoàng Ngọc Ngã", chucDanhTTV: "Thẩm tra viên", ngayPCTTV: "01/07/2026", hoTenLD: "Nguyễn Văn Hòa", chucVuLD: "Phó Vụ trưởng", ngayPCLD: "01/07/2026", nguoiThaoTac: "Nguyễn Cao Thắng" },
+    { stt: 1, giaiDoan: "Giải quyết đơn", hoTenTTV: "Hoàng Ngọc Hoa", chucDanhTTV: "Thẩm tra viên", ngayPCTTV: "21/06/2026", hoTenLD: "Nguyễn Văn Hiển", chucVuLD: "Phó Vụ trưởng", ngayPCLD: "21/06/2026", nguoiThaoTac: "Lý Thái Phúc" },
   ];
 
   const sectionHdr = (title: string) => (
@@ -2306,15 +2306,16 @@ function TabPhanCong({ detail }: { detail: VuAnDetailData }) {
           <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
             <colgroup>
               <col style={{ width: 40 }} />
-              <col style={{ width: "12%" }} />
-              <col style={{ width: "20%" }} />
-              <col style={{ width: "15%" }} />
-              <col style={{ width: "20%" }} />
+              <col style={{ width: "11%" }} />
+              <col style={{ width: "18%" }} />
+              <col style={{ width: "13%" }} />
+              <col style={{ width: "18%" }} />
+              <col style={{ width: "13%" }} />
               <col style={{ width: "15%" }} />
             </colgroup>
             <thead>
               <tr>
-                {["STT", "GIAI ĐOẠN", "HỌ VÀ TÊN TTV", "NGÀY PHÂN CÔNG TTV", "HỌ VÀ TÊN LÃNH ĐẠO", "NGÀY PHÂN CÔNG LĐ"].map(h => (
+                {["STT", "GIAI ĐOẠN", "HỌ VÀ TÊN TTV", "NGÀY PHÂN CÔNG TTV", "HỌ VÀ TÊN LÃNH ĐẠO", "NGÀY PHÂN CÔNG LĐ", "NGƯỜI THAO TÁC"].map(h => (
                   <th key={h} style={TH_STYLE}>{h}</th>
                 ))}
               </tr>
@@ -2338,6 +2339,7 @@ function TabPhanCong({ detail }: { detail: VuAnDetailData }) {
                     </div>
                   </td>
                   <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT, textAlign: "center" }}>{r.ngayPCLD}</td>
+                  <td style={{ ...TD_STYLE, fontSize: 11, color: TEXT }}>{r.nguoiThaoTac}</td>
                 </tr>
               ))}
             </tbody>
