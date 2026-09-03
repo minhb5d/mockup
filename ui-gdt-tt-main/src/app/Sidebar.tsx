@@ -25,7 +25,8 @@ export type View =
   | "phe-duyet-de-xuat"
   | "an-quoc-hoi"
   | "an-thoi-hieu"
-  | "phan-cong-tptc";
+  | "phan-cong-tptc"
+  | "cau-hinh-phan-cong-tp";
 
 interface SidebarProps {
   currentView: View;
@@ -243,33 +244,15 @@ export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
           <NavLink label="Tiếp nhận đơn" onClick={() => onNavigate("don-cho-phe-duyet")} sub />
           <NavLink label="Danh sách đơn" onClick={() => onNavigate("don-cho-phe-duyet")} sub />
           <NavLink label="Lưu số văn bản & In báo cáo" active={currentView === "luu-so-van-ban"} onClick={() => onNavigate("luu-so-van-ban")} sub />
-          <NavLink
-            label="Phân công thẩm phán (4)"
-            active={currentView === "phan-cong-tham-phan"}
-            onClick={() => onNavigate("phan-cong-tham-phan")}
-            sub
-          />
         </NavGroup>
 
-        {/* Quản lý án GĐT/TT */}
+        {/* Quản lý án GĐT/TT — thứ tự khớp STG */}
         <NavGroup
           icon={<Scale size={ICON_SIZE} color={ICON_COLOR} />}
           label="Quản lý án GĐT/TT"
           open={qlaOpen}
           onToggle={() => setQlaOpen((v) => !v)}
         >
-          <NavLink
-            label="Dashboard Vụ GĐ,KT"
-            active={currentView === "dashboard-gdkt"}
-            onClick={() => onNavigate("dashboard-gdkt")}
-            sub
-          />
-          <NavLink
-            label="Hồ sơ tổng hợp vụ án"
-            active={currentView === "ho-so-tong-hop"}
-            onClick={() => onNavigate("ho-so-tong-hop")}
-            sub
-          />
           <NavLink
             label="Nhận đơn và TL vụ án"
             active={inList}
@@ -282,11 +265,16 @@ export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
             onClick={() => onNavigate("ho-so-khang-nghi")}
             sub
           />
-
           <NavLink
             label="Quản lý vụ án"
             active={currentView === "quan-ly-vu-an"}
             onClick={() => onNavigate("quan-ly-vu-an")}
+            sub
+          />
+          <NavLink
+            label="Phân công thẩm phán"
+            active={currentView === "phan-cong-tham-phan"}
+            onClick={() => onNavigate("phan-cong-tham-phan")}
             sub
           />
           <NavLink
@@ -302,13 +290,7 @@ export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
             sub
           />
           <NavLink
-            label="Lịch xét xử"
-            active={currentView === "lich-xet-xu"}
-            onClick={() => onNavigate("lich-xet-xu")}
-            sub
-          />
-          <NavLink
-            label="Quản lý vụ xét xử GĐT"
+            label="Quản lý xét xử GĐT"
             active={currentView === "quan-ly-vu-xet-xu"}
             onClick={() => onNavigate("quan-ly-vu-xet-xu")}
             sub
@@ -323,6 +305,24 @@ export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
             label="Danh sách vụ án phân công TPTC"
             active={currentView === "phan-cong-tptc"}
             onClick={() => onNavigate("phan-cong-tptc")}
+            sub
+          />
+          <NavLink
+            label="Án quốc hội"
+            active={currentView === "an-quoc-hoi"}
+            onClick={() => onNavigate("an-quoc-hoi")}
+            sub
+          />
+          <NavLink
+            label="Án thời hiệu"
+            active={currentView === "an-thoi-hieu"}
+            onClick={() => onNavigate("an-thoi-hieu")}
+            sub
+          />
+          <NavLink
+            label="Công văn trao đổi"
+            active={currentView === "cong-van-trao-doi"}
+            onClick={() => onNavigate("cong-van-trao-doi")}
             sub
           />
           {/* Quản lý hồ sơ tử hình (2 tab con: Đơn xin ân giảm & Hồ sơ tử hình) */}
@@ -375,7 +375,7 @@ export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
                   lineHeight: 1.4,
                 }}
               >
-                Quản lý hồ sơ tử hình
+                Quản lý án tử hình
               </span>
               {tuHinhOpen ? (
                 <ChevronDown size={11} color="#9ca3af" />
@@ -403,27 +403,15 @@ export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
             )}
           </div>
           <NavLink
-            label="Án quốc hội"
-            active={currentView === "an-quoc-hoi"}
-            onClick={() => onNavigate("an-quoc-hoi")}
-            sub
-          />
-          <NavLink
-            label="Án thời hiệu"
-            active={currentView === "an-thoi-hieu"}
-            onClick={() => onNavigate("an-thoi-hieu")}
-            sub
-          />
-          <NavLink
-            label="Công văn trao đổi"
-            active={currentView === "cong-van-trao-doi"}
-            onClick={() => onNavigate("cong-van-trao-doi")}
-            sub
-          />
-          <NavLink
             label="Cấu hình TTV báo cáo"
             active={currentView === "cau-hinh-ttv"}
             onClick={() => onNavigate("cau-hinh-ttv")}
+            sub
+          />
+          <NavLink
+            label="Cấu hình phân công Thẩm phán"
+            active={currentView === "cau-hinh-phan-cong-tp"}
+            onClick={() => onNavigate("cau-hinh-phan-cong-tp")}
             sub
           />
         </NavGroup>

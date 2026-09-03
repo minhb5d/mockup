@@ -117,6 +117,7 @@ export interface DonCase {
   capXetXu: string;
   thoiHieu?: string;
   thoiHieuQuaHan?: boolean;
+  soDon?: number; // CR: số đơn (số lượng đơn/văn bản đề nghị gộp trong hồ sơ này)
   hoiDongThamPhanPhucTham?: string;
   thamPhanChuToaPhucTham?: string;
 
@@ -456,6 +457,7 @@ function buildCase(loaiIdx: number, recIdx: number, globalId: number): DonCase {
     capXetXu: recIdx % 3 === 0 ? "Phúc thẩm" : "Sơ thẩm",
     thoiHieu,
     thoiHieuQuaHan,
+    soDon: (recIdx % 3) + 1,
     soToTrinh: `${100 + globalId}/TT-PC`,
     ngayToTrinh: `${10 + (recIdx % 9)}/07/2026`,
     donViGuiCongVan: recIdx % 2 === 0 ? "TAND tỉnh Hà Nam" : "VKSND tối cao",

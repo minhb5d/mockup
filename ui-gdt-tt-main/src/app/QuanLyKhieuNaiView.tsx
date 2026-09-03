@@ -3,6 +3,10 @@ import {
   Printer,
   FileText,
   Plus,
+  Search,
+  ChevronDown,
+  ChevronUp,
+  RotateCcw,
 } from "lucide-react";
 import {
   F,
@@ -92,7 +96,7 @@ const paginBtn: React.CSSProperties = {
   color: TEXT,
 };
 
-export type KhieuNaiTabId = "tat-ca" | "dang-giai-quyet" | "da-giai-quyet" | "qua-han";
+export type KhieuNaiTabId = "tat-ca" | "chap-nhan";
 
 // SRS: Thời hạn giải quyết đếm ngược — Hình sự 7 ngày, Dân sự 15 ngày kể từ ngày thụ lý.
 // Trả về số ngày còn lại (âm = đã quá hạn); null nếu không đọc được ngày thụ lý.
@@ -109,6 +113,91 @@ function tinhSoNgayConLai(ngayThuLy: string | undefined, soNgayHan: number): num
   return Math.round((han.getTime() - homNay.getTime()) / 86400000);
 }
 
+// Tìm kiếm nhanh + Tìm kiếm nâng cao (15 trường) — khớp đúng màn "Quản lý khiếu nại" trên STG
+function KhieuNaiSearchPanel() {
+  const [advOpen, setAdvOpen] = useState(false);
+  const inSt: React.CSSProperties = { border: `1px solid ${BORDER}`, borderRadius: 5, padding: "6px 10px", fontSize: 12, fontFamily: F, outline: "none", background: "#fff", color: TEXT, width: "100%", boxSizing: "border-box" };
+  const lbl: React.CSSProperties = { display: "block", fontSize: 11, color: MUTED, fontFamily: F, marginBottom: 4 };
+  const col = (label: string, children: React.ReactNode) => (
+    <div style={{ display: "flex", flexDirection: "column" }}><label style={lbl}>{label}</label>{children}</div>
+  );
+  const rangeRow = (label: string) => (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <label style={lbl}>{label}</label>
+      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        <input type="date" style={{ ...inSt, flex: 1 }} />
+        <span style={{ fontSize: 11, color: MUTED, fontFamily: F }}>–</span>
+        <input type="date" style={{ ...inSt, flex: 1 }} />
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, padding: "12px 20px", flexShrink: 0, fontFamily: F }}>
+      {/* Tìm kiếm nhanh */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ position: "relative", flex: 1, maxWidth: 360 }}>
+          <input placeholder="Nhập từ khóa tìm kiếm..." style={{ ...inSt, paddingLeft: 30 }} />
+          <Search size={14} color={MUTED} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)" }} />
+        </div>
+        <button
+          onClick={() => setAdvOpen((v) => !v)}
+          style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "#2563eb", fontFamily: F, padding: 0, fontWeight: 500 }}
+        >
+          {advOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          Tìm kiếm nâng cao
+        </button>
+      </div>
+
+      {/* Tìm kiếm nâng cao — 15 trường */}
+      {advOpen && (
+        <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px 16px" }}>
+            {col("Tòa ra BA/QĐ", <select style={inSt}><option value="">– Tất cả –</option><option>TAND Tối cao</option><option>TAND Cấp cao HN</option><option>TAND Cấp cao TP.HCM</option></select>)}
+            {col("Số BA/QĐ", <input placeholder="Nhập số BA/QĐ" style={inSt} />)}
+            {rangeRow("Ngày BA/QĐ")}
+            {rangeRow("Nhận đơn")}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px 16px" }}>
+            {rangeRow("Thụ lý")}
+            {col("Trạng thái hồ sơ", <select style={inSt}><option value="">– Tất cả –</option><option>Chưa có hồ sơ</option><option>Đang mượn hồ sơ</option><option>Đã có hồ sơ</option><option>Đã trả hồ sơ</option></select>)}
+            {rangeRow("Tờ trình")}
+            {col("Tờ trình lãnh đạo", <select style={inSt}><option value="">– Tất cả –</option><option>Chưa trình</option><option>Đang trình</option><option>Đã duyệt</option></select>)}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px 16px" }}>
+            {col("Ý kiến lãnh đạo", <input placeholder="Nhập ý kiến" style={inSt} />)}
+            {col("Yêu cầu trình tiếp", <select style={inSt}><option value="">– Tất cả –</option><option>Có</option><option>Không</option></select>)}
+            {col("Trạng thái thụ lý", <select style={inSt}><option value="">– Tất cả –</option><option>Thụ lý mới</option><option>Đã thụ lý</option></select>)}
+            {col("Kết quả thụ lý", <select style={inSt}><option value="">– Tất cả –</option><option>Chưa có kết quả</option><option>Đã có kết quả</option></select>)}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px 16px" }}>
+            {col("Kết quả giải quyết", <select style={inSt}><option value="">– Tất cả –</option><option>Chấp nhận khiếu nại</option><option>Không chấp nhận khiếu nại</option><option>Xếp đơn</option></select>)}
+            {col("Thẩm tra viên giải quyết", <select style={inSt}><option value="">– Tất cả –</option><option>Nguyễn Thu Hằng</option><option>Lý Văn An</option></select>)}
+            {col("Lãnh đạo phụ trách", <select style={inSt}><option value="">Vui lòng chọn</option><option>Nguyễn Văn Minh</option><option>Vũ Đình Tuấn</option></select>)}
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 2 }}>
+            <button
+              onClick={() => setAdvOpen(false)}
+              style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "#2563eb", fontFamily: F, padding: 0, fontWeight: 500 }}
+            >
+              <ChevronUp size={14} /> Thu gọn
+            </button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 18px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F }}>
+                <Search size={13} /> Tìm kiếm
+              </button>
+              <button style={{ padding: "7px 16px", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F, display: "flex", alignItems: "center", gap: 6 }}>
+                <RotateCcw size={13} /> Xóa bộ lọc
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function QuanLyKhieuNaiView({
   userRole,
   setUserRole,
@@ -118,7 +207,7 @@ export function QuanLyKhieuNaiView({
   setUserRole?: (role: UserRoleType) => void;
   onSelectKhieuNai: (id: string, tab?: ChiTietTab) => void;
 }) {
-  const [activeTab, setActiveTab] = useState<KhieuNaiTabId>("dang-giai-quyet");
+  const [activeTab, setActiveTab] = useState<KhieuNaiTabId>("tat-ca");
   const [quickViewDonGroup, setQuickViewDonGroup] = useState<VuAnGroup | null>(null);
   const [showInBaoCao, setShowInBaoCao] = useState(false);
 
@@ -126,25 +215,8 @@ export function QuanLyKhieuNaiView({
   const filteredGroups = roleGroups
     .map((group) => {
       if (activeTab === "tat-ca") return group;
-      if (activeTab === "dang-giai-quyet") {
-        const rows = group.rows.filter((r) => r.kqGiaiQuyet === "chua-co" || r.kqGiaiQuyet === "da-co-con-don" || !r.kqGiaiQuyet);
-        if (rows.length === 0) return null;
-        return { ...group, rows };
-      }
-      if (activeTab === "da-giai-quyet") {
-        const rows = group.rows.filter((r) => r.kqGiaiQuyet === "da-co");
-        if (rows.length === 0) return null;
-        return { ...group, rows };
-      }
-      if (activeTab === "qua-han") {
-        // SRS: thời hạn giải quyết Hình sự 7 ngày, Dân sự 15 ngày kể từ ngày thụ lý.
-        // Chỉ tính vụ chưa có KQGQ hoặc đã có KQGQ nhưng còn đơn thụ lý mới.
-        const rows = group.rows.filter((r) => {
-          if (r.kqGiaiQuyet === "da-co") return false;
-          const soNgayHan = r.loaiAn === "Hình sự" ? 7 : 15;
-          const conLai = tinhSoNgayConLai(r.ngayThuLy, soNgayHan);
-          return conLai !== null && conLai < 0;
-        });
+      if (activeTab === "chap-nhan") {
+        const rows = group.rows.filter((r) => r.kqGiaiQuyet === "chap-nhan");
         if (rows.length === 0) return null;
         return { ...group, rows };
       }
@@ -152,18 +224,19 @@ export function QuanLyKhieuNaiView({
     })
     .filter(Boolean) as VuAnGroup[];
 
-  const tabs: { id: KhieuNaiTabId; label: string }[] = [
-    { id: "tat-ca", label: "Tất cả" },
-    { id: "dang-giai-quyet", label: "Đang giải quyết" },
-    { id: "da-giai-quyet", label: "Đã giải quyết" },
-    { id: "qua-han", label: "Quá hạn giải quyết" },
+  const countTatCa = roleGroups.length;
+  const countChapNhan = roleGroups.filter((g) => g.rows.some((r) => r.kqGiaiQuyet === "chap-nhan")).length;
+
+  const tabs: { id: KhieuNaiTabId; label: string; count: number }[] = [
+    { id: "tat-ca", label: "Tất cả", count: countTatCa },
+    { id: "chap-nhan", label: "Chấp nhận khiếu nại", count: countChapNhan },
   ];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", background: "#f9fafb", fontFamily: F }}>
       {/* Breadcrumb */}
       <div style={{ padding: "8px 20px", borderBottom: `1px solid ${BORDER}`, fontSize: 12, color: MUTED, fontFamily: F, flexShrink: 0, background: "#fff" }}>
-        <span>Trang chủ</span> &nbsp;›&nbsp; <span>Quản lý án GĐT/TT</span> &nbsp;›&nbsp; <b style={{ color: TEXT }}>Quản lý khiếu nại</b>
+        <span>Trang chủ</span> &nbsp;›&nbsp; <span>Quản lý án GĐT/TT</span> &nbsp;›&nbsp; <span>Quản lý khiếu nại</span> &nbsp;›&nbsp; <b style={{ color: TEXT }}>Danh sách</b>
       </div>
 
       {/* Title + Tabs */}
@@ -199,79 +272,16 @@ export function QuanLyKhieuNaiView({
                   whiteSpace: "nowrap",
                 }}
               >
-                {t.label}
+                {t.label}{" "}
+                <span style={{ padding: "1px 6px", borderRadius: 20, fontSize: 11, background: active ? RED : "#e5e7eb", color: active ? "#fff" : MUTED, fontWeight: 600 }}>{t.count}</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* 19-Field Comprehensive Filter Panel */}
-      <VuAnSearchFilterPanel
-        userRole={userRole}
-        onSearch={() => alert("Đang tìm kiếm danh sách khiếu nại...")}
-      />
-
-      {/* Action Bar */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          padding: "8px 20px",
-          background: "#fff",
-          borderBottom: `1px solid ${BORDER}`,
-          flexShrink: 0,
-        }}
-      >
-        <div style={{ flex: 1 }} />
-        <button
-          onClick={() => alert("Mở form thêm mới khiếu nại")}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "6px 14px",
-            background: RED,
-            color: "#fff",
-            border: "none",
-            borderRadius: 4,
-            cursor: "pointer",
-            fontSize: 12,
-            fontWeight: 600,
-            fontFamily: F,
-          }}
-        >
-          <Plus size={13} /> Thêm mới
-        </button>
-
-        <button
-          onClick={() => setShowInBaoCao(true)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "6px 14px",
-            background: "#fff",
-            color: "#374151",
-            border: `1px solid ${BORDER}`,
-            borderRadius: 4,
-            cursor: "pointer",
-            fontSize: 12,
-            fontFamily: F,
-          }}
-        >
-          <Printer size={13} /> In báo cáo
-        </button>
-      </div>
-
-      {showInBaoCao && (
-        <PrintReportModal
-          onClose={() => setShowInBaoCao(false)}
-          bieuMauList={BIEU_MAU_KHIEU_NAI}
-          tieuDeMan="In báo cáo — Quản lý khiếu nại"
-        />
-      )}
+      {/* Tìm kiếm nhanh + Tìm kiếm nâng cao (15 trường) — khớp STG */}
+      <KhieuNaiSearchPanel />
 
       {/* Table Section */}
       <div style={{ flex: 1, overflow: "auto" }}>

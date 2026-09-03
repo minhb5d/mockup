@@ -121,26 +121,15 @@ function CellThongTinDon({ c, tab }: { c: DonCase; tab?: TabId }) {
 
 // ── Đương sự cell ────────────────────────────────────────────────────────────
 
-function CellDuongSu({ c, userRole }: { c: DonCase; userRole?: UserRoleType }) {
-  const { label1, label2 } = getPartyLabels(c.loaiAn, userRole);
+function CellDuongSu({ c }: { c: DonCase; userRole?: UserRoleType }) {
+  // Đối chiếu STG: cột "Người đứng đơn" chỉ hiển thị người đứng đơn + địa chỉ.
+  // Người khiếu nại/Bị cáo (hoặc Nguyên đơn-Bị đơn/Người khởi kiện-Người bị kiện) đã hiển thị ở cột "Thông tin BA/QĐ" (CellBA).
   const nguoiDungDon = c.ndd
     ? (c.id % 4 === 0 ? [c.ndd, "Nguyễn Văn B", "Trần Thị C", "Lê Văn D"] : [c.ndd])
     : [];
   const visibleNdd = nguoiDungDon.slice(0, 3);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-      {c.nguoiKhieuNai && (
-        <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
-          <span style={{ color: TEXT }}>{label1}: </span>
-          <span style={{ fontWeight: 600, color: TEXT }}>{c.nguoiKhieuNai}</span>
-        </span>
-      )}
-      {c.biCao && (
-        <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
-          <span style={{ color: TEXT }}>{label2}: </span>
-          <span style={{ fontWeight: 600, color: TEXT }}>{c.biCao}</span>
-        </span>
-      )}
       {nguoiDungDon.length > 0 && (
         <>
           <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
@@ -383,12 +372,14 @@ function CellNhanTra({ c, tab }: { c: DonCase; tab?: TabId }) {
 function ActionBar({
   tab,
   selectedCases,
+  hetThoiHieuCount,
   onTraDon,
   onGiaoTieuHoSo,
   onInBaoCao,
 }: {
   tab: TabId;
   selectedCases: DonCase[];
+  hetThoiHieuCount?: number;
   onTraDon: () => void;
   onGiaoTieuHoSo: () => void;
   onInBaoCao?: () => void;
@@ -403,6 +394,12 @@ function ActionBar({
         borderBottom: `1px solid ${BORDER}`,
       }}
     >
+      {typeof hetThoiHieuCount === "number" && (
+        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: TEXT, fontFamily: F, cursor: "pointer" }}>
+          <input type="checkbox" style={{ cursor: "pointer" }} />
+          Đơn hết thời hiệu: {hetThoiHieuCount} đơn
+        </label>
+      )}
       <div style={{ flex: 1 }} />
       <button
         onClick={onTraDon}
@@ -490,14 +487,9 @@ function CaseTable({
   const lastColHeader =
     tab === "cho-y-kien" ? "Ý KIẾN LÃNH ĐẠO" : "THÔNG TIN VỤ ÁN";
 
-  const duongSuHeader =
-    userRole === "vu-1" || userRole === "hinh-su"
-      ? "NGƯỜI KHIẾU NẠI & BỊ CÁO"
-      : userRole === "vu-4" || userRole === "hanh-chinh"
-        ? "NGƯỜI KHỞI KIỆN & NGƯỜI BỊ KIỆN"
-        : userRole === "vu-2" || userRole === "vu-3" || userRole === "dan-su"
-          ? "NGUYÊN ĐƠN & BỊ ĐƠN"
-          : "ĐƯƠNG SỰ & NGƯỜI ĐỨNG ĐƠN";
+  // Đối chiếu STG: cột này chỉ ghi "Người đứng đơn" (không đổi theo loại án) —
+  // Người khiếu nại/Bị cáo/Nguyên đơn-Bị đơn... đã hiển thị ở cột Thông tin BA/QĐ.
+  const duongSuHeader = "NGƯỜI ĐỨNG ĐƠN";
 
   const baHeader = isVu234(userRole)
     ? "THÔNG TIN BA/QĐ ĐỀ NGHỊ GĐT,TT & QHPL"
@@ -511,10 +503,11 @@ function CaseTable({
         <colgroup>
           <col style={{ width: 36 }} />
           <col style={{ width: 36 }} />
-          <col style={{ width: "26%" }} />
-          <col style={{ width: "22%" }} />
-          <col style={{ width: "22%" }} />
           <col style={{ width: "24%" }} />
+          <col style={{ width: 56 }} />
+          <col style={{ width: "20%" }} />
+          <col style={{ width: "22%" }} />
+          <col style={{ width: "22%" }} />
           <col style={{ width: 52 }} />
         </colgroup>
         <thead>
@@ -524,6 +517,7 @@ function CaseTable({
             </th>
             <th style={TH_STYLE}>STT</th>
             <th style={TH_STYLE}>THÔNG TIN ĐƠN</th>
+            <th style={{ ...TH_STYLE, textAlign: "center" }}>SỐ ĐƠN</th>
             <th style={TH_STYLE}>{duongSuHeader}</th>
             <th style={TH_STYLE}>{baHeader}</th>
             <th style={TH_STYLE}>{lastColHeader}</th>
@@ -533,7 +527,7 @@ function CaseTable({
         <tbody>
           {cases.length === 0 && (
             <tr>
-              <td colSpan={7} style={{ ...TD_STYLE, textAlign: "center", color: MUTED, padding: 32 }}>
+              <td colSpan={8} style={{ ...TD_STYLE, textAlign: "center", color: MUTED, padding: 32 }}>
                 Không có dữ liệu phù hợp với điều kiện tìm kiếm.
               </td>
             </tr>
@@ -560,6 +554,7 @@ function CaseTable({
                 {idx + 1}
               </td>
               <td style={TD_STYLE}><CellThongTinDon c={c} tab={tab} /></td>
+              <td style={{ ...TD_STYLE, textAlign: "center" }}>{c.soDon ?? "-"}</td>
               <td style={TD_STYLE}><CellDuongSu c={c} userRole={userRole} /></td>
               <td style={TD_STYLE}><CellBA c={c} userRole={userRole} /></td>
               <td style={TD_STYLE}>
@@ -1247,7 +1242,14 @@ export default function NhanDonTLVuAnView({
       <Breadcrumb />
       <TabBar activeTab={activeTab} userRole={userRole} onTabChange={setActiveTab} />
       <SearchFilterPanel expanded={filterExpanded} userRole={userRole} onToggle={() => setFilterExpanded((v) => !v)} />
-      <ActionBar tab={activeTab} selectedCases={selectedCases} onTraDon={handleTraDon} onGiaoTieuHoSo={onGiaoTieuHoSo} onInBaoCao={() => onInBaoCao?.(activeTab)} />
+      <ActionBar
+        tab={activeTab}
+        selectedCases={selectedCases}
+        hetThoiHieuCount={activeTab === "don-cho-phe-duyet" ? currentCases.filter((c) => c.thoiHieuQuaHan).length : undefined}
+        onTraDon={handleTraDon}
+        onGiaoTieuHoSo={onGiaoTieuHoSo}
+        onInBaoCao={() => onInBaoCao?.(activeTab)}
+      />
       <CaseTable tab={activeTab} userRole={userRole} onGiaoTieuHoSo={onGiaoTieuHoSo} onThemHoSo={onThemHoSo} overrideCases={visibleCases} selectedIds={selectedIds} onSelectedIdsChange={setSelectedIds} onVuAnAction={handleVuAnAction} onXuLyTBGQ={setTbgqCase} onXemChiTiet={setXemChiTietCase} />
       {showTraDon && <TraDonModal cases={selectedCases} onClose={() => setShowTraDon(false)} onSuccess={() => setSelectedIds([])} />}
       {tbgqCase && <XuLyTBGQCuModal c={tbgqCase} onClose={() => setTbgqCase(null)} />}

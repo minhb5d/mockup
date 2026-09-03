@@ -357,6 +357,8 @@ export function PhanCongTTVView() {
   const [fBiDon, setFBiDon] = useState("");
   const [fTTV, setFTTV] = useState("");
   const [fLanhDao, setFLanhDao] = useState("");
+  const [fHinhThucPC, setFHinhThucPC] = useState("Theo đơn");
+  const [fTinhTrang, setFTinhTrang] = useState("");
 
   // Table row data
   const [chuaPCRows, setChuaPCRows] = useState<CaseRow[]>(INITIAL_CHUA_PHAN_CONG);
@@ -394,6 +396,7 @@ export function PhanCongTTVView() {
     setFBiDon("");
     setFTTV("");
     setFLanhDao("");
+    setFTinhTrang("");
     setFilterApplied(false);
   };
 
@@ -581,6 +584,14 @@ export function PhanCongTTVView() {
           </button>
         </div>
 
+        {/* Hình thức phân công */}
+        <div style={{ maxWidth: 260 }}>
+          <label style={labelStyle}>Hình thức phân công</label>
+          <select value={fHinhThucPC} onChange={(e) => setFHinhThucPC(e.target.value)} style={inputStyle}>
+            <option value="Theo đơn">Theo đơn</option>
+          </select>
+        </div>
+
         {/* Radio Option for Tab 1 */}
         {activeTab === "chua-phan-cong" && (
           <div style={{ display: "flex", alignItems: "center", gap: 20, marginTop: -4 }}>
@@ -715,6 +726,22 @@ export function PhanCongTTVView() {
                 </div>
 
                 <div>
+                  <label style={labelStyle}>Tình trạng vụ án</label>
+                  <select
+                    value={fTinhTrang}
+                    onChange={(e) => setFTinhTrang(e.target.value)}
+                    style={inputStyle}
+                  >
+                    <option value="">Vui lòng chọn</option>
+                    <option value="Đang giải quyết">Đang giải quyết</option>
+                    <option value="Đã có kết quả">Đã có kết quả</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 3 */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px 16px" }}>
+                <div>
                   <label style={labelStyle}>Nguyên đơn/Người khiếu nại</label>
                   <input
                     placeholder="Nhập tên"
@@ -723,10 +750,7 @@ export function PhanCongTTVView() {
                     style={inputStyle}
                   />
                 </div>
-              </div>
 
-              {/* Row 3 - Luôn hiển thị đầy đủ TTV và LĐV */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px 16px" }}>
                 <div>
                   <label style={labelStyle}>Bị đơn/Bị cáo</label>
                   <input
@@ -737,8 +761,9 @@ export function PhanCongTTVView() {
                   />
                 </div>
 
+                {activeTab === "da-phan-cong" && (
                 <div>
-                  <label style={labelStyle}>Thẩm tra viên (TTV)</label>
+                  <label style={labelStyle}>Thẩm tra viên giải quyết</label>
                   <select
                     value={fTTV}
                     onChange={(e) => setFTTV(e.target.value)}
@@ -750,9 +775,13 @@ export function PhanCongTTVView() {
                     ))}
                   </select>
                 </div>
+                )}
+              </div>
 
+              {activeTab === "da-phan-cong" && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px 16px" }}>
                 <div>
-                  <label style={labelStyle}>Lãnh đạo vụ (LĐV)</label>
+                  <label style={labelStyle}>Lãnh đạo phụ trách</label>
                   <select
                     value={fLanhDao}
                     onChange={(e) => setFLanhDao(e.target.value)}
@@ -767,6 +796,7 @@ export function PhanCongTTVView() {
 
                 <div />
               </div>
+              )}
             </div>
           )}
 
@@ -829,7 +859,7 @@ export function PhanCongTTVView() {
                   fontFamily: F,
                 }}
               >
-                <RotateCcw size={13} /> Làm mới
+                <RotateCcw size={13} /> Xóa bộ lọc
               </button>
             </div>
           </div>
@@ -880,9 +910,9 @@ export function PhanCongTTVView() {
               alignItems: "center",
               gap: 6,
               padding: "7px 16px",
-              background: RED,
-              color: "#fff",
-              border: "none",
+              background: activeTab === "da-phan-cong" ? RED : "#fff",
+              color: activeTab === "da-phan-cong" ? "#fff" : TEXT,
+              border: activeTab === "da-phan-cong" ? "none" : `1px solid ${BORDER}`,
               borderRadius: 4,
               fontSize: 12,
               fontWeight: 600,

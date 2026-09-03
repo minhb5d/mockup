@@ -6413,13 +6413,13 @@ export default function QuanLyVuXetXuView({
       <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
         {/* Breadcrumb */}
         <div style={{ padding: "8px 20px", borderBottom: `1px solid ${BORDER}`, fontSize: 12, color: MUTED, fontFamily: F, flexShrink: 0, background: "#fff" }}>
-          Trang chủ › Quản lý GĐT/TT › Quản lý vụ xét xử GĐT › Danh sách
+          Trang chủ › Quản lý án GĐT/TT › Quản lý xét xử GĐT › Danh sách vụ xét xử
         </div>
 
         {/* Title + Phân quyền tài khoản + tabs */}
         <div style={{ background: "#fff", padding: "14px 20px 0", flexShrink: 0, borderBottom: `1px solid ${BORDER}` }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: TEXT, fontFamily: F, margin: 0 }}>Danh sách vụ xét xử GĐT</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: TEXT, fontFamily: F, margin: 0 }}>Quản lý vụ án xét xử</h2>
 
             <TaiKhoanPhanQuyenBar userRole={userRole} setUserRole={setUserRole} />
           </div>
@@ -6545,72 +6545,20 @@ export default function QuanLyVuXetXuView({
                 </select>
               </div>
 
-              {/* 8. Quá hạn luật định (LỆCH: SRS 3 option) */}
+              {/* 8. Quá hạn xét xử */}
               <div>
-                <label style={labelStyle}>Quá hạn luật định</label>
+                <label style={labelStyle}>Quá hạn xét xử</label>
                 <select
                   value={fQuaHanXX}
                   onChange={(e) => setFQuaHanXX(e.target.value)}
                   style={selSt}
                 >
                   <option value="">– Tất cả –</option>
-                  <option value="Không">Không</option>
-                  <option value="Quá hạn chủ quan">Quá hạn chủ quan</option>
-                  <option value="Quá hạn khách quan">Quá hạn khách quan</option>
+                  <option value="Không quá hạn">Không quá hạn</option>
+                  <option value="Quá hạn">Quá hạn</option>
                 </select>
               </div>
 
-              {/* ── THIẾU [Cao]: 12 trường tìm kiếm bổ sung theo SRS ── */}
-              <div>
-                <label style={labelStyle}>Nguyên đơn / Bị đơn</label>
-                <input value={fNguyenDonBiDon} onChange={e => setFNguyenDonBiDon(e.target.value)} placeholder="Nhập tên" style={inSt} />
-              </div>
-              <div>
-                <label style={labelStyle}>Số thụ lý XX</label>
-                <input value={fSoThuLyXX} onChange={e => setFSoThuLyXX(e.target.value)} placeholder="Nhập số thụ lý xét xử" style={inSt} />
-              </div>
-              <div>
-                <label style={labelStyle}>Số thụ lý XX từ – đến ngày</label>
-                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                  <input type="date" value={fThuLyTuNgay} onChange={e => setFThuLyTuNgay(e.target.value)} style={{ ...inSt, flex: 1, minWidth: 0 }} />
-                  <span style={{ fontSize: 12, color: MUTED }}>–</span>
-                  <input type="date" value={fThuLyDenNgay} onChange={e => setFThuLyDenNgay(e.target.value)} style={{ ...inSt, flex: 1, minWidth: 0 }} />
-                </div>
-              </div>
-              <div>
-                <label style={labelStyle}>Xét xử từ – đến ngày</label>
-                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                  <input type="date" value={fXetXuTuNgay} onChange={e => setFXetXuTuNgay(e.target.value)} style={{ ...inSt, flex: 1, minWidth: 0 }} />
-                  <span style={{ fontSize: 12, color: MUTED }}>–</span>
-                  <input type="date" value={fXetXuDenNgay} onChange={e => setFXetXuDenNgay(e.target.value)} style={{ ...inSt, flex: 1, minWidth: 0 }} />
-                </div>
-              </div>
-              <div>
-                <label style={labelStyle}>Trạng thái xét xử</label>
-                <select value={fTrangThaiXX} onChange={e => setFTrangThaiXX(e.target.value)} style={selSt}>
-                  <option value="">– Tất cả –</option>
-                  <option>Chưa thụ lý xét xử</option>
-                  <option>Chưa có danh sách xét xử</option>
-                  <option>Đã có danh sách xét xử</option>
-                  <option>Đã xét xử</option>
-                  <option>Hoãn phiên tòa</option>
-                  <option>Đình chỉ</option>
-                  <option>Rút kháng nghị</option>
-                  <option>Chuyển thẩm quyền</option>
-                </select>
-              </div>
-              <div>
-                <label style={labelStyle}>Thẩm phán</label>
-                <input value={fThamPhan} onChange={e => setFThamPhan(e.target.value)} placeholder="Nhập tên thẩm phán" style={inSt} />
-              </div>
-              <div>
-                <label style={labelStyle}>Hoãn THA?</label>
-                <select value={fHoanTHA} onChange={e => setFHoanTHA(e.target.value)} style={selSt}>
-                  <option value="">– Tất cả –</option>
-                  <option value="Có">Có</option>
-                  <option value="Không">Không</option>
-                </select>
-              </div>
               <div>
                 <label style={labelStyle}>Số kháng nghị</label>
                 <input value={fSoKhangNghi} onChange={e => setFSoKhangNghi(e.target.value)} placeholder="Nhập số kháng nghị" style={inSt} />
@@ -6682,7 +6630,7 @@ export default function QuanLyVuXetXuView({
                   fontFamily: F,
                 }}
               >
-                <RotateCcw size={13} /> Làm mới
+                <RotateCcw size={13} /> Xóa bộ lọc
               </button>
             </div>
           </div>
@@ -6713,10 +6661,9 @@ export default function QuanLyVuXetXuView({
             <colgroup>
               <col style={{ width: 36 }} />
               <col style={{ width: 36 }} />
-              <col style={{ width: "11%" }} />
-              <col style={{ width: "24%" }} />
-              <col style={{ width: "16%" }} />
-              <col style={{ width: "16%" }} />
+              <col style={{ width: "18%" }} />
+              <col style={{ width: "28%" }} />
+              <col style={{ width: "22%" }} />
               <col style={{ width: "16%" }} />
               <col style={{ width: 48 }} />
             </colgroup>
@@ -6725,20 +6672,7 @@ export default function QuanLyVuXetXuView({
                 <th style={TH_STYLE}><input type="checkbox" /></th>
                 <th style={TH_STYLE}>STT</th>
                 <th style={TH_STYLE}>THÔNG TIN VỤ XÉT XỬ</th>
-                <th style={TH_STYLE}>
-                  {userRole === "hinh-su" || userRole === "vu-1"
-                    ? "THÔNG TIN BẢN ÁN HÌNH SỰ"
-                    : "THÔNG TIN BẢN ÁN / QUYẾT ĐỊNH & QHPL"}
-                </th>
-                <th style={TH_STYLE}>
-                  {userRole === "hinh-su" || userRole === "vu-1"
-                    ? "NGƯỜI KHIẾU NẠI / BỊ CÁO"
-                    : userRole === "dan-su" || userRole === "vu-2" || userRole === "vu-3"
-                      ? "NGUYÊN ĐƠN / BỊ ĐƠN"
-                      : userRole === "hanh-chinh" || userRole === "vu-4"
-                        ? "NGƯỜI KHỞI KIỆN / NGƯỜI BỊ KIỆN"
-                        : "THÔNG TIN ĐƯƠNG SỰ"}
-                </th>
+                <th style={TH_STYLE}>THÔNG TIN BẢN ÁN</th>
                 <th style={TH_STYLE}>PHÂN CÔNG</th>
                 <th style={TH_STYLE}>TRẠNG THÁI</th>
                 <th style={{ ...TH_STYLE, textAlign: "center" as const }}>THAO TÁC</th>
@@ -6746,7 +6680,7 @@ export default function QuanLyVuXetXuView({
             </thead>
             <tbody>
               {paginated.length === 0 && (
-                <tr><td colSpan={8} style={{ padding: 32, textAlign: "center" as const, color: MUTED, fontSize: 12, fontFamily: F }}>Không có dữ liệu</td></tr>
+                <tr><td colSpan={7} style={{ padding: 32, textAlign: "center" as const, color: MUTED, fontSize: 12, fontFamily: F }}>Không có dữ liệu</td></tr>
               )}
               {paginated.map((row, idx) => (
                 <tr key={row.id}
@@ -6813,37 +6747,6 @@ export default function QuanLyVuXetXuView({
                           </span>
                         )}
                       </div>
-                    </div>
-                  </td>
-
-                  {/* Đương sự / Bị cáo */}
-                  <td style={TD_STYLE}>
-                    <div style={{ fontSize: 11, fontFamily: F, lineHeight: 1.8 }}>
-                      {(() => {
-                        const { label1, val1, label2, val2 } = getVuXetXuPartyInfo(row, userRole);
-                        return (
-                          <>
-                            {val1 && (
-                              <div>
-                                <span style={{ color: MUTED }}>{label1}: </span>
-                                <span style={{ fontWeight: 600, color: TEXT }}>{val1}</span>
-                              </div>
-                            )}
-                            {val2 && (
-                              <div>
-                                <span style={{ color: MUTED }}>{label2}: </span>
-                                <span style={{ fontWeight: 600, color: TEXT }}>{val2}</span>
-                              </div>
-                            )}
-                            {row.nguoiKhangNghi && (
-                              <div>
-                                <span style={{ color: MUTED }}>Người kháng nghị: </span>
-                                <span style={{ color: TEXT }}>{row.nguoiKhangNghi}</span>
-                              </div>
-                            )}
-                          </>
-                        );
-                      })()}
                     </div>
                   </td>
 

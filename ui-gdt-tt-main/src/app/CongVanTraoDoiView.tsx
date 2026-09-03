@@ -2235,7 +2235,7 @@ export default function CongVanTraoDoiView({
   });
 
   const tabs: { id: CongVanTab; label: string }[] = [
-    { id: "tat-ca", label: "Tất cả" },
+    { id: "tat-ca", label: "Tổng số công văn" },
     { id: "den", label: "Công văn đến" },
     { id: "di", label: "Công văn đi" },
   ];
@@ -2255,7 +2255,7 @@ export default function CongVanTraoDoiView({
       {showTaoCV && <TaoCongVanModal onClose={() => setShowTaoCV(false)} />}
       <div style={{ padding: "20px 28px 0" }}>
         <div style={{ fontSize: 10, color: MUTED, fontFamily: F, marginBottom: 6 }}>
-          Quản lý án &rsaquo; <span style={{ color: RED, fontWeight: 600 }}>Công văn trao đổi</span>
+          Trang chủ &rsaquo; Quản lý án GĐT/TT &rsaquo; Công văn trao đổi &rsaquo; <span style={{ color: RED, fontWeight: 600 }}>Danh sách</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: TEXT, fontFamily: F, margin: 0 }}>Công văn trao đổi</h1>
@@ -2394,8 +2394,8 @@ export default function CongVanTraoDoiView({
             <button onClick={() => setShowTaoCV(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: RED, color: "#fff", border: "none", borderRadius: 5, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F, whiteSpace: "nowrap" }}>
               + Thêm công văn
             </button>
-            <button style={{ padding: 8, background: "none", border: `1px solid ${BORDER}`, borderRadius: 5, cursor: "pointer", display: "flex", alignItems: "center" }}>
-              <Printer size={15} color={MUTED} />
+            <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 5, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F }}>
+              <Printer size={14} color={MUTED} /> In báo cáo
             </button>
           </div>
 

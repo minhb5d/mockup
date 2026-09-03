@@ -59,8 +59,7 @@ export type HDXXRow = {
   danhSachVuAn?: VuAnDetail[];
 };
 
-// THIẾU [TB]: tab "Danh sách tham mưu Hội đồng xét xử" — SRS mục 1.4
-type PCTab = "tat-ca" | "cho-ky-duyet" | "tham-muu";
+type PCTab = "tat-ca" | "cho-ky-duyet" | "da-ky-duyet";
 
 const ROWS: HDXXRow[] = [
   {
@@ -4668,9 +4667,8 @@ function HDXXDetailView({
 
 // ── Filter panel ──────────────────────────────────────────────────────────────
 
-function FilterPanel({ open, onToggle, userRole }: { open: boolean; onToggle: () => void; userRole?: UserRoleType }) {
-  const isVu1 = userRole === "vu-1" || userRole === "hinh-su";
-  const isVu4 = userRole === "vu-4" || userRole === "hanh-chinh";
+function FilterPanel({ userRole }: { open?: boolean; onToggle?: () => void; userRole?: UserRoleType }) {
+  void userRole;
   const inSt: React.CSSProperties = { border: `1px solid ${BORDER}`, borderRadius: 5, padding: "6px 10px", fontSize: 12, fontFamily: F, outline: "none", background: "#fff", color: TEXT, width: "100%", boxSizing: "border-box" };
   const lbl: React.CSSProperties = { display: "block", fontSize: 11, color: MUTED, fontFamily: F, marginBottom: 4 };
   const col = (label: string, children: React.ReactNode) => (
@@ -4690,63 +4688,20 @@ function FilterPanel({ open, onToggle, userRole }: { open: boolean; onToggle: ()
   return (
     <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: "16px 20px", marginBottom: 16 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        {/* Hàng 1 (luôn hiển thị) */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12 }}>
-          {col("Tòa ra BA/QĐ", <select style={inSt}><option value="">Chọn tòa án</option><option>TAND Tối cao</option><option>TAND Cấp cao HN</option><option>TAND Cấp cao TP.HCM</option></select>)}
-          {col("Số BA/QĐ", <input placeholder="Nhập số BA/QĐ" style={inSt} />)}
-          {rangeRow("Ngày BA/QĐ")}
-          {col("Loại án", <select style={inSt}><option value="">{isVu1 ? "Hình sự" : isVu4 ? "Hành chính" : "Chọn loại án"}</option><option>Hình sự</option><option>Dân sự</option><option>Kinh tế</option><option>Hành chính</option></select>)}
-          {col("Thuộc án", <select style={inSt}><option value="">Chọn loại</option><option>GĐT</option><option>TT</option></select>)}
-          {col(isVu1 ? "Người kháng nghị / Đề nghị" : isVu4 ? "Người khởi kiện" : "Người có đơn / Khiếu nại", <input placeholder="Nhập tên..." style={inSt} />)}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+          {col("Số danh sách", <input placeholder="Nhập số danh sách" style={inSt} />)}
+          {rangeRow("Ngày danh sách")}
+          {col("Đơn vị tạo danh sách", <select style={inSt}><option value="">– Tất cả –</option><option>Vụ Giám đốc, Kiểm tra I</option><option>Vụ Giám đốc, Kiểm tra II</option></select>)}
+          {col("Trạng thái", <select style={inSt}><option value="">– Tất cả –</option><option>Chờ ký duyệt</option><option>Đã ký duyệt</option></select>)}
         </div>
-
-        {/* Hàng 2 & 3 (chỉ hiển thị khi mở rộng) */}
-        {open && (
-          <>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12 }}>
-              {col(isVu1 ? "Bị cáo / Bị hại" : isVu4 ? "Người khởi kiện / Bị kiện" : "Nguyên đơn / Bị đơn", <input placeholder={isVu1 ? "Nhập tên bị cáo..." : "Nhập tên đương sự..."} style={inSt} />)}
-              {col("Số thụ lý XX", <input placeholder="Số thụ lý" style={inSt} />)}
-              {rangeRow("Thụ lý XX")}
-              {rangeRow("Xét xử")}
-              {col("Trạng thái xét xử", <select style={inSt}><option value="">– Tất cả –</option><option>Chưa xét xử</option><option>Đã xét xử</option></select>)}
-              {col("Thẩm tra viên/Thư ký", <select style={inSt}><option value="">– Tất cả –</option><option>Nguyễn Thu Hằng</option><option>Lý Văn An</option></select>)}
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-              {col("Lãnh đạo phụ trách", <select style={inSt}><option value="">Vui lòng chọn</option><option>Nguyễn Văn Minh</option><option>Vũ Đình Tuấn</option></select>)}
-              {col("Thẩm phán", <select style={inSt}><option value="">Vui lòng chọn</option><option>Trần Thị Lan</option><option>Lê Hoàng Nam</option></select>)}
-              {col("Quá hạn xét xử", <select style={inSt}><option value="">– Tất cả –</option><option>Có</option><option>Không</option></select>)}
-              {col("Hoãn thi hành án", <select style={inSt}><option value="">– Tất cả –</option><option>Có</option><option>Không</option></select>)}
-            </div>
-            {/* THIẾU [TB]: bộ lọc riêng của Danh sách phân công HĐXX — SRS 2.1.A */}
-            <div style={{ borderTop: `1px dashed ${BORDER}`, paddingTop: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, marginBottom: 8, textTransform: "uppercase" as const }}>Bộ lọc Danh sách phân công HĐXX</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 12 }}>
-                {col("Số danh sách", <input placeholder="Nhập số danh sách" style={inSt} />)}
-                {rangeRow("Ngày danh sách")}
-                {col("Đơn vị tạo", <select style={inSt}><option value="">– Tất cả –</option><option>Vụ Giám đốc, Kiểm tra I</option><option>Vụ Giám đốc, Kiểm tra II</option></select>)}
-                {col("Trạng thái", <select style={inSt}><option value="">– Tất cả –</option><option>Chờ ký duyệt</option><option>Đã ký duyệt</option></select>)}
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-                {col("Thẩm phán chủ tọa", <select style={inSt}><option value="">Vui lòng chọn</option><option>Nguyễn Biên Thùy</option><option>Trần Hồng Hà</option></select>)}
-                {col("Thẩm phán thành viên", <select style={inSt}><option value="">Vui lòng chọn</option><option>Trịnh Thị Minh Trang</option><option>Nguyễn Như Thắng</option></select>)}
-                {col("Hội đồng xét xử", <select style={inSt}><option value="">– Tất cả –</option><option>Hội đồng 5 thẩm phán</option><option>Hội đồng toàn thể</option></select>)}
-              </div>
-            </div>
-          </>
-        )}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+          {col("Thẩm phán chủ tọa", <select style={inSt}><option value="">Vui lòng chọn</option><option>Nguyễn Biên Thùy</option><option>Trần Hồng Hà</option></select>)}
+          {col("Thẩm phán", <select style={inSt}><option value="">Vui lòng chọn</option><option>Trịnh Thị Minh Trang</option><option>Nguyễn Như Thắng</option></select>)}
+          {col("Hội đồng xét xử", <select style={inSt}><option value="">– Tất cả –</option><option>Hội đồng 5 thẩm phán</option><option>Hội đồng toàn thể</option></select>)}
+        </div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
-        <button
-          onClick={onToggle}
-          style={{
-            display: "flex", alignItems: "center", gap: 4, background: "none", border: "none",
-            cursor: "pointer", fontSize: 12, color: "#2563eb", fontFamily: F, padding: 0, fontWeight: 500,
-          }}>
-          {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          {open ? "Thu gọn" : "Mở rộng"}
-        </button>
-
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", marginTop: 14 }}>
         <div style={{ display: "flex", gap: 8 }}>
           <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 18px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F }}>
             <Search size={13} /> Tìm kiếm
@@ -4815,12 +4770,10 @@ export default function PhanCongHDXXView({
     return true;
   });
 
-  // THIẾU [TB]: tab "Danh sách tham mưu Hội đồng xét xử" — SRS mục 1.4
-  // (danh sách đã lập tham mưu, chưa trình ký — tái dùng trạng thái "chua-phan-cong")
   const rows = tab === "cho-ky-duyet"
     ? filteredByRole.filter(r => r.trangThaiXX === "cho-ky-duyet")
-    : tab === "tham-muu"
-      ? filteredByRole.filter(r => r.trangThaiXX === "chua-phan-cong")
+    : tab === "da-ky-duyet"
+      ? filteredByRole.filter(r => r.trangThaiXX === "chua-xx" || r.trangThaiXX === "da-xx")
       : filteredByRole;
   const allChecked = rows.length > 0 && rows.every(r => checked.has(r.id));
   const toggleAll = () => setChecked(allChecked ? new Set() : new Set(rows.map(r => r.id)));
@@ -4832,8 +4785,7 @@ export default function PhanCongHDXXView({
   const tabs: { id: PCTab; label: string; count: number }[] = [
     { id: "tat-ca", label: "Tất cả", count: filteredByRole.length },
     { id: "cho-ky-duyet", label: "Chờ ký duyệt", count: filteredByRole.filter(r => r.trangThaiXX === "cho-ky-duyet").length },
-    // THIẾU [TB]: tab "Danh sách tham mưu Hội đồng xét xử" — SRS mục 1.4
-    { id: "tham-muu", label: "Danh sách tham mưu HĐXX", count: filteredByRole.filter(r => r.trangThaiXX === "chua-phan-cong").length },
+    { id: "da-ky-duyet", label: "Đã ký duyệt", count: filteredByRole.filter(r => r.trangThaiXX === "chua-xx" || r.trangThaiXX === "da-xx").length },
   ];
 
   return (
@@ -4859,7 +4811,7 @@ export default function PhanCongHDXXView({
       </div>
 
       <div style={{ padding: "0 28px 28px" }}>
-        <FilterPanel open={filterOpen} onToggle={() => setFilterOpen(v => !v)} userRole={userRole} />
+        <FilterPanel userRole={userRole} />
 
         <div style={{ background: "#fff", borderRadius: 8, border: `1px solid ${BORDER}` }}>
           <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px 16px", borderBottom: `1px solid ${BORDER}` }}>
@@ -4877,7 +4829,7 @@ export default function PhanCongHDXXView({
                 <th style={{ ...TH, textAlign: "center" }}>
                   <input type="checkbox" checked={allChecked} onChange={toggleAll} style={{ accentColor: RED, cursor: "pointer" }} />
                 </th>
-                {["STT", "Số & Ngày lập DS", "Đơn vị gửi", "Thông tin hội đồng xét xử", "Trạng thái", "Thao tác"].map(h => (
+                {["STT", "Số & Ngày lập DS", "Đơn vị tạo danh sách", "Thông tin hội đồng xét xử", "Trạng thái", "Thao tác"].map(h => (
                   <th key={h} style={TH}>{h}</th>
                 ))}
               </tr>

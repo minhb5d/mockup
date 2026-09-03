@@ -14,51 +14,40 @@ interface FieldDef {
 
 type RowCell = FieldDef | "diaChi" | "anDacThu" | "thoiHieu" | "trangThai" | null;
 
+// 2 hàng đầu khớp đúng bộ lọc mặc định (chưa bấm "Nâng cao") trên STG — 6 cột/hàng.
 const SEARCH_ROWS: RowCell[][] = [
   [
-    { label: "Người đứng đơn", type: "input", placeholder: "Người đứng đơn" },
-    { label: "Số BA/QĐ", type: "input", placeholder: "Số BA/QĐ" },
-    { label: "Ngày BA/QĐ", type: "date" },
-  ],
-  [
-    { label: "Tòa ra BA/QĐ", type: "select", placeholder: "--- Chọn ---" },
-    { label: "Thời gian nhận đơn", type: "dateRange" },
-    { label: "Thẩm phán", type: "select", placeholder: "--- Tất cả ---" },
-  ],
-  [
-    "diaChi",
-    { label: "Chi tiết", type: "input", placeholder: "Chi tiết" },
-    null, // 27.08 đỏ: bỏ Phân loại đơn
-  ],
-  [
-    { label: "Số CMND", type: "input", placeholder: "Số CMND / CCCD" },
-    { label: "Mã đơn", type: "input", placeholder: "Mã đơn" },
-    { label: "Hình thức đơn", type: "select", placeholder: "--- Tất cả ---" },
-  ],
-  [
-    null, // 27.08 đỏ: bỏ Thời gian chuyển
-    { label: "Thời gian thụ lý", type: "dateRange" },
-    { label: "Số thụ lý", type: "input", placeholder: "Số thụ lý" },
+    { label: "Người gửi đơn", type: "input", placeholder: "Người gửi đơn" },
+    { label: "Số bản án/quyết định", type: "input", placeholder: "Số bản án/quyết định" },
+    { label: "Ngày bản án/quyết định", type: "dateRange" },
+    { label: "Tòa ra bản án/quyết định", type: "select", placeholder: "--- Chọn ---" },
+    { label: "Số công văn chuyển", type: "input", placeholder: "Số công văn chuyển" },
+    { label: "Ngày công văn chuyển", type: "dateRange" },
   ],
   [
     { label: "Thụ lý đơn", type: "select", placeholder: "--Tất cả--", options: ["Thụ lý mới", "Đã thụ lý"] },
-    { label: "Số CV chuyển", type: "input", placeholder: "Số CV chuyển" },
-    { label: "Ngày CV chuyển", type: "date" },
-  ],
-  [
-    { label: "Thẩm tra viên", type: "select", placeholder: "--- Tất cả ---" },
+    { label: "Ngày thụ lý", type: "dateRange" },
+    { label: "Số thụ lý", type: "input", placeholder: "Số thụ lý" },
+    { label: "Thẩm phán", type: "select", placeholder: "--- Tất cả ---" },
     { label: "Loại án", type: "select", placeholder: "--- Tất cả ---", options: [...LOAI_AN_OPTIONS] },
-    { label: "Giao THS", type: "select", placeholder: "--Tất cả--", options: ["Đơn đã giao TTV", "Đơn chưa giao TTV", "Đơn đã nhận từ VP HCTP", "Đơn chưa nhận từ VP HCTP"] },
+    { label: "Giao tiêu hồ sơ", type: "select", placeholder: "--Tất cả--", options: ["Đơn đã giao TTV", "Đơn chưa giao TTV", "Đơn đã nhận từ VP HCTP", "Đơn chưa nhận từ VP HCTP"] },
+  ],
+  // Các trường sau chỉ hiện khi bấm "Nâng cao" (STG không có sẵn — giữ lại vì SRS yêu cầu)
+  [
+    "diaChi",
+    { label: "Chi tiết", type: "input", placeholder: "Chi tiết" },
+    { label: "Số CMND", type: "input", placeholder: "Số CMND / CCCD" },
+    { label: "Mã đơn", type: "input", placeholder: "Mã đơn" },
+    { label: "Hình thức đơn", type: "select", placeholder: "--- Tất cả ---" },
+    { label: "Thẩm tra viên", type: "select", placeholder: "--- Tất cả ---" },
   ],
   [
     "trangThai",
-    null, // 27.08 đỏ: bỏ Thuộc án ở màn Nhận đơn
-    null, // 27.08 đỏ: bỏ Nơi chuyển
-  ],
-  [
-    null, // 27.08 đỏ: bỏ Thời hiệu ở màn Nhận đơn
     { label: "Số tờ trình phân công", type: "input", placeholder: "Số tờ trình phân công" },
     { label: "Ngày tờ trình phân công", type: "date" },
+    null,
+    null,
+    null,
   ],
 ];
 
@@ -196,7 +185,7 @@ export function SearchFilterPanel({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: isHoSoKhangNghi ? "repeat(4, 1fr)" : "repeat(3, 1fr)",
+          gridTemplateColumns: isHoSoKhangNghi ? "repeat(4, 1fr)" : "repeat(6, 1fr)",
           gap: "10px 16px",
           marginBottom: 12,
         }}
@@ -251,7 +240,7 @@ export function SearchFilterPanel({
         )}
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10 }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10, marginTop: 4 }}>
         <button
           onClick={onToggle}
           style={{
@@ -269,7 +258,7 @@ export function SearchFilterPanel({
           }}
         >
           {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          {expanded ? "Thu gọn" : "Mở rộng"}
+          {expanded ? "Thu gọn" : "Nâng cao"}
         </button>
 
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -308,7 +297,7 @@ export function SearchFilterPanel({
             }}
           >
             <RotateCcw size={13} />
-            Làm mới
+            Xóa bộ lọc
           </button>
         </div>
       </div>

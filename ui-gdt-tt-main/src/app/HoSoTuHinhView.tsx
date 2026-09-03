@@ -2940,7 +2940,7 @@ export default function HoSoTuHinhView({
       {/* Breadcrumb */}
       <div style={{ padding: "10px 20px", borderBottom: `1px solid ${BORDER}`, background: "#fff", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ fontSize: 12, fontFamily: F, color: MUTED }}>
-          Trang chủ › Quản lý hồ sơ tử hình › <strong style={{ color: TEXT }}>{activeTab === "don-xin-an-giam" ? "Đơn xin ân giảm" : "Hồ sơ tử hình"}</strong>
+          Trang chủ › Quản lý án GĐT/TT › Quản lý án tử hình › <strong style={{ color: TEXT }}>{activeTab === "don-xin-an-giam" ? "Đơn xin ân giảm" : "Hồ sơ tử hình"}</strong>
         </span>
       </div>
 

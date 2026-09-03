@@ -803,7 +803,7 @@ function CauHinhTTVCore() {
           <button onClick={()=>setApplied({ld:filterLD,ttv:filterTTV})} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 16px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F }}>
             <Search size={13} /> Tìm kiếm
           </button>
-          <button onClick={()=>{ alert(`Preview biểu mẫu cấu hình: ${visibleRows.length} bản ghi`); window.print(); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
+          <button onClick={()=>{ alert("Chức năng đang phát triển"); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
             <Printer size={13} /> In biểu mẫu
           </button>
         </div>
@@ -925,6 +925,23 @@ function ToNhomConfigView() {
   <table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr>{["Mã tổ","Tên tổ","Loại án","Loại tổ/nhóm","Trạng thái","Thành viên","Thao tác"].map(x=><th style={TH_STYLE} key={x}>{x}</th>)}</tr></thead><tbody>{filtered.map(g=><tr key={g.id}><td style={TD_STYLE}>{g.ma}</td><td style={TD_STYLE}>{g.ten}</td><td style={TD_STYLE}>{g.loaiAn}</td><td style={TD_STYLE}>{g.loai}</td><td style={TD_STYLE}><input type="checkbox" checked={g.active} onChange={()=>setGroups(v=>v.map(x=>x.id===g.id?{...x,active:!x.active}:x))}/></td><td style={TD_STYLE}>{g.members.length} người</td><td style={TD_STYLE}><button onClick={()=>setEditing({...g})}>Sửa</button> <button onClick={()=>setAssign(g)}>Gán thành viên</button> <button onClick={()=>confirm("Xóa tổ/nhóm này?")&&setGroups(v=>v.filter(x=>x.id!==g.id))}>Xóa</button></td></tr>)}</tbody></table>
   {editing&&<div style={modalOverlay}><div style={{...modalCard,maxWidth:720}}><h3>Sửa/Thêm Tổ/Nhóm</h3><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><input value={editing.ma} onChange={e=>setEditing({...editing,ma:e.target.value})} placeholder="Mã tổ"/><input value={editing.ten} onChange={e=>setEditing({...editing,ten:e.target.value})} placeholder="Tên tổ ≤255"/><select value={editing.loaiAn} onChange={e=>setEditing({...editing,loaiAn:e.target.value})}>{LOAI_AN_OPTIONS.map(x=><option key={x}>{x}</option>)}</select><select value={editing.loai} onChange={e=>setEditing({...editing,loai:e.target.value})}><option>Tổ</option><option>Nhóm</option></select><textarea value={editing.moTa||""} onChange={e=>setEditing({...editing,moTa:e.target.value})} placeholder="Mô tả ≤500" style={{gridColumn:"1 / -1"}}/></div><div style={{marginTop:12,textAlign:"right"}}><button onClick={()=>setEditing(null)}>Đóng</button> <button onClick={save}>Lưu</button></div></div></div>}
   {assign&&<div style={modalOverlay}><div style={{...modalCard,maxWidth:760}}><h3>Gán đối tượng – {assign.ten}</h3><div style={{display:"grid",gridTemplateColumns:"1fr 80px 1fr",gap:12}}><div><b>Chưa gán</b>{people.filter(p=>!assign.members.includes(p.split(" - ")[0])).map(p=><div key={p}><button onClick={()=>{const name=p.split(" - ")[0]; const next={...assign,members:[...assign.members,name]};setAssign(next);setGroups(v=>v.map(x=>x.id===next.id?next:x));}}>›</button> {p}</div>)}</div><div style={{textAlign:"center"}}>› / ‹</div><div><b>Đã gán</b>{assign.members.map((m:string)=><div key={m}><button onClick={()=>{const next={...assign,members:assign.members.filter((x:string)=>x!==m)};setAssign(next);setGroups(v=>v.map(x=>x.id===next.id?next:x));}}>‹</button> {m}</div>)}</div></div><div style={{marginTop:12,textAlign:"right"}}><button onClick={()=>setAssign(null)}>Đóng</button> <button onClick={()=>setAssign(null)}>Cập nhật tổ</button></div></div></div>}</div>
+}
+
+// Placeholder — mục mới phát hiện trên STG, sẽ audit & xây dựng chi tiết khi tới lượt trong danh sách công việc
+function CauHinhPhanCongTPView() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+      <div style={{ padding: "8px 20px", borderBottom: `1px solid ${BORDER}`, fontSize: 12, color: MUTED, fontFamily: F, flexShrink: 0, background: "#fff" }}>
+        Trang chủ › Quản lý án GĐT/TT › Cấu hình phân công Thẩm phán
+      </div>
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "#f9fafb" }}>
+        <div style={{ textAlign: "center", color: MUTED, fontFamily: F }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: TEXT, marginBottom: 6 }}>Cấu hình phân công Thẩm phán</div>
+          <div style={{ fontSize: 12 }}>Màn hình đang chờ audit chi tiết theo đúng thứ tự công việc.</div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function CapTrinhConfigView(){ const [rows,setRows]=useState([{id:1,ma:"CT01",ten:"Lãnh đạo Vụ",thuTu:1,active:true},{id:2,ma:"CT02",ten:"Phó Chánh án",thuTu:2,active:true},{id:3,ma:"CT03",ten:"Chánh án",thuTu:3,active:true}]); return <div style={{padding:16,fontFamily:F}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><b>Danh mục cấp trình</b><button onClick={()=>setRows(v=>[...v,{id:Date.now(),ma:`CT0${v.length+1}`,ten:"Cấp trình mới",thuTu:v.length+1,active:true}])}>+ Thêm mới</button></div><table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr>{["Mã","Tên cấp trình","Thứ tự","Trạng thái","Thao tác"].map(x=><th key={x} style={TH_STYLE}>{x}</th>)}</tr></thead><tbody>{rows.map(r=><tr key={r.id}><td style={TD_STYLE}>{r.ma}</td><td style={TD_STYLE}><input value={r.ten} onChange={e=>setRows(v=>v.map(x=>x.id===r.id?{...x,ten:e.target.value}:x))}/></td><td style={TD_STYLE}><input type="number" value={r.thuTu} onChange={e=>setRows(v=>v.map(x=>x.id===r.id?{...x,thuTu:+e.target.value}:x))}/></td><td style={TD_STYLE}><input type="checkbox" checked={r.active} onChange={()=>setRows(v=>v.map(x=>x.id===r.id?{...x,active:!x.active}:x))}/></td><td style={TD_STYLE}><button onClick={()=>setRows(v=>v.filter(x=>x.id!==r.id))}>Xóa</button></td></tr>)}</tbody></table></div> }
@@ -2787,7 +2804,7 @@ function ModalNhanHoSoKhangNghi({
 // ── Main App ──────────────────────────────────────────────────────────────────
 
 
-type AppView = "luu-so-van-ban" | "dashboard-gdkt" | "ho-so-tong-hop" | "list" | "giao-tieu-ho-so" | "phan-cong-ttv" | "phan-cong-tham-phan" | "phan-cong-tptc" | "cau-hinh-ttv" | "quan-ly-vu-an" | "chi-tiet-vu-an" | "cong-van-trao-doi" | "phan-cong-hdxx" | "lich-xet-xu" | "quan-ly-vu-xet-xu" | "phe-duyet-de-xuat" | "quan-ly-khieu-nai" | "chi-tiet-khieu-nai" | "ho-so-khang-nghi" | "ho-so-tu-hinh" | "don-xin-an-giam" | "tao-cong-van" | "an-quoc-hoi" | "an-thoi-hieu";
+type AppView = "luu-so-van-ban" | "dashboard-gdkt" | "ho-so-tong-hop" | "list" | "giao-tieu-ho-so" | "phan-cong-ttv" | "phan-cong-tham-phan" | "phan-cong-tptc" | "cau-hinh-ttv" | "cau-hinh-phan-cong-tp" | "quan-ly-vu-an" | "chi-tiet-vu-an" | "cong-van-trao-doi" | "phan-cong-hdxx" | "lich-xet-xu" | "quan-ly-vu-xet-xu" | "phe-duyet-de-xuat" | "quan-ly-khieu-nai" | "chi-tiet-khieu-nai" | "ho-so-khang-nghi" | "ho-so-tu-hinh" | "don-xin-an-giam" | "tao-cong-van" | "an-quoc-hoi" | "an-thoi-hieu";
 
 export default function App() {
   const [globalUserRole, setGlobalUserRole] = useState<UserRoleType>("hinh-su");
@@ -2795,7 +2812,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>("don-cho-phe-duyet");
   const [filterExpanded, setFilterExpanded] = useState(false);
   const [selectedVuAnId, setSelectedVuAnId] = useState<string>("VA26-002621");
-  const [phanCongHdxxInitialTab, setPhanCongHdxxInitialTab] = useState<"tham-muu" | undefined>(undefined);
+  const [phanCongHdxxInitialTab, setPhanCongHdxxInitialTab] = useState<"tat-ca" | undefined>(undefined);
 
   const sidebarView: View =
     appView === "luu-so-van-ban" ? "luu-so-van-ban"
@@ -2806,6 +2823,7 @@ export default function App() {
           : appView === "phan-cong-ttv" ? "phan-cong-ttv"
             : appView === "phan-cong-tptc" ? "phan-cong-tptc"
               : appView === "cau-hinh-ttv" ? "cau-hinh-ttv"
+                : appView === "cau-hinh-phan-cong-tp" ? "cau-hinh-phan-cong-tp"
                 : appView === "quan-ly-vu-an" || appView === "chi-tiet-vu-an" ? "quan-ly-vu-an"
                   : appView === "quan-ly-khieu-nai" || appView === "chi-tiet-khieu-nai" ? "quan-ly-khieu-nai"
                     : appView === "cong-van-trao-doi" ? "cong-van-trao-doi"
@@ -2830,6 +2848,7 @@ export default function App() {
     if (v === "phan-cong-ttv") { setAppView("phan-cong-ttv"); return; }
     if (v === "phan-cong-tptc") { setAppView("phan-cong-tptc"); return; }
     if (v === "cau-hinh-ttv") { setAppView("cau-hinh-ttv"); return; }
+    if (v === "cau-hinh-phan-cong-tp") { setAppView("cau-hinh-phan-cong-tp"); return; }
     if (v === "quan-ly-vu-an") { setAppView("quan-ly-vu-an"); return; }
     if (v === "quan-ly-khieu-nai") { setAppView("quan-ly-khieu-nai"); return; }
     if (v === "giao-tieu-ho-so") { setAppView("giao-tieu-ho-so"); return; }
@@ -2880,7 +2899,7 @@ export default function App() {
         {appView === "luu-so-van-ban" ? (
           <LuuSoVanBanView />
         ) : appView === "dashboard-gdkt" ? (
-          <DashboardGDKTView userRole={globalUserRole} onNavigate={(v) => handleSidebarNav(v as View)} />
+          <DashboardGDKTView userRole={globalUserRole} setUserRole={setGlobalUserRole} onNavigate={(v) => handleSidebarNav(v as View)} />
         ) : appView === "ho-so-tong-hop" ? (
           <HoSoTongHopVuAnView />
         ) : appView === "phan-cong-tham-phan" ? (
@@ -2890,7 +2909,9 @@ export default function App() {
         ) : appView === "phan-cong-tptc" ? (
           <PhanCongTPTCView />
         ) : appView === "cau-hinh-ttv" ? (
-          <CauHinhTTVView />
+          <CauHinhTTVCore />
+        ) : appView === "cau-hinh-phan-cong-tp" ? (
+          <CauHinhPhanCongTPView />
         ) : appView === "quan-ly-vu-an" ? (
           <QuanLyVuAnView userRole={globalUserRole} setUserRole={setGlobalUserRole} onSelectVuAn={handleSelectVuAn} />
         ) : appView === "chi-tiet-vu-an" ? (
@@ -2916,7 +2937,7 @@ export default function App() {
           <QuanLyVuXetXuView
             userRole={globalUserRole}
             setUserRole={setGlobalUserRole}
-            onGoToThamMuu={() => { setPhanCongHdxxInitialTab("tham-muu"); setAppView("phan-cong-hdxx"); }}
+            onGoToThamMuu={() => { setPhanCongHdxxInitialTab("tat-ca"); setAppView("phan-cong-hdxx"); }}
           />
         ) : appView === "phe-duyet-de-xuat" ? (
           <PheDuyetDeXuatView userRole={globalUserRole} setUserRole={setGlobalUserRole} />

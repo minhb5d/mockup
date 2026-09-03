@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Search, Eye, ChevronDown, RotateCcw, X, Save,
-  FileText, CheckCircle2, Send, FileSpreadsheet, FolderCheck, Printer, Upload,
+  FileText, CheckCircle2, Send, FileSpreadsheet, FolderCheck, Upload,
 } from "lucide-react";
 import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge, type UserRoleType } from "./shared";
 import { TaiLieuHoSoView } from "./TaiLieuHoSoView";
@@ -11,6 +11,7 @@ const todayVi = () => new Date().toLocaleDateString("vi-VN");
 type HsknFilterValues = Record<string, string>;
 function HsknFilterPanel({ tab, expanded, onToggle, onApply }: { tab: "di" | "den"; expanded: boolean; onToggle: () => void; onApply: (values: HsknFilterValues) => void }) {
   const [values, setValues] = useState<HsknFilterValues>({});
+  const [keyword, setKeyword] = useState("");
   const fields = tab === "den"
     ? [
         ["maVanThuDen", "Mã văn thư đến"], ["vanThuTu", "Văn thư đến từ ngày"], ["vanThuDen", "Văn thư đến đến ngày"],
@@ -26,9 +27,26 @@ function HsknFilterPanel({ tab, expanded, onToggle, onApply }: { tab: "di" | "de
       ];
   const st: React.CSSProperties = { width: "100%", padding: "7px 9px", fontSize: 12, border: `1px solid ${BORDER}`, borderRadius: 4, fontFamily: F, boxSizing: "border-box" };
   return <div style={{ borderBottom: `1px solid ${BORDER}`, background: "#fff" }}>
-    <button onClick={onToggle} style={{ margin: "8px 20px", border: "none", background: "transparent", color: RED, fontWeight: 700, cursor: "pointer", fontFamily: F }}>
-      <Search size={14} style={{ verticalAlign: "middle", marginRight: 6 }} /> Tìm kiếm nâng cao {expanded ? "▴" : "▾"}
-    </button>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 20px 0" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 0, maxWidth: 320 }}>
+        <input
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") onApply({ ...values, keyword }); }}
+          placeholder="Nhập từ khóa tìm kiếm..."
+          style={{ ...st, borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
+        />
+        <button
+          onClick={() => onApply({ ...values, keyword })}
+          style={{ padding: "7px 12px", background: RED, color: "#fff", border: "none", borderRadius: "0 4px 4px 0", cursor: "pointer" }}
+        >
+          <Search size={14} />
+        </button>
+      </div>
+      <button onClick={onToggle} style={{ border: "none", background: "transparent", color: RED, fontWeight: 700, cursor: "pointer", fontFamily: F, fontSize: 12, display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
+        Tìm kiếm nâng cao {expanded ? "▴" : "▾"}
+      </button>
+    </div>
     {expanded && <div style={{ padding: "4px 20px 14px", display: "grid", gridTemplateColumns: "repeat(4,minmax(180px,1fr))", gap: 10 }}>
       {fields.map(([key,label]) => <label key={key} style={{ fontSize: 11, color: MUTED, fontFamily: F }}>{label}
         {key === "trangThaiChuyen" ? <select value={values[key] || ""} onChange={e=>setValues(v=>({...v,[key]:e.target.value}))} style={st}><option value="">- Tất cả -</option><option>Chưa chuyển</option><option>Đã chuyển</option><option>Đã trả</option></select>
@@ -1996,42 +2014,11 @@ export function HoSoKhangNghiView({ userRole, onTaoCongVan }: { userRole?: UserR
       {/* Search filter panel */}
       <HsknFilterPanel tab={activeSubTab} expanded={filterExpanded} onToggle={() => setFilterExpanded(v => !v)} onApply={setAppliedFilters} />
 
-      {/* Action Bar */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px", background: "#f8fafc", borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: TEXT, fontFamily: F }}>
-            {activeSubTab === "di" ? "Danh sách Hồ sơ kháng nghị" : "Danh sách Hồ sơ kháng nghị"}
-          </span>
-          <Badge color="#1e40af" bg="#dbeafe">{currentList.length} hồ sơ</Badge>
-        </div>
-
+      {/* Action Bar — đối chiếu STG: chỉ giữ nút thao tác chính + Xuất Excel + refresh, bỏ Chọn hồ sơ/Tạo công văn/In danh sách/label+badge */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", padding: "10px 20px", background: "#f8fafc", borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {activeSubTab === "di" && (
             <>
-              <button
-                onClick={() => setShowChonHoSoModal(true)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "7px 16px", background: "#16a34a", color: "#fff",
-                  border: "none", borderRadius: 4, cursor: "pointer",
-                  fontSize: 12, fontWeight: 700, fontFamily: F,
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                }}>
-                <FolderCheck size={14} /> Chọn hồ sơ
-              </button>
-
-              <button
-                onClick={() => handleOpenTaoCongVan()}
-                style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "7px 16px", background: "#0284c7", color: "#fff",
-                  border: "none", borderRadius: 4, cursor: "pointer",
-                  fontSize: 12, fontWeight: 700, fontFamily: F,
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                }}>
-                Tạo công văn
-              </button>
-
               <button
                 onClick={handleChuyenHoSoDi}
                 style={{
@@ -2088,10 +2075,6 @@ export function HoSoKhangNghiView({ userRole, onTaoCongVan }: { userRole?: UserR
           <button onClick={handleXuatExcel} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
             <FileSpreadsheet size={14} color="#16a34a" /> Xuất Excel
           </button>
-
-          <button onClick={()=>window.print()} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
-            <Printer size={14} color="#16a34a" /> In danh sách
-          </button>
         </div>
       </div>
 
@@ -2109,7 +2092,7 @@ export function HoSoKhangNghiView({ userRole, onTaoCongVan }: { userRole?: UserR
               <th style={{ ...TH_STYLE, width: 45, textAlign: "center" }}>STT</th>
               <th style={{ ...TH_STYLE, width: 165 }}>{activeSubTab === "di" ? "THÔNG TIN VĂN THƯ ĐI" : "MÃ VĂN THƯ ĐẾN"}</th>
               <th style={{ ...TH_STYLE, width: 160 }}>THÔNG TIN KHÁNG NGHỊ</th>
-              <th style={{ ...TH_STYLE, width: 145 }}>SỐ BẢN ÁN / QĐ</th>
+              <th style={{ ...TH_STYLE, width: 145 }}>THÔNG TIN BẢN ÁN / QĐ</th>
               <th style={{ ...TH_STYLE, width: 210 }}>{activeSubTab === "di" ? "ĐƠN VỊ NHẬN / CÔNG VĂN CHUYỂN" : "ĐƠN VỊ GỬI / NGƯỜI NHẬN"}</th>
               <th style={{ ...TH_STYLE, width: 110, textAlign: "center" }}>TRẠNG THÁI</th>
               <th style={{ ...TH_STYLE, width: 110, textAlign: "center" }}>THAO TÁC</th>
