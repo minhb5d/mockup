@@ -25,6 +25,9 @@ const DANH_SACH_TTV = [
   "Lê Thị Lan - 05/05/1987 / Thẩm tra viên",
   "Hoàng Ngọc Chiêu - 10/10/1980 / Thẩm tra viên cao cấp",
   "Đinh Thị Vân Anh - 09/01/1989 / Thẩm tra viên",
+  // CR28/8: danh sách TTV phải bao gồm cả TTV biệt phái
+  "Bùi Thanh Tùng - 22/07/1990 / Thẩm tra viên (biệt phái)",
+  "Phạm Hồng Nhung - 03/12/1986 / Thẩm tra viên (biệt phái)",
 ];
 
 const DANH_SACH_LANH_DAO = [
@@ -34,6 +37,8 @@ const DANH_SACH_LANH_DAO = [
   "Nguyễn Biên Thùy - 21/02/1975 / Phó Vụ trưởng, Thẩm phán",
   "Trần Hồng Hà - 19/06/1974 / Vụ trưởng, Thẩm phán",
   "Nguyễn Văn Cường - 30/09/1976 / Phó Vụ trưởng, Thẩm phán",
+  // CR28/8: danh sách TP phải bao gồm cả TP biệt phái
+  "Đỗ Mạnh Cường - 14/05/1979 / Thẩm phán (biệt phái)",
 ];
 
 const TODAY_ISO = new Date().toISOString().slice(0, 10);

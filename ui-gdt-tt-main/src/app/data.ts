@@ -116,6 +116,7 @@ export interface DonCase {
   toa: string;
   capXetXu: string;
   thoiHieu?: string;
+  thoiHieuQuaHan?: boolean;
   hoiDongThamPhanPhucTham?: string;
   thamPhanChuToaPhucTham?: string;
 
@@ -436,6 +437,8 @@ function buildCase(loaiIdx: number, recIdx: number, globalId: number): DonCase {
   } else {
     thoiHieu = recIdx % 2 === 0 ? "3 năm" : "5 năm";
   }
+  // CR28/8: cảnh báo án hết/quá thời hiệu (tag đỏ, order lên trên ở tab Đơn chờ phê duyệt)
+  const thoiHieuQuaHan = thoiHieu !== "Không xác định thời hiệu" && recIdx % 4 === 1;
 
   const base = {
     id: globalId,
@@ -452,6 +455,7 @@ function buildCase(loaiIdx: number, recIdx: number, globalId: number): DonCase {
     toa,
     capXetXu: recIdx % 3 === 0 ? "Phúc thẩm" : "Sơ thẩm",
     thoiHieu,
+    thoiHieuQuaHan,
     soToTrinh: `${100 + globalId}/TT-PC`,
     ngayToTrinh: `${10 + (recIdx % 9)}/07/2026`,
     donViGuiCongVan: recIdx % 2 === 0 ? "TAND tỉnh Hà Nam" : "VKSND tối cao",
@@ -625,7 +629,16 @@ export function filterCasesByRole(cases: DonCase[], userRole?: string): DonCase[
 
 export function getCasesByTab(tab: TabId, userRole?: string): DonCase[] {
   const tabCases = CASES.filter((c) => c.tabs.includes(tab));
-  return filterCasesByRole(tabCases, userRole);
+  const filtered = filterCasesByRole(tabCases, userRole);
+  // CR28/8: tab "Đơn chờ phê duyệt" — đơn hết/quá thời hiệu order lên trên
+  if (tab === "don-cho-phe-duyet") {
+    return [...filtered].sort((a, b) => Number(!!b.thoiHieuQuaHan) - Number(!!a.thoiHieuQuaHan));
+  }
+  // CR28/8: tab "Tất cả" — đơn đã có vụ án trước đó ưu tiên hiển thị lên trên
+  if (tab === "tat-ca") {
+    return [...filtered].sort((a, b) => Number(!!b.tabs?.includes("da-co-vu-an")) - Number(!!a.tabs?.includes("da-co-vu-an")));
+  }
+  return filtered;
 }
 
 export function countByTab(tab: TabId, userRole?: string): string {

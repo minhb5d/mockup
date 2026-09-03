@@ -44,24 +44,31 @@ function CellThongTinDon({ c, tab }: { c: DonCase; tab?: TabId }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
       {c.type === "don" ? (
         <>
+          {/* CR28/8: tag Thụ lý mới (xanh lá) / Đã thụ lý (cam) — hiển thị tại TẤT CẢ các tab */}
+          {c.daThuLy ? (
+            <span style={{
+              display: "inline-flex", alignSelf: "flex-start", padding: "1px 8px", borderRadius: 10,
+              fontSize: 10.5, fontWeight: 600, fontFamily: F,
+              background: "#fef3c7", color: "#b45309", border: "1px solid #fde68a",
+            }}>
+              Đã thụ lý
+            </span>
+          ) : c.thuLyMoi ? (
+            <span style={{
+              display: "inline-flex", alignSelf: "flex-start", alignItems: "center", gap: 4,
+              padding: "1px 8px", borderRadius: 10, fontSize: 10.5, fontWeight: 600, fontFamily: F,
+              background: "#ecfdf5", color: "#16a34a", border: "1px solid #bbf7d0",
+            }}>
+              Thụ lý mới <span style={{ fontWeight: 400 }}>: {c.thuLyMoi}</span>
+            </span>
+          ) : null}
           <span style={{ fontSize: 12, fontWeight: 700, color: RED, fontFamily: F }}>
             Mã đơn: {c.maDon}
           </span>
-          {c.daThuLy ? (
-            <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>Đã thụ lý</span>
-          ) : (
-            <>
-              {c.soCV && (
-                <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
-                  CV chuyển: {c.soCV} - {c.ngayCV}
-                </span>
-              )}
-              {c.thuLyMoi && (
-                <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
-                  Thụ lý mới: {c.thuLyMoi}
-                </span>
-              )}
-            </>
+          {!c.daThuLy && c.soCV && (
+            <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
+              CV chuyển: {c.soCV} - {c.ngayCV}
+            </span>
           )}
           {isDaCoVuAn && c.soToTrinh && (
             <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
@@ -182,9 +189,22 @@ function CellBA({ c, userRole }: { c: DonCase; userRole?: UserRoleType }) {
         </span>
       )}
       {c.thoiHieu && (
-        <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
-          <span style={{ color: TEXT }}>Thời hiệu: </span>
-          <span style={{ color: c.thoiHieu === "Không xác định thời hiệu" ? "#047857" : "#c2410c", fontWeight: 600 }}>{c.thoiHieu}</span>
+        <span
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 4, alignSelf: "flex-start",
+            padding: "2px 8px", borderRadius: 10, fontSize: 10.5, fontWeight: 600, fontFamily: F,
+            ...(c.thoiHieuQuaHan
+              ? { background: "#fee2e2", color: "#b91c1c" }
+              : c.thoiHieu === "Không xác định thời hiệu"
+                ? { background: "#f3f4f6", color: "#4b5563" }
+                : { background: "#d1fae5", color: "#047857" }),
+          }}
+        >
+          {c.thoiHieuQuaHan
+            ? `Án quá thời hiệu ${c.thoiHieu}`
+            : c.thoiHieu === "Không xác định thời hiệu"
+              ? "Không xác định thời hiệu giải quyết"
+              : `Trong thời hạn giải quyết ${c.thoiHieu}`}
         </span>
       )}
       {showQHPL && (
@@ -452,6 +472,7 @@ function CaseTable({
   onSelectedIdsChange,
   onVuAnAction,
   onXuLyTBGQ,
+  onXemChiTiet,
 }: {
   tab: TabId;
   onGiaoTieuHoSo: () => void;
@@ -462,6 +483,7 @@ function CaseTable({
   onSelectedIdsChange: (ids: number[]) => void;
   onVuAnAction?: (action: VuAnAction, c: DonCase) => void;
   onXuLyTBGQ?: (c: DonCase) => void;
+  onXemChiTiet?: (c: DonCase) => void;
 }) {
   const cases = overrideCases ?? getCasesByTab(tab, userRole);
 
@@ -516,10 +538,16 @@ function CaseTable({
               </td>
             </tr>
           )}
-          {cases.map((c, idx) => (
+          {cases.map((c, idx) => {
+            // CR28/8: đơn đã có vụ án trước đó — đánh dấu thanh màu xanh dọc cạnh STT (tab Tất cả)
+            const daCoVuAnTruocDo = tab === "tat-ca" && c.tabs?.includes("da-co-vu-an");
+            return (
             <tr
               key={c.id}
-              style={{ background: idx % 2 === 0 ? "#ffffff" : "#fafafa" }}
+              style={{
+                background: idx % 2 === 0 ? "#ffffff" : "#fafafa",
+                boxShadow: daCoVuAnTruocDo ? "inset 3px 0 0 #2563eb" : undefined,
+              }}
               onMouseEnter={(e) => (e.currentTarget.style.background = "#f0f9ff")}
               onMouseLeave={(e) =>
                 (e.currentTarget.style.background = idx % 2 === 0 ? "#ffffff" : "#fafafa")
@@ -544,7 +572,7 @@ function CaseTable({
               <td style={{ ...TD_STYLE, textAlign: "center" }}>
                 <div style={{ display: "flex", justifyContent: "center", gap: 3 }}>
                   <button
-                    onClick={() => alert(`Xem chi tiết ${c.maDon || c.maVanThuDen || c.id}`)}
+                    onClick={() => onXemChiTiet?.(c)}
                     style={{ background: "none", border: "none", cursor: "pointer", padding: 4, borderRadius: 4 }}
                     title="Xem chi tiết"
                   >
@@ -553,7 +581,8 @@ function CaseTable({
                 </div>
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
 
@@ -603,6 +632,7 @@ export function GiaoTieuHoSoView({ onClose, userRole }: { onClose: () => void; u
       toa: "Tòa án nhân dân cấp cao tại Hà Nội",
       thoiHieu: "1 năm",
       loaiAn: "Hình sự",
+      ttvDaPhanCong: "Lý Thái Phúc, 05/10/1986 / Thẩm tra viên",
     },
     {
       maDon: "6965",
@@ -617,6 +647,7 @@ export function GiaoTieuHoSoView({ onClose, userRole }: { onClose: () => void; u
       toa: "Tòa án nhân dân cấp cao tại Hà Nội",
       thoiHieu: "2 năm",
       loaiAn: "Hình sự",
+      ttvDaPhanCong: "Vũ Biêu Thư, 03/02/1984 / Thẩm tra viên",
     },
   ];
 
@@ -1002,12 +1033,10 @@ export function GiaoTieuHoSoView({ onClose, userRole }: { onClose: () => void; u
                         </select>
                       </td>
                       <td style={TD_STYLE}>
-                        <select defaultValue="" style={cellInputStyle}>
-                          <option value="" disabled>Chọn người nhận</option>
-                          <option value="1">Lý Thái Phúc, 05/10/1986 / Thẩm tra viên</option>
-                          <option value="2">Vũ Biêu Thư, 03/02/1984 / Thẩm tra viên</option>
-                          <option value="3">Trần Minh Đức, 19/11/1979 / Thẩm phán</option>
-                        </select>
+                        {/* CR28/8: TTV không được chỉnh sửa — lấy trực tiếp theo vụ đã phân công trước đó */}
+                        <div style={{ ...cellInputStyle, display: "flex", alignItems: "center", background: "#f3f4f6", color: TEXT, cursor: "default" }}>
+                          {gc.ttvDaPhanCong || "-"}
+                        </div>
                       </td>
                       <td style={TD_STYLE}>
                         <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
@@ -1101,13 +1130,16 @@ function TabBar({
     >
       {TAB_CONFIG.map((t) => {
         const active = t.id === activeTab;
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const _count = countByTab(t.id as TabId, userRole);
+        const count = countByTab(t.id as TabId, userRole);
+        // CR28/8: chỉ 2 tab này hiển thị cảnh báo số lượng đơn (đơn chờ phê duyệt chưa
+        // chính thức sang Vụ; đã có vụ án nhưng cán bộ chưa xử lý)
+        const showBadge = (t.id === "don-cho-phe-duyet" || t.id === "da-co-vu-an") && Number(count) > 0;
         return (
           <button
             key={t.id}
             onClick={() => onTabChange(t.id as TabId)}
             style={{
+              display: "flex", alignItems: "center", gap: 6,
               padding: "12px 16px", fontSize: 13, fontFamily: F, fontWeight: active ? 600 : 400,
               background: "none", border: "none", cursor: "pointer",
               color: active ? RED : MUTED,
@@ -1117,6 +1149,16 @@ function TabBar({
             }}
           >
             {t.label}
+            {showBadge && (
+              <span style={{
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                minWidth: 18, height: 18, padding: "0 5px", borderRadius: 9,
+                background: RED, color: "#fff", fontSize: 11, fontWeight: 700, fontFamily: F,
+                lineHeight: "18px",
+              }}>
+                {count}
+              </span>
+            )}
           </button>
         );
       })}
@@ -1177,6 +1219,8 @@ export default function NhanDonTLVuAnView({
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [showTraDon, setShowTraDon] = useState(false);
   const [tbgqCase, setTbgqCase] = useState<DonCase | null>(null);
+  // CR28/8: xem chi tiết đơn = side panel (không mở màn hình mới)
+  const [xemChiTietCase, setXemChiTietCase] = useState<DonCase | null>(null);
   const currentCases = getCasesByTab(activeTab, userRole);
   const visibleCases = currentCases;
   const selectedCases = currentCases.filter((c) => selectedIds.includes(c.id));
@@ -1204,9 +1248,56 @@ export default function NhanDonTLVuAnView({
       <TabBar activeTab={activeTab} userRole={userRole} onTabChange={setActiveTab} />
       <SearchFilterPanel expanded={filterExpanded} userRole={userRole} onToggle={() => setFilterExpanded((v) => !v)} />
       <ActionBar tab={activeTab} selectedCases={selectedCases} onTraDon={handleTraDon} onGiaoTieuHoSo={onGiaoTieuHoSo} onInBaoCao={() => onInBaoCao?.(activeTab)} />
-      <CaseTable tab={activeTab} userRole={userRole} onGiaoTieuHoSo={onGiaoTieuHoSo} onThemHoSo={onThemHoSo} overrideCases={visibleCases} selectedIds={selectedIds} onSelectedIdsChange={setSelectedIds} onVuAnAction={handleVuAnAction} onXuLyTBGQ={setTbgqCase} />
+      <CaseTable tab={activeTab} userRole={userRole} onGiaoTieuHoSo={onGiaoTieuHoSo} onThemHoSo={onThemHoSo} overrideCases={visibleCases} selectedIds={selectedIds} onSelectedIdsChange={setSelectedIds} onVuAnAction={handleVuAnAction} onXuLyTBGQ={setTbgqCase} onXemChiTiet={setXemChiTietCase} />
       {showTraDon && <TraDonModal cases={selectedCases} onClose={() => setShowTraDon(false)} onSuccess={() => setSelectedIds([])} />}
       {tbgqCase && <XuLyTBGQCuModal c={tbgqCase} onClose={() => setTbgqCase(null)} />}
+      {xemChiTietCase && <ChiTietDonSidePanel c={xemChiTietCase} userRole={userRole} onClose={() => setXemChiTietCase(null)} />}
     </>
+  );
+}
+
+// ── CR28/8: side panel xem chi tiết đơn (thay vì mở màn hình mới) ─────────────
+function ChiTietDonSidePanel({ c, userRole, onClose }: { c: DonCase; userRole?: UserRoleType; onClose: () => void }) {
+  // CR28/8: trường null không hiển thị "-" — ẩn luôn dòng đó
+  const row: [string, string | undefined | false][] = [
+    ["Mã đơn", c.maDon || c.maVanThuDen || String(c.id)],
+    ["Hình thức", c.hinhThuc],
+    ["Trạng thái thụ lý", c.daThuLy ? "Đã thụ lý" : c.thuLyMoi ? `Thụ lý mới${c.thuLyMoi ? " – " + c.thuLyMoi : ""}` : undefined],
+    ["Thẩm phán (Dự kiến)", c.thamPhan],
+    ["Người đứng đơn / Người khiếu nại", c.nguoiKhieuNai || c.ndd],
+    ["Bị cáo / Bị đơn", c.biCao],
+    ["Số BA/QĐ", c.soBA],
+    ["Ngày BA/QĐ", c.ngayBA],
+    ["Tòa ra BA/QĐ", c.toa],
+    ["Loại án", c.loaiAn],
+    ["Thời hiệu", c.thoiHieuQuaHan ? `Án quá thời hiệu ${c.thoiHieu}` : c.thoiHieu],
+  ].filter(([, v]) => !!v) as [string, string][];
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 1600, display: "flex", justifyContent: "flex-end" }}>
+      <div style={{ position: "absolute", inset: 0, background: "rgba(15,23,42,0.35)" }} onClick={onClose} />
+      <div style={{
+        position: "relative", width: 460, maxWidth: "92vw", height: "100%", background: "#fff",
+        boxShadow: "-8px 0 24px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column",
+        fontFamily: F, animation: "none",
+      }}>
+        <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: F }}>Chi tiết đơn</span>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+            <X size={18} color={MUTED} />
+          </button>
+        </div>
+        <div style={{ flex: 1, overflow: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
+          {row.map(([label, value]) => (
+            <div key={label}>
+              <div style={{ fontSize: 11, color: MUTED, fontFamily: F, marginBottom: 2 }}>{label}</div>
+              <div style={{ fontSize: 13, color: TEXT, fontFamily: F, fontWeight: 500 }}>{value}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ padding: "12px 20px", borderTop: `1px solid ${BORDER}`, textAlign: "right" }}>
+          <button onClick={onClose} style={{ padding: "7px 16px", borderRadius: 4, border: `1px solid ${BORDER}`, background: "#fff", fontFamily: F, fontSize: 13, cursor: "pointer" }}>Đóng</button>
+        </div>
+      </div>
+    </div>
   );
 }

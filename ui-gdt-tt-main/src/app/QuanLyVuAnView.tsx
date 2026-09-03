@@ -26,6 +26,8 @@ export interface VuAnRow {
   toa: string; capXetXu: string;
   thoiHieu?: string;
   anLoai?: "chi-dao" | "quoc-hoi" | "tvtn" | "tu-hinh" | string;
+  // CR28/8: 1 vụ có thể vừa Án tử hình vừa Án người chưa thành niên,... — hiển thị đủ tag, không chỉ 1
+  anLoaiTags?: string[];
   loaiAn?: string;
   quanHePhapLuat?: string;
   nkn: string; biCao: string; ndd: string;
@@ -48,6 +50,8 @@ export interface VuAnRow {
   // TH-064: địa chỉ người đứng đơn
   diaChiNDD?: string;
   extraTags?: string[];
+  // CR28/8: tội danh chính của bị cáo được khiếu nại (hoặc bị cáo đầu vụ nếu không có)
+  toiDanhChinh?: string;
 }
 
 export interface VuAnGroup {
@@ -668,7 +672,7 @@ export function QuickViewDanhSachDonModal({
                 <th style={TH_STYLE}>STT</th>
                 <th style={TH_STYLE}>MÃ ĐƠN</th>
                 <th style={TH_STYLE}>THÔNG TIN THỤ LÝ</th>
-                <th style={TH_STYLE}>NGƯỜI ĐỨNG ĐƠN</th>
+                <th style={TH_STYLE}>HỌ VÀ TÊN</th>
                 <th style={{ ...TH_STYLE, textAlign: "center" }}>PHÂN LOẠI</th>
                 <th style={TH_STYLE}>THÔNG TIN TRÌNH (TRÌNH ĐẾN AI)</th>
                 <th style={{ ...TH_STYLE, textAlign: "center" }}>KẾT QUẢ GIẢI QUYẾT</th>
@@ -910,10 +914,13 @@ export default function QuanLyVuAnView({
     })
     .filter(Boolean) as VuAnGroup[];
 
+  // CR28/8: cảnh báo số lượng vụ tại tab Đang giải quyết (và Đã giải quyết, cho đồng bộ)
+  const countDangGiaiQuyet = roleGroups.filter((g) => g.rows.some((r) => r.kqGiaiQuyet === "chua-co" || r.kqGiaiQuyet === "da-co-con-don" || !r.kqGiaiQuyet)).length;
+  const countDaGiaiQuyet = roleGroups.filter((g) => g.rows.some((r) => r.kqGiaiQuyet === "da-co")).length;
   const tabs = [
-    { id: "tat-ca", label: "Tất cả" },
-    { id: "dang-giai-quyet", label: "Đang giải quyết" },
-    { id: "da-giai-quyet", label: "Đã giải quyết" },
+    { id: "tat-ca", label: "Tất cả", count: undefined as number | undefined },
+    { id: "dang-giai-quyet", label: "Đang giải quyết", count: countDangGiaiQuyet },
+    { id: "da-giai-quyet", label: "Đã giải quyết", count: countDaGiaiQuyet },
   ];
 
   const paginBtn: React.CSSProperties = {
@@ -941,8 +948,18 @@ export default function QuanLyVuAnView({
             const active = t.id === activeTab;
             return (
               <button key={t.id} onClick={() => setActiveTab(t.id as VuAnTabId)}
-                style={{ padding: "10px 16px", fontSize: 13, fontFamily: F, fontWeight: active ? 600 : 400, background: "none", border: "none", cursor: "pointer", color: active ? RED : MUTED, borderBottom: active ? `2px solid ${RED}` : "2px solid transparent", marginBottom: -1, whiteSpace: "nowrap" }}>
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", fontSize: 13, fontFamily: F, fontWeight: active ? 600 : 400, background: "none", border: "none", cursor: "pointer", color: active ? RED : MUTED, borderBottom: active ? `2px solid ${RED}` : "2px solid transparent", marginBottom: -1, whiteSpace: "nowrap" }}>
                 {t.label}
+                {typeof t.count === "number" && t.count > 0 && (
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    minWidth: 18, height: 18, padding: "0 5px", borderRadius: 9,
+                    background: RED, color: "#fff", fontSize: 11, fontWeight: 700, fontFamily: F,
+                    lineHeight: "18px",
+                  }}>
+                    {t.count}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -1075,17 +1092,29 @@ export default function QuanLyVuAnView({
                                   <span style={{ fontSize: 10.5, color: "#64748b", fontFamily: F }}>
                                     Ngày đơn: {row.ngayThuLy}
                                   </span>
-                                  {row.anLoai && (
-                                    <Tag type={row.anLoai} />
-                                  )}
+                                  {/* CR28/8: hiển thị đủ tag đặc thù (Án tử hình, Án người chưa thành niên,...) không chỉ 1 tag */}
+                                  {(row.anLoaiTags && row.anLoaiTags.length > 0
+                                    ? row.anLoaiTags
+                                    : row.anLoai ? [row.anLoai] : []
+                                  ).map((t, i) => (
+                                    <Tag key={i} type={t} />
+                                  ))}
                                   {row.congVanChinh && (
                                     <span style={{ fontSize: 10.5, color: "#64748b", fontFamily: F }}>
                                       CV chính: {row.congVanChinh}
                                     </span>
                                   )}
+                                  {/* CR28/8: bỏ hiển thị chi tiết ý kiến chỉ đạo ra ngoài bảng danh sách, chỉ giữ tag ngắn gọn */}
                                   {row.yKienChiDao && (
-                                    <span style={{ fontSize: 10.5, color: "#b45309", fontFamily: F }}>
-                                      Chỉ đạo: {row.yKienChiDao}
+                                    <span
+                                      title={row.yKienChiDao}
+                                      style={{
+                                        display: "inline-flex", alignSelf: "flex-start", padding: "1px 6px", borderRadius: 8,
+                                        fontSize: 10, fontWeight: 600, fontFamily: F,
+                                        background: "#fef3c7", color: "#b45309", border: "1px solid #fde68a",
+                                      }}
+                                    >
+                                      Có ý kiến chỉ đạo
                                     </span>
                                   )}
                                   {row.congVanChuyenDon && (
@@ -1108,18 +1137,12 @@ export default function QuanLyVuAnView({
                                 {/* Cột 2: Thông tin Bản án / QĐ & QHPL */}
                                 <td rowSpan={totalRows} style={{ ...TD_STYLE, verticalAlign: "middle", background: "#ffffff", padding: "6px 10px", lineHeight: 1.35 }}>
                                   <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                                    {/* CR28/8: hiển thị 1 dòng theo form Số BA/QĐ: [số BA] - [ngày BA] - [tòa ra BA] */}
                                     <span style={{ fontSize: 11, fontFamily: F }}>
-                                      <span style={{ color: TEXT }}>Số BA: </span>
-                                      <span style={{ color: "#2563eb", fontWeight: 600 }}>{formatSoBA(row.soBA, effectiveLoaiAn)}</span>
-                                      {row.ngayBA && (
-                                        <>
-                                          <span style={{ color: TEXT }}> Ngày: </span>
-                                          <span style={{ color: "#2563eb" }}>{row.ngayBA}</span>
-                                        </>
-                                      )}
-                                    </span>
-                                    <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
-                                      <span style={{ color: TEXT }}>Tại: </span>{row.toa}
+                                      <span style={{ color: TEXT }}>Số BA/QĐ: </span>
+                                      <span style={{ color: "#2563eb", fontWeight: 600 }}>
+                                        {formatSoBA(row.soBA, effectiveLoaiAn)}{row.ngayBA ? ` - ${row.ngayBA}` : ""}{row.toa ? ` - ${row.toa}` : ""}
+                                      </span>
                                     </span>
                                     {row.thoiHieu && (
                                       <span style={{ fontSize: 10.5, color: "#b45309", fontFamily: F }}>
@@ -1153,7 +1176,9 @@ export default function QuanLyVuAnView({
                                     {row.biCao && (
                                       <span style={{ fontSize: 11, fontFamily: F }} title={row.biCao}>
                                         <span style={{ color: TEXT, fontWeight: 500 }}>{label2}:</span>{" "}
-                                        <span style={{ fontWeight: 600, color: TEXT }}>{row.biCao}</span>
+                                        <span style={{ fontWeight: 600, color: TEXT }}>
+                                          {row.biCao}{row.toiDanhChinh ? ` - ${row.toiDanhChinh}` : ""}
+                                        </span>
                                       </span>
                                     )}
                                     {row.ndd && (
@@ -1289,18 +1314,12 @@ export default function QuanLyVuAnView({
                       </td>
                       <td style={TD_STYLE}>
                         <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                          {/* CR28/8: hiển thị 1 dòng theo form Số BA/QĐ: [số BA] - [ngày BA] - [tòa ra BA] */}
                           <span style={{ fontSize: 11, fontFamily: F }}>
-                            <span style={{ color: TEXT }}>Số BA: </span>
-                            <span style={{ color: "#2563eb", fontWeight: 600 }}>{formatSoBA(row.soBA, effectiveLoaiAn)}</span>
-                            {row.ngayBA && (
-                              <>
-                                <span style={{ color: TEXT }}> Ngày: </span>
-                                <span style={{ color: "#2563eb" }}>{row.ngayBA}</span>
-                              </>
-                            )}
-                          </span>
-                          <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
-                            <span style={{ color: TEXT }}>Tại: </span>{row.toa}
+                            <span style={{ color: TEXT }}>Số BA/QĐ: </span>
+                            <span style={{ color: "#2563eb", fontWeight: 600 }}>
+                              {formatSoBA(row.soBA, effectiveLoaiAn)}{row.ngayBA ? ` - ${row.ngayBA}` : ""}{row.toa ? ` - ${row.toa}` : ""}
+                            </span>
                           </span>
                           {row.thoiHieu && (
                             <span style={{ fontSize: 11, color: TEXT, fontFamily: F }}>
@@ -1371,20 +1390,21 @@ export default function QuanLyVuAnView({
 
                           <div style={{ display: "flex", flexDirection: "column", gap: 2, borderTop: `1px dashed #e5e7eb`, paddingTop: 4 }}>
                             <span style={{ fontSize: 10, color: MUTED, fontFamily: F, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>Hồ sơ</span>
+                            {/* CR28/8: 3 trạng thái — Chưa có phiếu mượn/trả (tag đỏ) / Đã có phiếu mượn/trả (click → tab hồ sơ phiếu mượn) / Đã có hồ sơ */}
                             {row.trangThaiHoSo === "chua-co" && (
-                              <span style={{ fontSize: 11, color: "#6b7280", fontFamily: F }}>Chưa có hồ sơ</span>
+                              <Badge color="#991b1b" bg="#fee2e2">Chưa có phiếu mượn/trả</Badge>
                             )}
-                            {row.trangThaiHoSo === "dang-muon" && (
-                              <Badge color="#92400e" bg="#fef3c7">Đang mượn hồ sơ</Badge>
+                            {(row.trangThaiHoSo === "dang-muon" || row.trangThaiHoSo === "da-tra" || row.trangThaiHoSo === "da-chuyen") && (
+                              <button
+                                onClick={() => onSelectVuAn(group.id, "muon-tra-ho-so")}
+                                style={{ border: "none", padding: 0, background: "none", cursor: "pointer", textAlign: "left" }}
+                                title="Xem tab hồ sơ phiếu mượn"
+                              >
+                                <Badge color="#92400e" bg="#fef3c7">Đã có phiếu mượn/trả</Badge>
+                              </button>
                             )}
                             {row.trangThaiHoSo === "da-co" && (
                               <Badge color="#065f46" bg="#d1fae5">Đã có hồ sơ</Badge>
-                            )}
-                            {row.trangThaiHoSo === "da-tra" && (
-                              <Badge color="#1e40af" bg="#dbeafe">Đã trả hồ sơ</Badge>
-                            )}
-                            {row.trangThaiHoSo === "da-chuyen" && (
-                              <Badge color="#6d28d9" bg="#ede9fe">Đã chuyển hồ sơ</Badge>
                             )}
                           </div>
 
@@ -1393,11 +1413,24 @@ export default function QuanLyVuAnView({
                             {row.kqGiaiQuyet === "chua-co" && (
                               <span style={{ fontSize: 11, color: "#6b7280", fontFamily: F }}>Chưa có kết quả</span>
                             )}
+                            {/* CR28/8: KQGQ ở cột trạng thái link sang KQGQ bên trong (nếu có) */}
                             {row.kqGiaiQuyet === "da-co" && (
-                              <Badge color="#065f46" bg="#d1fae5">Đã có kết quả</Badge>
+                              <button
+                                onClick={() => onSelectVuAn(group.id, "giai-quyet-vb")}
+                                style={{ border: "none", padding: 0, background: "none", cursor: "pointer" }}
+                                title="Xem chi tiết kết quả giải quyết"
+                              >
+                                <Badge color="#065f46" bg="#d1fae5">Đã có kết quả</Badge>
+                              </button>
                             )}
                             {row.kqGiaiQuyet === "da-co-con-don" && (
-                              <Badge color="#92400e" bg="#fef3c7">Đã có KQ – còn đơn TLM</Badge>
+                              <button
+                                onClick={() => onSelectVuAn(group.id, "giai-quyet-vb")}
+                                style={{ border: "none", padding: 0, background: "none", cursor: "pointer" }}
+                                title="Xem chi tiết kết quả giải quyết"
+                              >
+                                <Badge color="#92400e" bg="#fef3c7">Đã có KQ – còn đơn TLM</Badge>
+                              </button>
                             )}
                           </div>
                         </div>
@@ -1559,7 +1592,7 @@ function TabDanhSachDon({ detail }: { detail: VuAnDetailData }) {
                 <input type="checkbox" checked={danhSachDon.length > 0 && selectedDon.length === danhSachDon.length}
                   onChange={toggleAll} style={{ cursor: "pointer" }} />
               </th>
-              {["STT", "Mã đơn", "Thông tin giải quyết đơn", "Ngày nhận đơn", "Người đứng đơn", "Phân loại", "Nội dung", "Thao tác"].map((h) => (
+              {["STT", "Mã đơn", "Thông tin giải quyết đơn", "Ngày nhận đơn", "Họ và tên", "Phân loại", "Nội dung", "Thao tác"].map((h) => (
                 <th key={h} style={TH_STYLE}>{h}</th>
               ))}
             </tr>
