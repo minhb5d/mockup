@@ -339,3 +339,59 @@ export function TaiKhoanPhanQuyenBar({
     </div>
   );
 }
+
+// ── Dashboard Vụ GĐ,KT — mô hình phân quyền 5 role (theo HANDOFF DASHBOARD_VU_GDKT) ────
+
+export type DashboardRoleType = "ttv" | "tham-phan" | "pho-vu-truong" | "vu-truong" | "bctk-vu";
+
+export type AccountTypeId = "ttv-gdkt" | "tham-phan-gdkt" | "pho-vu-truong-gdkt" | "vu-truong-gdkt" | "bctk-vu-gdkt";
+
+export interface AccountTypeProfile {
+  accountType: AccountTypeId;
+  dashboardRole: DashboardRoleType;
+  label: string;
+}
+
+const ACCOUNT_TYPE_PROFILES: Record<AccountTypeId, AccountTypeProfile> = {
+  "ttv-gdkt": { accountType: "ttv-gdkt", dashboardRole: "ttv", label: "Thẩm tra viên / Thư ký giải quyết án" },
+  "tham-phan-gdkt": { accountType: "tham-phan-gdkt", dashboardRole: "tham-phan", label: "Thẩm phán" },
+  "pho-vu-truong-gdkt": { accountType: "pho-vu-truong-gdkt", dashboardRole: "pho-vu-truong", label: "Phó Vụ trưởng" },
+  "vu-truong-gdkt": { accountType: "vu-truong-gdkt", dashboardRole: "vu-truong", label: "Vụ trưởng" },
+  "bctk-vu-gdkt": { accountType: "bctk-vu-gdkt", dashboardRole: "bctk-vu", label: "Tài khoản báo cáo thống kê Vụ" },
+};
+
+export function getAccountTypeProfile(accountType: AccountTypeId): AccountTypeProfile {
+  return ACCOUNT_TYPE_PROFILES[accountType];
+}
+
+export interface DashboardPermission {
+  dashboardRole: DashboardRoleType;
+  label: string;
+  /** Phạm vi dữ liệu: self = cá nhân, assigned = được phân công, assigned-scope = phạm vi phụ trách, department = toàn Vụ */
+  dataScope: "self" | "assigned" | "assigned-scope" | "department";
+  /** true = chỉ xem, không thao tác/phê duyệt/sửa hồ sơ nghiệp vụ */
+  readOnly: boolean;
+  /** true = được thấy & xử lý KPI quản trị "Chưa phân công TTV" */
+  showChuaPhanCongTTVAdmin: boolean;
+  /** true = được xem bảng hiệu suất cán bộ (toàn Vụ hoặc phạm vi phụ trách) */
+  showHieuSuatCanBo: boolean;
+  /** true = drill-down mở màn nghiệp vụ thật; false (BCTK) = chỉ mở popup trích ngang read-only */
+  canOpenBusinessScreen: boolean;
+  choPheDuyetLabel: string;
+}
+
+export function getDashboardPermission(role: DashboardRoleType): DashboardPermission {
+  switch (role) {
+    case "vu-truong":
+      return { dashboardRole: role, label: "Vụ trưởng", dataScope: "department", readOnly: false, showChuaPhanCongTTVAdmin: true, showHieuSuatCanBo: true, canOpenBusinessScreen: true, choPheDuyetLabel: "Chờ tôi phê duyệt" };
+    case "pho-vu-truong":
+      return { dashboardRole: role, label: "Phó Vụ trưởng", dataScope: "assigned-scope", readOnly: false, showChuaPhanCongTTVAdmin: true, showHieuSuatCanBo: true, canOpenBusinessScreen: true, choPheDuyetLabel: "Chờ tôi cho ý kiến" };
+    case "tham-phan":
+      return { dashboardRole: role, label: "Thẩm phán", dataScope: "assigned", readOnly: false, showChuaPhanCongTTVAdmin: false, showHieuSuatCanBo: false, canOpenBusinessScreen: true, choPheDuyetLabel: "Đã trình chờ duyệt" };
+    case "bctk-vu":
+      return { dashboardRole: role, label: "Tài khoản báo cáo thống kê Vụ", dataScope: "department", readOnly: true, showChuaPhanCongTTVAdmin: true, showHieuSuatCanBo: true, canOpenBusinessScreen: false, choPheDuyetLabel: "Chờ phê duyệt" };
+    case "ttv":
+    default:
+      return { dashboardRole: "ttv", label: "Thẩm tra viên / Thư ký giải quyết án", dataScope: "self", readOnly: false, showChuaPhanCongTTVAdmin: false, showHieuSuatCanBo: false, canOpenBusinessScreen: true, choPheDuyetLabel: "Đã trình chờ duyệt" };
+  }
+}

@@ -6,7 +6,7 @@ import {
   ArrowLeftRight, FileSpreadsheet, Paperclip, FolderPlus, Trash2,
 } from "lucide-react";
 import Sidebar, { type View } from "./Sidebar";
-import DashboardGDKTView from "./DashboardGDKTView";
+import DashboardVuGDKTView from "./DashboardVuGDKTView";
 import HoSoTongHopVuAnView from "./HoSoTongHopVuAnView";
 import {
   TAB_CONFIG, getCasesByTab, countByTab, LOAI_AN_OPTIONS,
@@ -927,19 +927,238 @@ function ToNhomConfigView() {
   {assign&&<div style={modalOverlay}><div style={{...modalCard,maxWidth:760}}><h3>Gán đối tượng – {assign.ten}</h3><div style={{display:"grid",gridTemplateColumns:"1fr 80px 1fr",gap:12}}><div><b>Chưa gán</b>{people.filter(p=>!assign.members.includes(p.split(" - ")[0])).map(p=><div key={p}><button onClick={()=>{const name=p.split(" - ")[0]; const next={...assign,members:[...assign.members,name]};setAssign(next);setGroups(v=>v.map(x=>x.id===next.id?next:x));}}>›</button> {p}</div>)}</div><div style={{textAlign:"center"}}>› / ‹</div><div><b>Đã gán</b>{assign.members.map((m:string)=><div key={m}><button onClick={()=>{const next={...assign,members:assign.members.filter((x:string)=>x!==m)};setAssign(next);setGroups(v=>v.map(x=>x.id===next.id?next:x));}}>‹</button> {m}</div>)}</div></div><div style={{marginTop:12,textAlign:"right"}}><button onClick={()=>setAssign(null)}>Đóng</button> <button onClick={()=>setAssign(null)}>Cập nhật tổ</button></div></div></div>}</div>
 }
 
-// Placeholder — mục mới phát hiện trên STG, sẽ audit & xây dựng chi tiết khi tới lượt trong danh sách công việc
+// ── Cấu hình phân công Thẩm phán ─────────────────────────────────────────────
+
+const CHTP_HO = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ", "Đặng", "Bùi", "Đỗ", "Ngô", "Dương", "Lý"];
+const CHTP_DEM = ["Văn", "Thị", "Hữu", "Đức", "Minh", "Quốc", "Ngọc", "Xuân", "Thanh", "Tiến"];
+const CHTP_TEN = ["Tiến", "Hải", "Hùng", "Mạnh", "Hiền", "Trang", "Anh", "Bình", "Cường", "Dũng", "Giang", "Hà", "Khánh", "Linh", "Nam", "Phúc", "Quang", "Sơn", "Thắng", "Vinh", "Yến"];
+const CHTP_DONVI = ["Vụ Giám đốc kiểm tra I", "Vụ Giám đốc kiểm tra II", "Vụ Giám đốc kiểm tra III", "Hội đồng Thẩm phán TANDTC", "Tòa hình sự TAND cấp cao"];
+const CHTP_CAP = ["Thẩm phán TAND tối cao", "Thẩm phán cao cấp", "Thẩm phán trung cấp"];
+function chtpBuildJudges(n: number) {
+  const rows: { id: number; ten: string; cap: string; donVi: string; soVuDangCam: number }[] = [];
+  let i = 0;
+  for (let h = 0; h < CHTP_HO.length && rows.length < n; h++) {
+    for (let d = 0; d < CHTP_DEM.length && rows.length < n; d++) {
+      const ten = `${CHTP_HO[h]} ${CHTP_DEM[d]} ${CHTP_TEN[i % CHTP_TEN.length]}`;
+      rows.push({
+        id: rows.length + 1,
+        ten,
+        cap: CHTP_CAP[rows.length % CHTP_CAP.length],
+        donVi: CHTP_DONVI[rows.length % CHTP_DONVI.length],
+        soVuDangCam: 3 + (rows.length * 7) % 22,
+      });
+      i++;
+    }
+  }
+  return rows.slice(0, n);
+}
+const CHTP_JUDGES = chtpBuildJudges(43);
+const CHTP_LOAI_NGHI = ["Phép năm", "Nghỉ ốm", "Công tác", "Khác"];
+
+type NghiPhepRow = { id: number; thamPhan: string; loaiNghi: string; tuNgay: string; denNgay: string; vuDangCam: number };
+
+function chtpSoNgay(tuNgay: string, denNgay: string): number {
+  const [d1, m1, y1] = tuNgay.split("/").map(Number);
+  const [d2, m2, y2] = denNgay.split("/").map(Number);
+  if (!d1 || !d2) return 0;
+  const t1 = new Date(y1, m1 - 1, d1).getTime();
+  const t2 = new Date(y2, m2 - 1, d2).getTime();
+  return Math.max(1, Math.round((t2 - t1) / 86400000) + 1);
+}
+
+function NghiPhepModal({ initial, onClose, onSave }: { initial: Partial<NghiPhepRow> | null; onClose: () => void; onSave: (r: Omit<NghiPhepRow, "id" | "vuDangCam">) => void }) {
+  const [thamPhan, setThamPhan] = useState(initial?.thamPhan || "");
+  const [loaiNghi, setLoaiNghi] = useState(initial?.loaiNghi || "");
+  const [tuNgay, setTuNgay] = useState(initial?.tuNgay || "");
+  const [denNgay, setDenNgay] = useState(initial?.denNgay || "");
+  const inputSt: React.CSSProperties = { width: "100%", padding: "7px 8px", fontSize: 12, border: `1px solid ${BORDER}`, borderRadius: 4, fontFamily: F, outline: "none" };
+  const labelSt: React.CSSProperties = { fontSize: 12, color: TEXT, fontFamily: F, marginBottom: 4, display: "block" };
+  const submit = () => {
+    if (!thamPhan || !loaiNghi || !tuNgay) { alert("Vui lòng nhập đủ Thẩm phán, Loại nghỉ, Từ ngày"); return; }
+    onSave({ thamPhan, loaiNghi, tuNgay, denNgay: denNgay || tuNgay });
+  };
+  return (
+    <div style={modalOverlay}>
+      <div style={{ ...modalCard, maxWidth: 480 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: TEXT, fontFamily: F }}>Đăng ký nghỉ phép/vắng mặt</div>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}><X size={18} /></button>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div>
+            <label style={labelSt}><span style={{ color: RED }}>*</span> Thẩm phán</label>
+            <select value={thamPhan} onChange={e => setThamPhan(e.target.value)} style={{ ...inputSt, background: "#fff" }}>
+              <option value="">Chọn thẩm phán</option>
+              {CHTP_JUDGES.map(j => <option key={j.id} value={j.ten}>{j.ten}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={labelSt}><span style={{ color: RED }}>*</span> Loại nghỉ</label>
+            <select value={loaiNghi} onChange={e => setLoaiNghi(e.target.value)} style={{ ...inputSt, background: "#fff" }}>
+              <option value="">Chọn loại nghỉ</option>
+              {CHTP_LOAI_NGHI.map(l => <option key={l} value={l}>{l}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={labelSt}><span style={{ color: RED }}>*</span> Từ ngày</label>
+            <input type="text" placeholder="Chọn từ ngày" value={tuNgay} onChange={e => setTuNgay(e.target.value)} style={inputSt} />
+          </div>
+          <div>
+            <label style={labelSt}>Đến ngày</label>
+            <input type="text" placeholder="Chọn đến ngày" value={denNgay} onChange={e => setDenNgay(e.target.value)} style={inputSt} />
+          </div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 20 }}>
+          <button onClick={onClose} style={{ padding: "7px 16px", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>Hủy</button>
+          <button onClick={submit} style={{ padding: "7px 16px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F }}>Lưu</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CauHinhPhanCongTPView() {
+  const [tab, setTab] = useState<"info" | "nghi">("info");
+  const [nghiRows, setNghiRows] = useState<NghiPhepRow[]>([
+    { id: 1, thamPhan: "Lê Tiến", loaiNghi: "Phép năm", tuNgay: "30/08/2026", denNgay: "03/09/2026", vuDangCam: 8 },
+  ]);
+  const [modal, setModal] = useState<{ mode: "new" } | { mode: "edit"; row: NghiPhepRow } | null>(null);
+
+  const saveNghi = (r: Omit<NghiPhepRow, "id" | "vuDangCam">) => {
+    if (modal?.mode === "edit") {
+      setNghiRows(prev => prev.map(x => x.id === modal.row.id ? { ...x, ...r } : x));
+    } else {
+      const judge = CHTP_JUDGES.find(j => j.ten === r.thamPhan);
+      setNghiRows(prev => [...prev, { id: Date.now(), ...r, vuDangCam: judge?.soVuDangCam ?? 0 }]);
+    }
+    setModal(null);
+  };
+  const removeNghi = (id: number) => {
+    if (confirm("Xóa đăng ký nghỉ này?")) setNghiRows(prev => prev.filter(x => x.id !== id));
+  };
+
+  const tabBtnSt = (active: boolean): React.CSSProperties => ({
+    padding: "10px 4px", background: "none", border: "none", borderBottom: `2px solid ${active ? RED : "transparent"}`,
+    color: active ? RED : MUTED, fontWeight: active ? 600 : 500, fontSize: 13, cursor: "pointer", fontFamily: F,
+  });
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
       <div style={{ padding: "8px 20px", borderBottom: `1px solid ${BORDER}`, fontSize: 12, color: MUTED, fontFamily: F, flexShrink: 0, background: "#fff" }}>
         Trang chủ › Quản lý án GĐT/TT › Cấu hình phân công Thẩm phán
       </div>
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "#f9fafb" }}>
-        <div style={{ textAlign: "center", color: MUTED, fontFamily: F }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: TEXT, marginBottom: 6 }}>Cấu hình phân công Thẩm phán</div>
-          <div style={{ fontSize: 12 }}>Màn hình đang chờ audit chi tiết theo đúng thứ tự công việc.</div>
+
+      <div style={{ padding: "0 20px", flexShrink: 0 }}>
+        <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, fontFamily: F, margin: "14px 0 4px" }}>Cấu hình phân công Thẩm phán</div>
+        <div style={{ display: "flex", gap: 20, borderBottom: `1px solid ${BORDER}` }}>
+          <button style={tabBtnSt(tab === "info")} onClick={() => setTab("info")}>Thông tin thẩm phán ({CHTP_JUDGES.length})</button>
+          <button style={tabBtnSt(tab === "nghi")} onClick={() => setTab("nghi")}>Nghỉ phép/vắng mặt ({nghiRows.length})</button>
         </div>
       </div>
+
+      {tab === "info" ? (
+        <div style={{ flex: 1, overflow: "auto", padding: "14px 20px" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th style={TH_STYLE}>STT</th>
+                <th style={TH_STYLE}>Thẩm phán</th>
+                <th style={TH_STYLE}>Cấp thẩm phán</th>
+                <th style={TH_STYLE}>Đơn vị</th>
+                <th style={TH_STYLE}>Vụ đang cầm</th>
+              </tr>
+            </thead>
+            <tbody>
+              {CHTP_JUDGES.map((r, idx) => (
+                <tr key={r.id} style={{ background: idx % 2 === 0 ? "#fff" : "#fafafa" }}>
+                  <td style={{ ...TD_STYLE, textAlign: "center", color: MUTED, fontSize: 12 }}>{r.id}</td>
+                  <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT, fontWeight: 500 }}>{r.ten}</td>
+                  <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT }}>{r.cap}</td>
+                  <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT }}>{r.donVi}</td>
+                  <td style={{ ...TD_STYLE, textAlign: "center", fontSize: 12, color: TEXT }}>{r.soVuDangCam}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div style={{ flex: 1, overflow: "auto", padding: "14px 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <div style={{ fontSize: 12, color: MUTED, fontFamily: F, flex: 1 }}>
+              Thẩm phán trong kỳ nghỉ sẽ bị loại khỏi danh sách phân công tự động trong khoảng thời gian đó.
+            </div>
+            <button
+              onClick={() => setModal({ mode: "new" })}
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F, flexShrink: 0 }}
+            >
+              + Đăng ký nghỉ
+            </button>
+            <button
+              onClick={() => {}}
+              title="Làm mới"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", flexShrink: 0 }}
+            >
+              <RefreshCw size={14} />
+            </button>
+          </div>
+
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th style={TH_STYLE}>STT</th>
+                <th style={TH_STYLE}>Thẩm phán</th>
+                <th style={TH_STYLE}>Loại nghỉ</th>
+                <th style={TH_STYLE}>Từ ngày</th>
+                <th style={TH_STYLE}>Đến ngày</th>
+                <th style={TH_STYLE}>Số ngày</th>
+                <th style={TH_STYLE}>Vụ đang cầm</th>
+                <th style={TH_STYLE}>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {nghiRows.map((r, idx) => (
+                <tr key={r.id} style={{ background: idx % 2 === 0 ? "#fff" : "#fafafa" }}>
+                  <td style={{ ...TD_STYLE, textAlign: "center", color: MUTED, fontSize: 12 }}>{idx + 1}</td>
+                  <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT, fontWeight: 500 }}>{r.thamPhan}</td>
+                  <td style={TD_STYLE}>
+                    <span style={{ padding: "3px 10px", background: "#dbeafe", color: "#1d4ed8", borderRadius: 12, fontSize: 11, fontWeight: 500, fontFamily: F }}>{r.loaiNghi}</span>
+                  </td>
+                  <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT }}>{r.tuNgay}</td>
+                  <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT }}>{r.denNgay}</td>
+                  <td style={{ ...TD_STYLE, textAlign: "center", fontSize: 12, color: TEXT }}>{chtpSoNgay(r.tuNgay, r.denNgay)} ngày</td>
+                  <td style={{ ...TD_STYLE, textAlign: "center", fontSize: 12, color: TEXT }}>{r.vuDangCam}</td>
+                  <td style={TD_STYLE}>
+                    <button onClick={() => setModal({ mode: "edit", row: r })} style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", fontSize: 12, fontFamily: F, marginRight: 10 }}>Sửa</button>
+                    <button onClick={() => removeNghi(r.id)} style={{ background: "none", border: "none", color: RED, cursor: "pointer", fontSize: 12, fontFamily: F }}>Xóa</button>
+                  </td>
+                </tr>
+              ))}
+              {nghiRows.length === 0 && (
+                <tr><td colSpan={8} style={{ ...TD_STYLE, textAlign: "center", color: MUTED, padding: 24 }}>Không có dữ liệu</td></tr>
+              )}
+            </tbody>
+          </table>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 0", fontSize: 12, color: MUTED, fontFamily: F }}>
+            <span>Hiển thị 1–{nghiRows.length} trong tổng {nghiRows.length} bản ghi</span>
+            <div style={{ flex: 1 }} />
+            <button style={paginBtn} disabled>‹</button>
+            <button style={{ ...paginBtn, background: RED, color: "#fff", border: `1px solid ${RED}` }}>1</button>
+            <button style={paginBtn}>›</button>
+            <select style={{ padding: "3px 8px", border: `1px solid ${BORDER}`, borderRadius: 4, fontFamily: F, fontSize: 12 }}>
+              <option>10 / trang</option>
+            </select>
+          </div>
+        </div>
+      )}
+
+      {modal && (
+        <NghiPhepModal
+          initial={modal.mode === "edit" ? modal.row : null}
+          onClose={() => setModal(null)}
+          onSave={saveNghi}
+        />
+      )}
     </div>
   );
 }
@@ -2899,7 +3118,7 @@ export default function App() {
         {appView === "luu-so-van-ban" ? (
           <LuuSoVanBanView />
         ) : appView === "dashboard-gdkt" ? (
-          <DashboardGDKTView userRole={globalUserRole} setUserRole={setGlobalUserRole} onNavigate={(v) => handleSidebarNav(v as View)} />
+          <DashboardVuGDKTView userRole={globalUserRole} setUserRole={setGlobalUserRole} onNavigate={(v) => handleSidebarNav(v as View)} />
         ) : appView === "ho-so-tong-hop" ? (
           <HoSoTongHopVuAnView />
         ) : appView === "phan-cong-tham-phan" ? (

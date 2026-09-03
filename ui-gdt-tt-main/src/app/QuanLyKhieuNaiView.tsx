@@ -7,6 +7,7 @@ import {
   ChevronDown,
   ChevronUp,
   RotateCcw,
+  RefreshCw,
 } from "lucide-react";
 import {
   F,
@@ -96,7 +97,7 @@ const paginBtn: React.CSSProperties = {
   color: TEXT,
 };
 
-export type KhieuNaiTabId = "tat-ca" | "chap-nhan";
+export type KhieuNaiTabId = "tat-ca" | "dang-giai-quyet" | "da-giai-quyet" | "qua-han-giai-quyet";
 
 // SRS: Thời hạn giải quyết đếm ngược — Hình sự 7 ngày, Dân sự 15 ngày kể từ ngày thụ lý.
 // Trả về số ngày còn lại (âm = đã quá hạn); null nếu không đọc được ngày thụ lý.
@@ -113,7 +114,7 @@ function tinhSoNgayConLai(ngayThuLy: string | undefined, soNgayHan: number): num
   return Math.round((han.getTime() - homNay.getTime()) / 86400000);
 }
 
-// Tìm kiếm nhanh + Tìm kiếm nâng cao (15 trường) — khớp đúng màn "Quản lý khiếu nại" trên STG
+// Bộ lọc inline (khớp đúng màn "Quản lý khiếu nại" trên STG — bản đầy đủ, không phải quick+advanced search)
 function KhieuNaiSearchPanel() {
   const [advOpen, setAdvOpen] = useState(false);
   const inSt: React.CSSProperties = { border: `1px solid ${BORDER}`, borderRadius: 5, padding: "6px 10px", fontSize: 12, fontFamily: F, outline: "none", background: "#fff", color: TEXT, width: "100%", boxSizing: "border-box" };
@@ -134,66 +135,55 @@ function KhieuNaiSearchPanel() {
 
   return (
     <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, padding: "12px 20px", flexShrink: 0, fontFamily: F }}>
-      {/* Tìm kiếm nhanh */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ position: "relative", flex: 1, maxWidth: 360 }}>
-          <input placeholder="Nhập từ khóa tìm kiếm..." style={{ ...inSt, paddingLeft: 30 }} />
-          <Search size={14} color={MUTED} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)" }} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "10px 14px" }}>
+          {col("Số BA/QĐ", <input placeholder="Nhập số BA/QĐ" style={inSt} />)}
+          {col("Ngày BA/QĐ", <input type="date" style={inSt} />)}
+          {col("Tòa ra BA/QĐ", <select style={inSt}><option value="">Chọn tòa án</option><option>TAND Tối cao</option><option>TAND Cấp cao HN</option><option>TAND Cấp cao TP.HCM</option></select>)}
+          {col("Loại án", <select style={inSt}><option value="">Chọn loại án</option><option>Hình sự</option><option>Dân sự</option><option>Kinh doanh, thương mại</option><option>Lao động</option><option>Hôn nhân gia đình</option><option>Hành chính</option></select>)}
+          {col("Bị cáo / Đương sự", <input placeholder="Nhập tên" style={inSt} />)}
+          {rangeRow("Tạo vụ án từ ngày đến ngày")}
         </div>
-        <button
-          onClick={() => setAdvOpen((v) => !v)}
-          style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "#2563eb", fontFamily: F, padding: 0, fontWeight: 500 }}
-        >
-          {advOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          Tìm kiếm nâng cao
-        </button>
-      </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "10px 14px" }}>
+          {rangeRow("Thụ lý từ ngày đến ngày")}
+          {col("Số thụ lý", <input placeholder="Nhập số thụ lý" style={inSt} />)}
+          {col("Thẩm tra viên giải quyết", <select style={inSt}><option value="">Vui lòng chọn</option><option>Nguyễn Thu Hằng</option><option>Lý Văn An</option></select>)}
+          {col("Lãnh đạo phụ trách TTV", <select style={inSt}><option value="">Vui lòng chọn</option><option>Nguyễn Văn Minh</option><option>Vũ Đình Tuấn</option></select>)}
+          {col("Thẩm phán", <select style={inSt}><option value="">Vui lòng chọn</option><option>Đỗ Tất Thống</option><option>Lê Thị Hoa</option></select>)}
+          {col("Trạng thái thụ lý xét xử", <select style={inSt}><option value="">– Tất cả –</option><option>Thụ lý mới</option><option>Đã thụ lý</option><option>Đã xét xử</option></select>)}
+        </div>
 
-      {/* Tìm kiếm nâng cao — 15 trường */}
-      {advOpen && (
-        <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px 16px" }}>
-            {col("Tòa ra BA/QĐ", <select style={inSt}><option value="">– Tất cả –</option><option>TAND Tối cao</option><option>TAND Cấp cao HN</option><option>TAND Cấp cao TP.HCM</option></select>)}
-            {col("Số BA/QĐ", <input placeholder="Nhập số BA/QĐ" style={inSt} />)}
-            {rangeRow("Ngày BA/QĐ")}
-            {rangeRow("Nhận đơn")}
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px 16px" }}>
-            {rangeRow("Thụ lý")}
+        {advOpen && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "10px 14px" }}>
             {col("Trạng thái hồ sơ", <select style={inSt}><option value="">– Tất cả –</option><option>Chưa có hồ sơ</option><option>Đang mượn hồ sơ</option><option>Đã có hồ sơ</option><option>Đã trả hồ sơ</option></select>)}
-            {rangeRow("Tờ trình")}
-            {col("Tờ trình lãnh đạo", <select style={inSt}><option value="">– Tất cả –</option><option>Chưa trình</option><option>Đang trình</option><option>Đã duyệt</option></select>)}
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px 16px" }}>
-            {col("Ý kiến lãnh đạo", <input placeholder="Nhập ý kiến" style={inSt} />)}
+            {col("Trạng thái trình lãnh đạo", <select style={inSt}><option value="">– Tất cả –</option><option>Chưa trình</option><option>Đang trình</option><option>Đã duyệt</option></select>)}
             {col("Yêu cầu trình tiếp", <select style={inSt}><option value="">– Tất cả –</option><option>Có</option><option>Không</option></select>)}
-            {col("Trạng thái thụ lý", <select style={inSt}><option value="">– Tất cả –</option><option>Thụ lý mới</option><option>Đã thụ lý</option></select>)}
             {col("Kết quả thụ lý", <select style={inSt}><option value="">– Tất cả –</option><option>Chưa có kết quả</option><option>Đã có kết quả</option></select>)}
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px 16px" }}>
             {col("Kết quả giải quyết", <select style={inSt}><option value="">– Tất cả –</option><option>Chấp nhận khiếu nại</option><option>Không chấp nhận khiếu nại</option><option>Xếp đơn</option></select>)}
-            {col("Thẩm tra viên giải quyết", <select style={inSt}><option value="">– Tất cả –</option><option>Nguyễn Thu Hằng</option><option>Lý Văn An</option></select>)}
-            {col("Lãnh đạo phụ trách", <select style={inSt}><option value="">Vui lòng chọn</option><option>Nguyễn Văn Minh</option><option>Vũ Đình Tuấn</option></select>)}
           </div>
+        )}
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 2 }}>
-            <button
-              onClick={() => setAdvOpen(false)}
-              style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "#2563eb", fontFamily: F, padding: 0, fontWeight: 500 }}
-            >
-              <ChevronUp size={14} /> Thu gọn
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 2 }}>
+          <button
+            onClick={() => setAdvOpen((v) => !v)}
+            style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "#2563eb", fontFamily: F, padding: 0, fontWeight: 500 }}
+          >
+            {advOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            {advOpen ? "Thu gọn" : "Nâng cao"}
+          </button>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 18px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F }}>
+              <Search size={13} /> Tìm kiếm
             </button>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 18px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F }}>
-                <Search size={13} /> Tìm kiếm
-              </button>
-              <button style={{ padding: "7px 16px", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F, display: "flex", alignItems: "center", gap: 6 }}>
-                <RotateCcw size={13} /> Xóa bộ lọc
-              </button>
-            </div>
+            <button style={{ padding: "7px 16px", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F, display: "flex", alignItems: "center", gap: 6 }}>
+              <RotateCcw size={13} /> Xóa bộ lọc
+            </button>
+            <button title="Làm mới" style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer" }}>
+              <RefreshCw size={13} />
+            </button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -212,24 +202,37 @@ export function QuanLyKhieuNaiView({
   const [showInBaoCao, setShowInBaoCao] = useState(false);
 
   const roleGroups = filterVuAnListByRole(KHIEU_NAI_LIST, userRole);
+
+  // SRS: "Đã giải quyết" = đã có KQGQ (kể cả trường hợp còn đơn thụ lý mới); "Đang giải quyết" = còn đơn chưa có KQGQ.
+  const isRowDaGiaiQuyet = (r: (typeof KHIEU_NAI_LIST)[number]["rows"][number]) => r.kqGiaiQuyet === "da-co" || r.kqGiaiQuyet === "da-co-con-don";
+  const isRowDangGiaiQuyet = (r: (typeof KHIEU_NAI_LIST)[number]["rows"][number]) => !isRowDaGiaiQuyet(r) || r.kqGiaiQuyet === "da-co-con-don";
+  const isRowQuaHan = (r: (typeof KHIEU_NAI_LIST)[number]["rows"][number]) => {
+    if (!isRowDangGiaiQuyet(r)) return false;
+    const soNgayHan = r.loaiAn === "Hình sự" ? 7 : 15;
+    const conLai = tinhSoNgayConLai(r.ngayThuLy, soNgayHan);
+    return conLai !== null && conLai < 0;
+  };
+
   const filteredGroups = roleGroups
     .map((group) => {
       if (activeTab === "tat-ca") return group;
-      if (activeTab === "chap-nhan") {
-        const rows = group.rows.filter((r) => r.kqGiaiQuyet === "chap-nhan");
-        if (rows.length === 0) return null;
-        return { ...group, rows };
-      }
-      return group;
+      const predicate = activeTab === "dang-giai-quyet" ? isRowDangGiaiQuyet : activeTab === "da-giai-quyet" ? isRowDaGiaiQuyet : isRowQuaHan;
+      const rows = group.rows.filter(predicate);
+      if (rows.length === 0) return null;
+      return { ...group, rows };
     })
     .filter(Boolean) as VuAnGroup[];
 
   const countTatCa = roleGroups.length;
-  const countChapNhan = roleGroups.filter((g) => g.rows.some((r) => r.kqGiaiQuyet === "chap-nhan")).length;
+  const countDangGiaiQuyet = roleGroups.filter((g) => g.rows.some(isRowDangGiaiQuyet)).length;
+  const countDaGiaiQuyet = roleGroups.filter((g) => g.rows.some(isRowDaGiaiQuyet)).length;
+  const countQuaHan = roleGroups.filter((g) => g.rows.some(isRowQuaHan)).length;
 
   const tabs: { id: KhieuNaiTabId; label: string; count: number }[] = [
     { id: "tat-ca", label: "Tất cả", count: countTatCa },
-    { id: "chap-nhan", label: "Chấp nhận khiếu nại", count: countChapNhan },
+    { id: "dang-giai-quyet", label: "Đang giải quyết", count: countDangGiaiQuyet },
+    { id: "da-giai-quyet", label: "Đã giải quyết", count: countDaGiaiQuyet },
+    { id: "qua-han-giai-quyet", label: "Quá hạn giải quyết", count: countQuaHan },
   ];
 
   return (
@@ -287,18 +290,16 @@ export function QuanLyKhieuNaiView({
       <div style={{ flex: 1, overflow: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
           <colgroup>
-            <col style={{ width: 36 }} />
-            <col style={{ width: 36 }} />
-            <col style={{ width: "13%" }} />
-            <col style={{ width: "20%" }} />
-            <col style={{ width: "18%" }} />
+            <col style={{ width: 40 }} />
             <col style={{ width: "14%" }} />
-            <col style={{ width: "20%" }} />
-            <col style={{ width: 44 }} />
+            <col style={{ width: "22%" }} />
+            <col style={{ width: "19%" }} />
+            <col style={{ width: "15%" }} />
+            <col style={{ width: "21%" }} />
+            <col style={{ width: 48 }} />
           </colgroup>
           <thead>
             <tr>
-              <th style={TH_STYLE}><input type="checkbox" /></th>
               <th style={TH_STYLE}>STT</th>
               <th style={TH_STYLE}>SỐ & NGÀY THỤ LÝ</th>
               <th style={TH_STYLE}>THÔNG TIN BẢN ÁN/QĐ & QHPL</th>
@@ -320,11 +321,6 @@ export function QuanLyKhieuNaiView({
                     onMouseEnter={(e) => (e.currentTarget.style.background = "#f0f9ff")}
                     onMouseLeave={(e) => (e.currentTarget.style.background = globalIdx % 2 === 0 ? "#fff" : "#fafafa")}
                   >
-                    {/* Checkbox */}
-                    <td style={{ ...TD_STYLE, textAlign: "center" }}>
-                      <input type="checkbox" />
-                    </td>
-
                     {/* STT */}
                     <td style={{ ...TD_STYLE, textAlign: "center", color: MUTED, fontSize: 12, fontFamily: F }}>
                       {globalIdx + 1}

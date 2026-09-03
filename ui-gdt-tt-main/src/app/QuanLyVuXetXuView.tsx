@@ -6301,6 +6301,7 @@ export default function QuanLyVuXetXuView({
   const [showInBaoCao, setShowInBaoCao] = useState(false);
   // THIẾU [Cao]: 12/21 trường tìm kiếm theo SRS Quản lý vụ XX mục A
   const [fNguyenDonBiDon, setFNguyenDonBiDon] = useState("");
+  const [fBiDonBiCao, setFBiDonBiCao] = useState("");
   const [fSoThuLyXX, setFSoThuLyXX] = useState("");
   const [fThuLyTuNgay, setFThuLyTuNgay] = useState("");
   const [fThuLyDenNgay, setFThuLyDenNgay] = useState("");
@@ -6329,7 +6330,7 @@ export default function QuanLyVuXetXuView({
     setFLanhDaoVu("");
     setFTTV("");
     setFQuaHanXX("");
-    setFNguyenDonBiDon(""); setFSoThuLyXX(""); setFThuLyTuNgay(""); setFThuLyDenNgay("");
+    setFNguyenDonBiDon(""); setFBiDonBiCao(""); setFSoThuLyXX(""); setFThuLyTuNgay(""); setFThuLyDenNgay("");
     setFXetXuTuNgay(""); setFXetXuDenNgay(""); setFTrangThaiXX(""); setFThamPhan("");
     setFHoanTHA(""); setFSoKhangNghi(""); setFNgayKhangNghi(""); setFNguoiKhangNghi("");
     setFThamQuyenXX(""); setFAnLe("");
@@ -6376,11 +6377,6 @@ export default function QuanLyVuXetXuView({
     { id: "tat-ca", label: "Tất cả", count: filteredByRole.length },
     { id: "chua-xx-chua-ds", label: "Chưa có DS xét xử", count: filteredByRole.filter(r => r.trangThai === "chua-xx-chua-ds").length },
     { id: "chua-xx-da-ds", label: "Đã có DS xét xử", count: filteredByRole.filter(r => r.trangThai === "chua-xx-da-ds").length },
-    { id: "chua-thu-ly", label: "Chưa thụ lý xét xử", count: filteredByRole.filter(r => r.trangThai === "chua-thu-ly").length },
-    { id: "hoan-xet-xu", label: "Hoãn xét xử", count: filteredByRole.filter(r => r.trangThai === "hoan-xet-xu").length },
-    { id: "rut-khang-nghi", label: "Rút kháng nghị", count: filteredByRole.filter(r => r.trangThai === "rut-khang-nghi").length },
-    { id: "da-xx", label: "Đã xét xử", count: filteredByRole.filter(r => r.trangThai === "da-xx").length },
-    { id: "chuyen-tham-quyen", label: "Chuyển thẩm quyền", count: filteredByRole.filter(r => r.trangThai === "chuyen-tham-quyen").length },
   ];
 
   const filtered = filteredByRole.filter(r => {
@@ -6437,201 +6433,215 @@ export default function QuanLyVuXetXuView({
           </div>
         </div>
 
-        {/* Filter - 8 trường tìm kiếm chuẩn */}
+        {/* Filter - 21 trường (2 hàng luôn hiện + 2 hàng Nâng cao), đúng STG */}
         <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, padding: "14px 20px", flexShrink: 0, fontFamily: F }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {/* Hàng 1 (1-4): Tòa ra BA/QĐ | Số BA/QĐ | Ngày BA/QĐ | Loại án */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px 16px" }}>
-              {/* 1. Tòa ra BA/QĐ */}
+            {/* Hàng 1 (luôn hiện) */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "10px 16px" }}>
               <div>
                 <label style={labelStyle}>Tòa ra BA/QĐ</label>
-                <select
-                  value={fToaRaBA}
-                  onChange={(e) => setFToaRaBA(e.target.value)}
-                  style={selSt}
-                >
+                <select value={fToaRaBA} onChange={(e) => setFToaRaBA(e.target.value)} style={selSt}>
                   <option value="">– Tất cả –</option>
-                  {DANH_SACH_TOA_AN_FILTER.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
+                  {DANH_SACH_TOA_AN_FILTER.map((t) => (<option key={t} value={t}>{t}</option>))}
                 </select>
               </div>
-
-              {/* 2. Số BA/QĐ */}
               <div>
                 <label style={labelStyle}>Số BA/QĐ</label>
-                <input
-                  placeholder="Nhập số BA/QĐ"
-                  value={fSoBA}
-                  onChange={(e) => setFSoBA(e.target.value)}
-                  style={inSt}
-                />
+                <input placeholder="Nhập số BA/QĐ" value={fSoBA} onChange={(e) => setFSoBA(e.target.value)} style={inSt} />
               </div>
-
-              {/* 3. Ngày BA/QĐ */}
               <div>
                 <label style={labelStyle}>Ngày BA/QĐ</label>
                 <div style={{ position: "relative" }}>
-                  <input
-                    placeholder="dd/mm/yyyy"
-                    value={fNgayBA}
-                    onChange={(e) => setFNgayBA(e.target.value)}
-                    style={inSt}
-                  />
+                  <input placeholder="dd/mm/yyyy" value={fNgayBA} onChange={(e) => setFNgayBA(e.target.value)} style={inSt} />
                   <Calendar size={13} color={MUTED} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
                 </div>
               </div>
-
-              {/* 4. Loại án */}
               <div>
                 <label style={labelStyle}>Loại án</label>
-                <select
-                  value={fLoaiAn}
-                  onChange={(e) => setFLoaiAn(e.target.value)}
-                  style={selSt}
-                >
+                <select value={fLoaiAn} onChange={(e) => setFLoaiAn(e.target.value)} style={selSt}>
                   <option value="">– Tất cả –</option>
-                  {LOAI_AN_OPTIONS.map((opt) => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
+                  {LOAI_AN_OPTIONS.map((opt) => (<option key={opt} value={opt}>{opt}</option>))}
                 </select>
               </div>
-            </div>
-
-            {/* Hàng 2 (5-8): Thuộc án | Lãnh đạo vụ | Thẩm tra viên | Quá hạn xét xử */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px 16px" }}>
-              {/* 5. Thuộc án */}
               <div>
                 <label style={labelStyle}>Thuộc án</label>
-                <select
-                  value={fThuocAn}
-                  onChange={(e) => setFThuocAn(e.target.value)}
-                  style={selSt}
-                >
+                <select value={fThuocAn} onChange={(e) => setFThuocAn(e.target.value)} style={selSt}>
                   <option value="">– Tất cả –</option>
-                  {thuocAnOptions.map((opt) => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* 6. Lãnh đạo vụ */}
-              <div>
-                <label style={labelStyle}>Lãnh đạo vụ</label>
-                <select
-                  value={fLanhDaoVu}
-                  onChange={(e) => setFLanhDaoVu(e.target.value)}
-                  style={selSt}
-                >
-                  <option value="">– Tất cả –</option>
-                  {DANH_SACH_LANH_DAO_FILTER.map((ld) => (
-                    <option key={ld} value={ld}>{ld}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* 7. Thẩm tra viên */}
-              <div>
-                <label style={labelStyle}>Thẩm tra viên</label>
-                <select
-                  value={fTTV}
-                  onChange={(e) => setFTTV(e.target.value)}
-                  style={selSt}
-                >
-                  <option value="">– Tất cả –</option>
-                  {DANH_SACH_TTV_FILTER.map((ttv) => (
-                    <option key={ttv} value={ttv}>{ttv}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* 8. Quá hạn xét xử */}
-              <div>
-                <label style={labelStyle}>Quá hạn xét xử</label>
-                <select
-                  value={fQuaHanXX}
-                  onChange={(e) => setFQuaHanXX(e.target.value)}
-                  style={selSt}
-                >
-                  <option value="">– Tất cả –</option>
-                  <option value="Không quá hạn">Không quá hạn</option>
-                  <option value="Quá hạn">Quá hạn</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={labelStyle}>Số kháng nghị</label>
-                <input value={fSoKhangNghi} onChange={e => setFSoKhangNghi(e.target.value)} placeholder="Nhập số kháng nghị" style={inSt} />
-              </div>
-              <div>
-                <label style={labelStyle}>Ngày kháng nghị</label>
-                <input type="date" value={fNgayKhangNghi} onChange={e => setFNgayKhangNghi(e.target.value)} style={inSt} />
-              </div>
-              <div>
-                <label style={labelStyle}>Người kháng nghị</label>
-                <select value={fNguoiKhangNghi} onChange={e => setFNguoiKhangNghi(e.target.value)} style={selSt}>
-                  <option value="">– Tất cả –</option>
-                  <option>Chánh án Tòa án nhân dân tối cao</option>
-                  <option>Viện trưởng Viện kiểm sát nhân dân tối cao</option>
-                  <option>Chánh án Tòa án nhân dân cấp tỉnh</option>
-                  <option>Viện trưởng Viện kiểm sát nhân dân cấp tỉnh</option>
+                  {thuocAnOptions.map((opt) => (<option key={opt} value={opt}>{opt}</option>))}
                 </select>
               </div>
               <div>
-                <label style={labelStyle}>Thẩm quyền xét xử</label>
-                <select value={fThamQuyenXX} onChange={e => setFThamQuyenXX(e.target.value)} style={selSt}>
-                  <option value="">– Tất cả –</option>
-                  <option>Ủy ban Thẩm phán TAND cấp cao</option>
-                  <option>Hội đồng Thẩm phán TAND tối cao</option>
-                  <option>Tòa chuyên trách TAND cấp cao</option>
-                </select>
-              </div>
-              <div>
-                <label style={labelStyle}>Án lệ áp dụng</label>
-                <input value={fAnLe} onChange={e => setFAnLe(e.target.value)} placeholder="Nhập số án lệ" style={inSt} />
+                <label style={labelStyle}>Nguyên đơn/Người khiếu nại</label>
+                <input value={fNguyenDonBiDon} onChange={e => setFNguyenDonBiDon(e.target.value)} placeholder="Nhập tên" style={inSt} />
               </div>
             </div>
 
-            {/* Filter Footer Buttons */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10, paddingTop: 4 }}>
-              <button
-                onClick={() => alert("Đang lọc danh sách vụ xét xử GĐT...")}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "6px 18px",
-                  background: RED,
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 4,
-                  cursor: "pointer",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  fontFamily: F,
-                }}
-              >
-                <Search size={13} /> Tìm kiếm
-              </button>
+            {/* Hàng 2 (luôn hiện) */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "10px 16px" }}>
+              <div>
+                <label style={labelStyle}>Bị đơn/Bị cáo</label>
+                <input value={fBiDonBiCao} onChange={e => setFBiDonBiCao(e.target.value)} placeholder="Nhập tên" style={inSt} />
+              </div>
+              <div>
+                <label style={labelStyle}>Số thụ lý XX</label>
+                <input value={fSoThuLyXX} onChange={e => setFSoThuLyXX(e.target.value)} placeholder="Nhập số thụ lý xét xử" style={inSt} />
+              </div>
+              <div>
+                <label style={labelStyle}>Thụ lý XX từ ngày đến ngày</label>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <input type="date" value={fThuLyTuNgay} onChange={e => setFThuLyTuNgay(e.target.value)} style={{ ...inSt, flex: 1, minWidth: 0 }} />
+                  <span style={{ fontSize: 12, color: MUTED }}>–</span>
+                  <input type="date" value={fThuLyDenNgay} onChange={e => setFThuLyDenNgay(e.target.value)} style={{ ...inSt, flex: 1, minWidth: 0 }} />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>Xét xử từ ngày đến ngày</label>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <input type="date" value={fXetXuTuNgay} onChange={e => setFXetXuTuNgay(e.target.value)} style={{ ...inSt, flex: 1, minWidth: 0 }} />
+                  <span style={{ fontSize: 12, color: MUTED }}>–</span>
+                  <input type="date" value={fXetXuDenNgay} onChange={e => setFXetXuDenNgay(e.target.value)} style={{ ...inSt, flex: 1, minWidth: 0 }} />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>Trạng thái xét xử</label>
+                <select value={fTrangThaiXX} onChange={e => setFTrangThaiXX(e.target.value)} style={selSt}>
+                  <option value="">– Tất cả –</option>
+                  <option>Chưa thụ lý xét xử</option>
+                  <option>Chưa có danh sách xét xử</option>
+                  <option>Đã có danh sách xét xử</option>
+                  <option>Đã xét xử</option>
+                  <option>Hoãn phiên tòa</option>
+                  <option>Đình chỉ</option>
+                  <option>Rút kháng nghị</option>
+                  <option>Chuyển thẩm quyền</option>
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Lãnh đạo vụ</label>
+                <select value={fLanhDaoVu} onChange={(e) => setFLanhDaoVu(e.target.value)} style={selSt}>
+                  <option value="">– Tất cả –</option>
+                  {DANH_SACH_LANH_DAO_FILTER.map((ld) => (<option key={ld} value={ld}>{ld}</option>))}
+                </select>
+              </div>
+            </div>
 
+            {/* Hàng 3 & 4 (chỉ hiện khi Nâng cao) */}
+            {filterExpanded && (
+              <>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "10px 16px" }}>
+                  <div>
+                    <label style={labelStyle}>Thẩm tra viên</label>
+                    <select value={fTTV} onChange={(e) => setFTTV(e.target.value)} style={selSt}>
+                      <option value="">– Tất cả –</option>
+                      {DANH_SACH_TTV_FILTER.map((ttv) => (<option key={ttv} value={ttv}>{ttv}</option>))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Quá hạn luật định</label>
+                    <select value={fQuaHanXX} onChange={(e) => setFQuaHanXX(e.target.value)} style={selSt}>
+                      <option value="">– Tất cả –</option>
+                      <option value="Không quá hạn">Không quá hạn</option>
+                      <option value="Quá hạn">Quá hạn</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Thẩm phán</label>
+                    <input value={fThamPhan} onChange={e => setFThamPhan(e.target.value)} placeholder="Nhập tên thẩm phán" style={inSt} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Hoãn thi hành án</label>
+                    <select value={fHoanTHA} onChange={e => setFHoanTHA(e.target.value)} style={selSt}>
+                      <option value="">– Tất cả –</option>
+                      <option value="Có">Có</option>
+                      <option value="Không">Không</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Số kháng nghị</label>
+                    <input value={fSoKhangNghi} onChange={e => setFSoKhangNghi(e.target.value)} placeholder="Nhập số kháng nghị" style={inSt} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Ngày kháng nghị</label>
+                    <input type="date" value={fNgayKhangNghi} onChange={e => setFNgayKhangNghi(e.target.value)} style={inSt} />
+                  </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "10px 16px" }}>
+                  <div>
+                    <label style={labelStyle}>Người kháng nghị</label>
+                    <select value={fNguoiKhangNghi} onChange={e => setFNguoiKhangNghi(e.target.value)} style={selSt}>
+                      <option value="">– Tất cả –</option>
+                      <option>Chánh án Tòa án nhân dân tối cao</option>
+                      <option>Viện trưởng Viện kiểm sát nhân dân tối cao</option>
+                      <option>Chánh án Tòa án nhân dân cấp tỉnh</option>
+                      <option>Viện trưởng Viện kiểm sát nhân dân cấp tỉnh</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Thẩm quyền xét xử</label>
+                    <select value={fThamQuyenXX} onChange={e => setFThamQuyenXX(e.target.value)} style={selSt}>
+                      <option value="">– Tất cả –</option>
+                      <option>Ủy ban Thẩm phán TAND cấp cao</option>
+                      <option>Hội đồng Thẩm phán TAND tối cao</option>
+                      <option>Tòa chuyên trách TAND cấp cao</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Án lệ áp dụng</label>
+                    <input value={fAnLe} onChange={e => setFAnLe(e.target.value)} placeholder="Nhập số án lệ" style={inSt} />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Filter Footer Buttons */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, paddingTop: 4 }}>
               <button
-                onClick={handleResetFilters}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "6px 14px",
-                  background: "#fff",
-                  color: TEXT,
-                  border: `1px solid ${BORDER}`,
-                  borderRadius: 4,
-                  cursor: "pointer",
-                  fontSize: 12,
-                  fontFamily: F,
-                }}
+                onClick={() => setFilterExpanded(v => !v)}
+                style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "#2563eb", fontFamily: F, padding: 0, fontWeight: 500 }}
               >
-                <RotateCcw size={13} /> Xóa bộ lọc
+                {filterExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                {filterExpanded ? "Thu gọn" : "Nâng cao"}
               </button>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  onClick={() => alert("Đang lọc danh sách vụ xét xử GĐT...")}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "6px 18px",
+                    background: RED,
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 4,
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    fontFamily: F,
+                  }}
+                >
+                  <Search size={13} /> Tìm kiếm
+                </button>
+
+                <button
+                  onClick={handleResetFilters}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "6px 14px",
+                    background: "#fff",
+                    color: TEXT,
+                    border: `1px solid ${BORDER}`,
+                    borderRadius: 4,
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontFamily: F,
+                  }}
+                >
+                  <RotateCcw size={13} /> Xóa bộ lọc
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -6639,9 +6649,9 @@ export default function QuanLyVuXetXuView({
         {/* Action bar */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 20px", background: "#fff", borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
           <div style={{ flex: 1 }} />
-          {/* <button onClick={() => setShowBieuMauMain(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "#fff", color: "#1e40af", border: `1px solid #93c5fd`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F }}>
-            <FileText size={13} /> Xem biểu mẫu Word
-          </button> */}
+          <button onClick={() => alert("Danh sách tham mưu")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F }}>
+            Danh sách tham mưu
+          </button>
           <button onClick={() => setShowThemModal(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F }}>
             Tạo danh sách vụ xét xử
           </button>
