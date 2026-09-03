@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { PrintReportModal, BIEU_MAU_VU_XET_XU } from "./PrintReportModal";
 import { Search, RotateCcw, ChevronDown, ChevronUp, MoreVertical, X, Eye, Pencil, Printer, FileText, Trash2, Calendar, Save, Send } from "lucide-react";
-import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge, type UserRoleType } from "./shared";
+import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge, TaiKhoanPhanQuyenBar, type UserRoleType } from "./shared";
 import { formatSoBA } from "./AppHelpers";
 import { TaoDuThaoModal } from "./TaoDuThaoModal";
 import { TrinhKyModal, HoSoToTrinhModal } from "./TrinhKyModal";
@@ -20,6 +20,7 @@ type TrangThai =
   | "chua-xx-chua-ds"       // Chưa xét xử – chưa có danh sách
   | "chua-xx-da-ds"         // Chưa xét xử – đã có danh sách
   | "chua-thu-ly"           // Chưa thụ lý xét xử
+  | "hoan-xet-xu"           // Hoãn xét xử (SRS tách trạng thái riêng)
   | "rut-khang-nghi"        // Rút kháng nghị
   | "da-xx"                 // Đã xét xử
   | "chuyen-tham-quyen";    // Chuyển thẩm quyền xét xử
@@ -65,6 +66,9 @@ type VuXetXuRow = {
   // THIẾU [TB]: bổ sung QHPL (bắt buộc) + QHPL thống kê — SRS mục A.5–A.11
   qhpl?: string;
   qhplThongKe?: string;
+  // Đối chiếu STG: tab Kết quả xét xử thiếu 2 trường này so với STG
+  lienQuanBanAnSoTham?: string;
+  toaAnThuLy?: string;
 };
 
 // ── Helper to resolve party labels & values by department/case type ─────────
@@ -352,7 +356,7 @@ const ROWS: VuXetXuRow[] = [
     capXetXu: "Sơ thẩm", thoiHieu: "3 năm", tag: "an-chi-dao",
     ndkn: "Đỗ Thành Công", ndd: "Ủy ban nhân dân tỉnh Bắc Ninh",
     ttv: "Trịnh Thị Minh Trang", ldv: "Nguyễn Như Thắng", tp: "Lê Thị Thu Hiển",
-    trangThai: "chua-xx-chua-ds",
+    trangThai: "hoan-xet-xu",
     soNgayBAQD: "18/2026/HC-ST – 08/07/2026", toaRABAQD: "Tòa án nhân dân cấp cao tại Hà Nội",
     nguoiKhangNghi: "Viện trưởng Viện kiểm sát nhân dân tối cao",
     soNgayKhangNghi: "QDKN_2613 – 09/07/2026", soNgayThuLy: "54682613 – 10/07/2026",
@@ -470,6 +474,13 @@ function TrangThaiCell({ row }: { row: VuXetXuRow }) {
       return (
         <div>
           <span style={{ display: "inline-block", padding: "3px 10px", border: `1px solid ${RED}`, borderRadius: 4, fontSize: 11, fontWeight: 600, fontFamily: F, color: RED, background: "#fff" }}>Chưa thụ lý xét xử</span>
+        </div>
+      );
+    case "hoan-xet-xu":
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <span style={{ display: "inline-block", padding: "3px 10px", border: "1px solid #d97706", borderRadius: 4, fontSize: 11, fontWeight: 600, fontFamily: F, color: "#b45309", background: "#fffbeb" }}>Hoãn xét xử</span>
+          <span style={{ fontSize: 11, color: MUTED, fontFamily: F }}>Lịch cũ được gỡ; lập lịch mới khi có thời gian/địa điểm theo quyết định hoãn</span>
         </div>
       );
     case "rut-khang-nghi":
@@ -2504,7 +2515,7 @@ export function TaoQuyetDinhHoanHDXXModal({
                   <tbody>
                     {biCaoList.length === 0 ? (
                       <tr>
-                        <td colSpan={9} style={{ padding: "24px 0", textAlign: "center", color: MUTED, fontSize: 12 }}>
+                        <td colSpan={10} style={{ padding: "24px 0", textAlign: "center", color: MUTED, fontSize: 12 }}>
                           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
                             <span style={{ fontSize: 24, color: "#d1d5db" }}>📦</span>
                             <span>Trống</span>
@@ -3721,6 +3732,7 @@ function TabQuyetDinhVuAn({ row, userRole }: { row: VuXetXuRow; userRole?: UserR
     "Quyết định đình chỉ trước phiên tòa của Chánh án",
     "Quyết định đình chỉ tại phiên tòa của HĐXX",
     "Quyết định hoãn phiên tòa của HĐXX",
+    "Quyết định hoãn phiên tòa của Chánh án",
     "Quyết định thay đổi/bổ sung/rút kháng nghị GĐT",
     "Biên bản phiên tòa hình sự GĐT",
   ];
@@ -4669,7 +4681,7 @@ function TabTaiLieuVuAn({ row }: { row?: VuXetXuRow }) {
 
 // ── Detail view ───────────────────────────────────────────────────────────────
 
-function ChiTietVuXetXuView({ row, userRole, onBack, initialTab }: { row: VuXetXuRow; userRole?: UserRoleType; onBack: () => void; initialTab?: DetailTab }) {
+function ChiTietVuXetXuView({ row, userRole, onBack, initialTab, onGoToThamMuu }: { row: VuXetXuRow; userRole?: UserRoleType; onBack: () => void; initialTab?: DetailTab; onGoToThamMuu?: () => void }) {
   const [tab, setTab] = useState<DetailTab>(initialTab || "thong-tin");
   // THIẾU [TB]: cảnh báo "Các thông tin thay đổi chưa được Lưu" khi rời tính năng lúc đang sửa dở
   const [thongTinDangSua, setThongTinDangSua] = useState(false);
@@ -4719,7 +4731,7 @@ function ChiTietVuXetXuView({ row, userRole, onBack, initialTab }: { row: VuXetX
         {tab === "phan-cong" && <TabPhanCong row={row} />}
         {tab === "qd-bi-cao" && isHinhSuDetail && <TabQuyetDinhBiCao row={row} />}
         {tab === "qd-vu-an" && <TabQuyetDinhVuAn row={row} userRole={userRole} />}
-        {tab === "ket-qua" && <TabKetQua row={row} />}
+        {tab === "ket-qua" && <TabKetQua row={row} onGoToThamMuu={onGoToThamMuu} />}
         {tab === "tai-lieu-vu-an" && <TabTaiLieuVuAn row={row} />}
         {tab === "ho-so-vu-an" && <TabHoSoVuAn row={row} />}
       </div>
@@ -4761,7 +4773,7 @@ type DieuLuatRow = { id: number; boLuat: string; dieuLuat: string[]; khoan: stri
 const BO_LUAT_OPTIONS = ["Bộ luật Hình sự 2015", "Bộ luật Dân sự 2015", "Bộ luật Tố tụng hình sự 2015", "Bộ luật Tố tụng dân sự 2015", "Luật Tố tụng hành chính 2015"];
 const DIEU_LUAT_OPTIONS = ["Điều 371", "Điều 372", "Điều 388", "Điều 391", "Điều 393", "Điều 398", "Điều 400"];
 
-function TabKetQua({ row }: { row: VuXetXuRow }) {
+function TabKetQua({ row, onGoToThamMuu }: { row: VuXetXuRow; onGoToThamMuu?: () => void }) {
   // THIẾU [Thấp]: trạng thái nút theo luồng ký — SRS mục E
   const [trangThaiKy, setTrangThaiKy] = useState<"chua-co-kq" | "cho-ky" | "da-ky">("chua-co-kq");
   const [apAnLe, setApAnLe] = useState<"khong" | "co">("khong");
@@ -4801,15 +4813,27 @@ function TabKetQua({ row }: { row: VuXetXuRow }) {
           // LỆCH (SRS): InfoGrid tab Kết quả trước dùng lại y hệt InfoGrid tab Thông tin,
           // thiếu Thủ tục giải quyết/Trạng thái/VKS giải quyết — bổ sung ở đây.
           ["Thủ tục giải quyết", "Giám đốc thẩm, tái thẩm", "Trạng thái", row.trangThai],
-          ["VKS giải quyết", row.vienKiemSat || "–", "", ""],
+          ["VKS giải quyết", row.vienKiemSat || "–", "Tòa án thụ lý", row.toaAnThuLy || row.toaAnGiaiQuyet || "–"],
+          ["Liên quan bản án sơ thẩm", row.lienQuanBanAnSoTham || row.soNgayBAQD || "–", "", ""],
         ]} />
       </div>
 
       {/* Kết quả giám đốc thẩm / tái thẩm */}
       <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, overflow: "hidden" }}>
-        <div style={{ padding: "10px 14px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ display: "inline-block", width: 14, height: 14, background: RED, borderRadius: 2, flexShrink: 0 }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: TEXT, fontFamily: F, textTransform: "uppercase" as const }}>Kết quả giám đốc thẩm, tái thẩm</span>
+        <div style={{ padding: "10px 14px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ display: "inline-block", width: 14, height: 14, background: RED, borderRadius: 2, flexShrink: 0 }} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: TEXT, fontFamily: F, textTransform: "uppercase" as const }}>Kết quả giám đốc thẩm, tái thẩm</span>
+          </div>
+          {onGoToThamMuu && (
+            <button
+              type="button"
+              onClick={onGoToThamMuu}
+              style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: `1px solid ${RED}`, color: RED, borderRadius: 4, padding: "6px 12px", fontSize: 12, fontWeight: 600, fontFamily: F, cursor: "pointer" }}
+            >
+              Danh sách tham mưu
+            </button>
+          )}
         </div>
         <div style={{ padding: 16, display: "flex", flexDirection: "column" as const, gap: 14 }}>
           {/* Row 1 */}
@@ -5036,7 +5060,7 @@ function TabKetQua({ row }: { row: VuXetXuRow }) {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: BG }}>
-              {["STT", "Tên vật chứng, đồ vật, tài liệu", "Số lượng", "Tình trạng", "Thuộc sở hữu của", "Mô tả", "Hình thức xử lý", "Trả lại cho", "Thao tác"].map(h => (
+              {["STT", "Tên vật chứng, đồ vật, tài liệu", "Số lượng", "Tình trạng", "Thuộc sở hữu của", "Mô tả", "Nơi lưu giữ", "Hình thức xử lý", "Trả lại cho", "Thao tác"].map(h => (
                 <th key={h} style={{ ...TH, borderRight: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
               ))}
             </tr>
@@ -6244,9 +6268,11 @@ function ThemVuXetXuModal({ userRole = "hinh-su", onClose }: { userRole?: string
 export default function QuanLyVuXetXuView({
   userRole: propUserRole,
   setUserRole: propSetUserRole,
+  onGoToThamMuu,
 }: {
   userRole?: UserRoleType;
   setUserRole?: (role: UserRoleType) => void;
+  onGoToThamMuu?: () => void;
 } = {}) {
   const [internalRole, setInternalRole] = useState<UserRoleType>("vu-1");
   const userRole = propUserRole ?? internalRole;
@@ -6348,8 +6374,13 @@ export default function QuanLyVuXetXuView({
 
   const listTabs = [
     { id: "tat-ca", label: "Tất cả", count: filteredByRole.length },
-    { id: "chua-xx-chua-ds", label: "Chưa có danh sách xét xử", count: filteredByRole.filter(r => r.trangThai === "chua-xx-chua-ds").length },
-    { id: "chua-xx-da-ds", label: "Đã có danh sách xét xử", count: filteredByRole.filter(r => r.trangThai === "chua-xx-da-ds").length },
+    { id: "chua-xx-chua-ds", label: "Chưa có DS xét xử", count: filteredByRole.filter(r => r.trangThai === "chua-xx-chua-ds").length },
+    { id: "chua-xx-da-ds", label: "Đã có DS xét xử", count: filteredByRole.filter(r => r.trangThai === "chua-xx-da-ds").length },
+    { id: "chua-thu-ly", label: "Chưa thụ lý xét xử", count: filteredByRole.filter(r => r.trangThai === "chua-thu-ly").length },
+    { id: "hoan-xet-xu", label: "Hoãn xét xử", count: filteredByRole.filter(r => r.trangThai === "hoan-xet-xu").length },
+    { id: "rut-khang-nghi", label: "Rút kháng nghị", count: filteredByRole.filter(r => r.trangThai === "rut-khang-nghi").length },
+    { id: "da-xx", label: "Đã xét xử", count: filteredByRole.filter(r => r.trangThai === "da-xx").length },
+    { id: "chuyen-tham-quyen", label: "Chuyển thẩm quyền", count: filteredByRole.filter(r => r.trangThai === "chuyen-tham-quyen").length },
   ];
 
   const filtered = filteredByRole.filter(r => {
@@ -6373,7 +6404,7 @@ export default function QuanLyVuXetXuView({
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  if (detail) return <ChiTietVuXetXuView row={detail} userRole={userRole} initialTab={detailInitialTab} onBack={() => { setDetail(null); setDetailInitialTab(undefined); }} />;
+  if (detail) return <ChiTietVuXetXuView row={detail} userRole={userRole} initialTab={detailInitialTab} onBack={() => { setDetail(null); setDetailInitialTab(undefined); }} onGoToThamMuu={onGoToThamMuu} />;
 
   return (
     <>
@@ -6389,6 +6420,8 @@ export default function QuanLyVuXetXuView({
         <div style={{ background: "#fff", padding: "14px 20px 0", flexShrink: 0, borderBottom: `1px solid ${BORDER}` }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
             <h2 style={{ fontSize: 20, fontWeight: 700, color: TEXT, fontFamily: F, margin: 0 }}>Danh sách vụ xét xử GĐT</h2>
+
+            <TaiKhoanPhanQuyenBar userRole={userRole} setUserRole={setUserRole} />
           </div>
           <div style={{ display: "flex", flexWrap: "wrap" as const, overflowX: "auto" as const }}>
             {listTabs.map(t => {
@@ -6667,6 +6700,10 @@ export default function QuanLyVuXetXuView({
           {/* THIẾU [Cao]: In báo cáo (2 biểu mẫu + hộp tiêu chí in + tiêu đề BC tự sinh) */}
           <button onClick={() => setShowInBaoCao(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
             <Printer size={13} /> In báo cáo
+          </button>
+          {/* THỪA so với SRS – giữ lại, chờ Lead xác nhận */}
+          <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
+            <Printer size={13} /> Xuất Excel
           </button>
         </div>
 

@@ -49,7 +49,10 @@ export function StatusBadge({ status }: { status: DonCase["trangThai"] | undefin
 
 export function VuAnBtn({ action, onClick }: { action: VuAnAction; onClick?: () => void }) {
   const map: Record<VuAnAction, { label: string; color: string; bg: string; border: string }> = {
+    "chuyen-vu-an": { label: "Chuyển vụ án", color: "#1e40af", bg: "#dbeafe", border: "#93c5fd" },
     "huy-ghep": { label: "Hủy ghép vụ án", color: "#92400e", bg: "#fef3c7", border: "#fcd34d" },
+    "them-vu-an": { label: "Thêm vụ án", color: "#ffffff", bg: RED, border: RED },
+    "ghep-vu-an": { label: "Ghép vụ án", color: "#065f46", bg: "#d1fae5", border: "#6ee7b7" },
   };
   const s = map[action];
   return (
@@ -79,10 +82,10 @@ export function Tag({ type }: { type: string }) {
         🏛️ Án quốc hội
       </Badge>
     );
-  if (type === "an-tvtn" || type === "Án TVTN")
+  if (type === "an-tvtn" || type === "Án TVTN" || type === "Án vị thành niên")
     return (
       <Badge color="#065f46" bg="#d1fae5">
-        📋 Án TVTN
+        📋 Án vị thành niên
       </Badge>
     );
   if (type === "an-tu-hinh" || type === "Án tử hình")
@@ -100,11 +103,11 @@ export function getAnDacThuOptions(userRole?: UserRoleType, loaiAnStr?: string) 
   const isOtherVu = userRole === "vu-2" || userRole === "vu-3" || userRole === "vu-4" || userRole === "dan-su" || userRole === "hanh-chinh";
 
   if (isVu1) {
-    return ["Án quốc hội", "Án chỉ đạo", "Án TVTN", "Án tử hình"];
+    return ["Án quốc hội", "Án chỉ đạo", "Án vị thành niên", "Án tử hình"];
   } else if (isOtherVu) {
     return ["Án quốc hội", "Án chỉ đạo"];
   } else {
-    return ["Án quốc hội", "Án chỉ đạo", "Án TVTN", "Án tử hình"];
+    return ["Án quốc hội", "Án chỉ đạo", "Án vị thành niên", "Án tử hình"];
   }
 }
 
@@ -292,4 +295,47 @@ export function getDepartmentInfo(role: UserRoleType): DepartmentInfo {
       ben3: "Người có quyền lợi và nghĩa vụ liên quan",
     },
   };
+}
+
+export function TaiKhoanPhanQuyenBar({
+  userRole,
+  setUserRole,
+}: {
+  userRole: UserRoleType;
+  setUserRole: (role: UserRoleType) => void;
+}) {
+  const isVu1 = userRole === "vu-1" || userRole === "hinh-su";
+  const isVu2 = userRole === "vu-2" || userRole === "dan-su";
+  const isVu3 = userRole === "vu-3";
+  const isVu4 = userRole === "vu-4" || userRole === "hanh-chinh";
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 12px", background: "#f8fafc", border: `1px solid ${BORDER}`, borderRadius: 6 }}>
+      <span style={{ fontSize: 12, fontWeight: 700, color: TEXT, fontFamily: F }}>
+        👤 Tài khoản phân quyền:
+      </span>
+      <select
+        value={userRole}
+        onChange={e => setUserRole(e.target.value as UserRoleType)}
+        style={{
+          padding: "5px 12px",
+          fontSize: 12,
+          fontWeight: 700,
+          fontFamily: F,
+          color: isVu1 ? RED : isVu2 ? "#1e40af" : isVu3 ? "#047857" : isVu4 ? "#c2410c" : "#6b21a8",
+          border: `1px solid ${isVu1 ? "#fca5a5" : isVu2 ? "#93c5fd" : isVu3 ? "#6ee7b7" : isVu4 ? "#fdba74" : "#d8b4fe"}`,
+          borderRadius: 4,
+          background: "#fff",
+          cursor: "pointer",
+          outline: "none",
+        }}
+      >
+        <option value="vu-1">🔴 D01.106 – Vụ Giám đốc kiểm tra về hình sự (Vụ Giám đốc, kiểm tra I)</option>
+        <option value="vu-2">🔵 D01.107 – Vụ Giám đốc kiểm tra về dân sự (Vụ Giám đốc, kiểm tra II)</option>
+        <option value="vu-3">🟢 D01.108 – Vụ Giám đốc, kiểm tra về KDTM, phá sản, LĐ, HNGĐ (Vụ Giám đốc, kiểm tra III)</option>
+        <option value="vu-4">🟠 D01.109 – Vụ Giám đốc, kiểm tra về hành chính (Vụ Giám đốc, kiểm tra IV)</option>
+        <option value="toan-bo">🟣 Lãnh đạo TANDTC / Quản trị viên (Toàn bộ 4 Vụ)</option>
+      </select>
+    </div>
+  );
 }

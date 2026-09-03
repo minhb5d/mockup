@@ -621,7 +621,25 @@ function ChonTaiLieuBoSungModal({
 
           {/* Quick state switcher */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            
+            <button
+              onClick={() => {
+                setHasData(!hasData);
+                setSelectedDocKey(null);
+              }}
+              style={{
+                padding: "4px 10px",
+                background: hasData ? "#f0fdf4" : "#f1f5f9",
+                color: hasData ? "#166534" : MUTED,
+                border: `1px solid ${hasData ? "#bbf7d0" : BORDER}`,
+                borderRadius: 4,
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: F,
+              }}
+            >
+              {hasData ? "● Đang xem: Dữ liệu hồ sơ mẫu" : "○ Đang xem: Trạng thái chưa có hồ sơ"}
+            </button>
           </div>
         </div>
 
@@ -1276,6 +1294,8 @@ export function TrinhKyModal({ onClose, loaiAn = "Hình sự", title, onSuccess 
     "Báo cáo tổ Thẩm phán",
     "Báo cáo Hội đồng thẩm phán",
     "Nghiên cứu lại, xác minh, bổ sung",
+    "Trình dự thảo trả lời đơn",
+    "Trình dự thảo kháng nghị",
   ];
 
   const UU_TIEN_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -1307,7 +1327,7 @@ export function TrinhKyModal({ onClose, loaiAn = "Hình sự", title, onSuccess 
     "Nguyễn Hòa Bình – Chánh án",
   ];
 
-  const isCheckboxType = ["Báo cáo tổ Thẩm phán", "Báo cáo Hội đồng thẩm phán"].includes(capTrinh);
+  const isCheckboxType = ["Báo cáo tổ Thẩm phán", "Báo cáo Hội đồng thẩm phán", "Trình dự thảo trả lời đơn", "Trình dự thảo kháng nghị"].includes(capTrinh);
   const checkboxList = capTrinh === "Báo cáo tổ Thẩm phán" ? TO_TP_LIST : capTrinh === "Báo cáo Hội đồng thẩm phán" ? HDTP_LIST : DU_THAO_LIST;
 
   // TH-152: lấy theo Loại án của vụ đang trình ký

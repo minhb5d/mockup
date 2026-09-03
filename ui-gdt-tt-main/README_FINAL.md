@@ -1,11 +1,11 @@
-# Mockup GĐT/TT TANDTC — SRS + Draw.io final
+# UI GĐT/TT — Final merged source
 
-Source đã được dọn theo SRS TANDTC, luồng `Quy trình GĐT,TT.drawio` và bảng đối chiếu 27.08.2026.
+Bản này là source hợp nhất từ 2 mockup và đã rà lại theo SRS + Draw.io.
 
-## Local
+## Chạy local
 
 ```bash
-npm ci --include=dev
+npm install
 npm run dev
 ```
 
@@ -15,4 +15,6 @@ npm run dev
 npm run build
 ```
 
-Xem `docs/FINAL_AUDIT.md` và `docs/VERCEL_DEPLOY.md`.
+## Tài liệu QA cuối
+
+Xem `FINAL_DRAWIO_SRS_AUDIT.md`.

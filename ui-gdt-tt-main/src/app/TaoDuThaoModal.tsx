@@ -504,6 +504,7 @@ export function TaoDuThaoModal({
       "Lê Văn Hùng (Bị cáo)",
     ].filter(Boolean))
   ) as string[];
+  const [selectedBiCao, setSelectedBiCao] = useState(biCaoOptions[0] || "Phan Văn Thành (Bị cáo đầu vụ)");
 
   const [ngayQuyetDinh, setNgayQuyetDinh] = useState("09/08/2026");
   const [soQuyetDinh, setSoQuyetDinh] = useState("");
@@ -953,10 +954,15 @@ export function TaoDuThaoModal({
                       <span style={{ fontWeight: ketQuaGQ === "khong-chap-nhan" ? 700 : 400 }}>Không chấp nhận khiếu nại</span>
                     </label>
                     <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13, fontFamily: F, color: "#111827" }}>
-                      <input type="radio" name="ketQuaGQ" checked={ketQuaGQ === "xep-don"} onChange={() => setKetQuaGQ("xep-don")} style={{ accentColor: "#800000", cursor: "pointer" }} />
+                      <input
+                        type="radio"
+                        name="ketQuaGQ"
+                        checked={ketQuaGQ === "xep-don"}
+                        onChange={() => setKetQuaGQ("xep-don")}
+                        style={{ accentColor: "#800000", cursor: "pointer" }}
+                      />
                       <span style={{ fontWeight: ketQuaGQ === "xep-don" ? 700 : 400 }}>Xếp đơn</span>
                     </label>
-                    
                   </>
                 ) : (
                   <>
@@ -980,11 +986,39 @@ export function TaoDuThaoModal({
                       />
                       <span style={{ fontWeight: ketQuaGQ === "tra-loi" ? 700 : 400 }}>Trả lời đơn</span>
                     </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13, fontFamily: F, color: "#111827" }}>
+                      <input
+                        type="radio"
+                        name="ketQuaGQ"
+                        checked={ketQuaGQ === "xep-don"}
+                        onChange={() => setKetQuaGQ("xep-don")}
+                        style={{ accentColor: "#800000", cursor: "pointer" }}
+                      />
+                      <span style={{ fontWeight: ketQuaGQ === "xep-don" ? 700 : 400 }}>Xếp đơn</span>
+                    </label>
                   </>
                 )}
               </div>
             </div>
 
+            {ketQuaGQ === "khang-nghi" && (
+              <div style={{ marginTop: 4 }}>
+                <label style={lblSt}>
+                  <span style={{ color: "#dc2626", marginRight: 3 }}>*</span>
+                  Chọn Bị cáo
+                </label>
+                <select
+                  value={selectedBiCao}
+                  onChange={e => setSelectedBiCao(e.target.value)}
+                  style={{ ...inSt, cursor: "pointer", maxWidth: 380 }}
+                >
+                  <option value="">-- Chọn bị cáo --</option>
+                  {biCaoOptions.map(bc => (
+                    <option key={bc} value={bc}>{bc}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Section 2: Thông tin quyết định */}

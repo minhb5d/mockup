@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Search, Download, Printer, ChevronDown, Eye, RotateCcw, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { F, RED, BORDER, TEXT, MUTED, BG, Badge, type UserRoleType } from "./shared";
+import { F, RED, BORDER, TEXT, MUTED, BG, Badge, TaiKhoanPhanQuyenBar, type UserRoleType } from "./shared";
 
 type Screen = "list" | "detail" | "bieu-mau";
 type ListTab = "tat-ca" | "cho-duyet" | "da-duyet" | "tu-choi";
@@ -919,6 +919,7 @@ export default function PheDuyetDeXuatView({
       </div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
         <h2 style={{ fontSize: 20, fontWeight: 700, color: TEXT, margin: 0 }}>Danh sách đề xuất</h2>
+        <TaiKhoanPhanQuyenBar userRole={userRole} setUserRole={setUserRole} />
       </div>
 
       {/* Tabs */}

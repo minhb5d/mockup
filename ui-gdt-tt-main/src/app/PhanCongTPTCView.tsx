@@ -9,16 +9,14 @@ import {
   X,
   FileSignature,
   CheckCircle2,
+  Eye,
 } from "lucide-react";
 import { F, RED, BORDER, TEXT, MUTED, TH_STYLE, TD_STYLE } from "./shared";
 import { LOAI_AN_OPTIONS } from "./data";
 
 const DANH_SACH_TPB3 = [
-  "Lê Thị Thu Hiền",
-  "Nguyễn Văn A",
-  "Trần Văn B",
-  "Phạm Văn C",
-  "Đinh Thị Vân Anh",
+  "Lê Thị Thu Hiền", "Nguyễn Văn A", "Trần Văn B", "Phạm Văn C", "Đinh Thị Vân Anh",
+  "Nguyễn Thị Hương", "Vũ Đức Thiện", "Hoàng Ngọc Chiêu", "Lê Minh Tuấn", "Phạm Thị Bích Ngọc",
 ];
 
 const DANH_SACH_TOA_AN = [
@@ -41,6 +39,7 @@ interface CaseTPTCRow {
   ngayBA: string;
   toaBA: string;
   capXetXu: string;
+  qhpl?: string;
   ndkn: string;
   ndd: string;
   ttv: string;
@@ -66,6 +65,7 @@ const INITIAL_CHUA_TAO_TT: CaseTPTCRow[] = [
     ngayBA: "20/07/2026",
     toaBA: "Tòa án nhân dân cấp cao tại Hà Nội",
     capXetXu: "Sơ thẩm",
+    qhpl: "Tranh chấp quyền sử dụng đất",
     ndkn: "VŨ HUY HOÀNG",
     ndd: "NGUYỄN MINH PHONG",
     ttv: "Đinh Thị Vân Anh",
@@ -89,6 +89,7 @@ const INITIAL_CHUA_TAO_TT: CaseTPTCRow[] = [
     ngayBA: "20/07/2026",
     toaBA: "Tòa án nhân dân cấp cao tại Hà Nội",
     capXetXu: "Sơ thẩm",
+    qhpl: "Tranh chấp quyền sử dụng đất",
     ndkn: "VŨ HUY HOÀNG",
     ndd: "NGUYỄN MINH PHONG",
     ttv: "Đinh Thị Vân Anh",
@@ -115,6 +116,7 @@ const INITIAL_DA_TAO_TT: CaseTPTCRow[] = [
     ngayBA: "10/06/2026",
     toaBA: "Tòa án nhân dân TP Đà Nẵng",
     capXetXu: "Sơ thẩm",
+    qhpl: "Tranh chấp quyền sử dụng đất",
     ndkn: "TRẦN VĂN ĐỒNG",
     ndd: "LÊ VĂN THUẬN",
     ttv: "Nguyễn Thị Hường",
@@ -138,6 +140,7 @@ const INITIAL_DA_TAO_TT: CaseTPTCRow[] = [
     ngayBA: "12/06/2026",
     toaBA: "Tòa án nhân dân TP Hải Phòng",
     capXetXu: "Phúc thẩm",
+    qhpl: "Tranh chấp hợp đồng dân sự",
     ndkn: "HOÀNG THỊ THỦY",
     ndd: "VŨ ĐÌNH TRỌNG",
     ttv: "Vũ Xuân Hiền",
@@ -161,6 +164,7 @@ const INITIAL_DA_TAO_TT: CaseTPTCRow[] = [
     ngayBA: "14/06/2026",
     toaBA: "Tòa án nhân dân tỉnh Vĩnh Phúc",
     capXetXu: "Sơ thẩm",
+    qhpl: "Tranh chấp quyền sử dụng đất",
     ndkn: "ĐỖ VĂN NAM",
     ndd: "UBND TỈNH VĨNH PHÚC",
     ttv: "Nguyễn Đức Thiện",
@@ -184,6 +188,7 @@ const INITIAL_DA_TAO_TT: CaseTPTCRow[] = [
     ngayBA: "18/06/2026",
     toaBA: "Tòa án nhân dân TP Hồ Chí Minh",
     capXetXu: "Sơ thẩm",
+    qhpl: "Tranh chấp quyền sử dụng đất",
     ndkn: "CÔNG TY CP TÂN PHÁT",
     ndd: "NGUYỄN VĂN THÀNH",
     ttv: "Vũ Diệu Thúy",
@@ -207,6 +212,7 @@ const INITIAL_DA_TAO_TT: CaseTPTCRow[] = [
     ngayBA: "20/06/2026",
     toaBA: "TAND cấp cao tại Đà Nẵng",
     capXetXu: "Phúc thẩm",
+    qhpl: "Tranh chấp hợp đồng dân sự",
     ndkn: "LÊ HOÀNG YẾN",
     ndd: "TRẦN MINH TÂM",
     ttv: "Đặng Thị Mai",
@@ -246,12 +252,30 @@ export function PhanCongTPTCView() {
   const [showViewToTrinhModal, setShowViewToTrinhModal] = useState<CaseTPTCRow | null>(null);
 
   // Form input for Them To Trinh
-  const [inputSoTT, setInputSoTT] = useState("35/TT-TA");
+  const [inputSoTT, setInputSoTT] = useState("");
+  const [daLaySo, setDaLaySo] = useState(false);
   const [inputNgayTT, setInputNgayTT] = useState("09/08/2026");
+  const [inputNguoiKyBanHanh, setInputNguoiKyBanHanh] = useState("Nguyễn Như Thắng - Vụ trưởng");
   const [inputNguoiTrinh, setInputNguoiTrinh] = useState("Nguyễn Văn A - Phó CA");
-  const [inputGhiChuTT, setInputGhiChuTT] = useState("Qua nghiên cứu hồ sơ, nhận thấy có căn cứ kháng nghị.");
+  const [inputGhiChuTT, setInputGhiChuTT] = useState("…nhận thấy có căn cứ kháng nghị");
+  const [inputNgayTrinh, setInputNgayTrinh] = useState("09/08/2026");
+  const [inputCapTrinh, setInputCapTrinh] = useState("Phó Chánh án");
+  const [inputNguoiDaTrinh, setInputNguoiDaTrinh] = useState("Nguyễn Như Thắng - Vụ trưởng");
+  const [inputTPTCDeXuat, setInputTPTCDeXuat] = useState("Hoàng Ngọc Chiêu - TPTC");
+  // Draw.io page 10 / 2.9: tờ trình có cả nhánh phân công TPTC lần đầu và
+  // nhánh phân công lại khi TPB3/Lãnh đạo Vụ/Phó Chánh án không đồng quan điểm.
+  const [inputNguonDeXuat, setInputNguonDeXuat] = useState("Phân công TPTC lần đầu");
+  const [inputCanCu, setInputCanCu] = useState("Quyết định số 75/QĐ-CA ngày 06/4/2026 của TANDTC; Điều 15");
+  const [noiNhanTT, setNoiNhanTT] = useState([
+    { id: 1, noiNhan: "Khác", chiTiet: "Như kính gửi", ghiChu: "" },
+    { id: 2, noiNhan: "Khác", chiTiet: "Lưu: Vụ GĐKT1", ghiChu: "" },
+  ]);
 
-  const currentRows = activeTab === "chua-tao" ? chuaTaoRows : daTaoRows;
+  const currentRows = [...(activeTab === "chua-tao" ? chuaTaoRows : daTaoRows)].sort((a,b)=>{
+    const parse=(d:string)=>{const [dd,mm,yy]=d.split("/").map(Number); return new Date(yy,mm-1,dd).getTime();};
+    const primary=parse(b.ngayToTrinh !== "-" ? b.ngayToTrinh : b.ngayThuLy)-parse(a.ngayToTrinh !== "-" ? a.ngayToTrinh : a.ngayThuLy);
+    return primary || (parse(b.ngayThuLy)-parse(a.ngayThuLy));
+  });
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
@@ -278,8 +302,8 @@ export function PhanCongTPTCView() {
   };
 
   const handleConfirmThemToTrinh = () => {
-    if (selectedIds.length === 0) {
-      alert("Vui lòng chọn ít nhất 1 vụ án để tạo tờ trình!");
+    if (selectedIds.length !== 1) {
+      alert("Thêm tờ trình phải thực hiện từ đúng 1 vụ án.");
       return;
     }
 
@@ -422,7 +446,7 @@ export function PhanCongTPTCView() {
                   <input
                     placeholder="Số bản án/quyết định"
                     value={fSoBA}
-                    onChange={(e) => setFSoBA(e.target.value)}
+                    onChange={(e) => { const v=e.target.value; setFSoBA(v); if(v.trim()){ setFNgayBA("20/07/2026"); setFToaRaBA("Tòa án nhân dân cấp cao tại Hà Nội"); } }}
                     style={inputStyle}
                   />
                 </div>
@@ -456,25 +480,27 @@ export function PhanCongTPTCView() {
 
                 <div>
                   <label style={labelStyle}>Thẩm phán bậc 3</label>
-                  <select
+                  <input
+                    list="tptc-tpb3-options"
                     value={fTPB3}
                     onChange={(e) => setFTPB3(e.target.value)}
+                    placeholder="Nhập/chọn Thẩm phán bậc 3"
                     style={inputStyle}
-                  >
-                    <option value="">Vui lòng chọn</option>
+                  />
+                  <datalist id="tptc-tpb3-options">
                     {DANH_SACH_TPB3.map((tp) => (
-                      <option key={tp} value={tp}>{tp}</option>
+                      <option key={tp} value={tp} />
                     ))}
-                  </select>
+                  </datalist>
                 </div>
               </div>
 
               {/* Row 2: Nguyên đơn | Bị đơn | Loại án | Empty */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px 16px" }}>
                 <div>
-                  <label style={labelStyle}>Nguyên đơn/người khởi kiện</label>
+                  <label style={labelStyle}>{fLoaiAn === "Hình sự" ? "Người khiếu nại" : fLoaiAn === "Hành chính" ? "Người khởi kiện" : "Nguyên đơn"}</label>
                   <input
-                    placeholder="Nguyên đơn/người khởi kiện"
+                    placeholder={fLoaiAn === "Hình sự" ? "Người khiếu nại" : fLoaiAn === "Hành chính" ? "Người khởi kiện" : "Nguyên đơn"}
                     value={fNguyenDon}
                     onChange={(e) => setFNguyenDon(e.target.value)}
                     style={inputStyle}
@@ -482,9 +508,9 @@ export function PhanCongTPTCView() {
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Bị đơn/người bị kiện</label>
+                  <label style={labelStyle}>{fLoaiAn === "Hình sự" ? "Bị cáo" : fLoaiAn === "Hành chính" ? "Người bị kiện" : "Bị đơn"}</label>
                   <input
-                    placeholder="Bị đơn/người bị kiện"
+                    placeholder={fLoaiAn === "Hình sự" ? "Bị cáo" : fLoaiAn === "Hành chính" ? "Người bị kiện" : "Bị đơn"}
                     value={fBiDon}
                     onChange={(e) => setFBiDon(e.target.value)}
                     style={inputStyle}
@@ -577,10 +603,11 @@ export function PhanCongTPTCView() {
 
         {/* Table Action Bar */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
+          <button onClick={() => window.print()} style={{padding:"7px 14px",background:"#fff",border:`1px solid ${BORDER}`,borderRadius:4,cursor:"pointer",fontSize:12}}>In danh sách</button>
           <button
             onClick={() => {
-              if (selectedIds.length === 0) {
-                alert("Vui lòng chọn ít nhất 1 vụ án để thêm tờ trình!");
+              if (selectedIds.length !== 1) {
+                alert("Vui lòng chọn đúng 1 vụ án để thêm tờ trình!");
                 return;
               }
               setShowThemToTrinhModal(true);
@@ -660,7 +687,7 @@ export function PhanCongTPTCView() {
                   <th style={{ ...TH_STYLE, width: 44, textAlign: "center", borderRight: `1px solid ${BORDER}` }}>STT</th>
                   <th style={{ ...TH_STYLE, width: "13%", borderRight: `1px solid ${BORDER}` }}>Số & Ngày thụ lý</th>
                   <th style={{ ...TH_STYLE, width: "23%", borderRight: `1px solid ${BORDER}` }}>Thông tin bản án/quyết định và QHPL</th>
-                  <th style={{ ...TH_STYLE, width: "16%", borderRight: `1px solid ${BORDER}` }}>Đương sự & Người đề nghị</th>
+                  <th style={{ ...TH_STYLE, width: "16%", borderRight: `1px solid ${BORDER}` }}>Đương sự & Người đứng đơn</th>
                   <th style={{ ...TH_STYLE, width: "18%", borderRight: `1px solid ${BORDER}` }}>Phân công & Thông tin trình TP</th>
                   <th style={{ ...TH_STYLE, width: "18%", borderRight: `1px solid ${BORDER}` }}>Thông tin tờ trình phân công</th>
                   <th style={{ ...TH_STYLE, width: 60, textAlign: "center", borderRight: "none" }}>Tờ trình</th>
@@ -715,27 +742,38 @@ export function PhanCongTPTCView() {
                         {/* Thông tin bản án / quyết định */}
                         <td style={{ ...TD_STYLE, borderRight: `1px solid ${BORDER}`, verticalAlign: "top" }}>
                           <div>
+                            <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:4}}>
+                              <span style={{background:"#fef3c7",color:"#92400e",padding:"1px 5px",borderRadius:10,fontSize:10}}>Án Quốc hội</span>
+                              {r.id % 2 === 0 && <span style={{background:"#fee2e2",color:"#991b1b",padding:"1px 5px",borderRadius:10,fontSize:10}}>Án chỉ đạo</span>}
+                              {r.soBA.includes("HS") && <span style={{background:"#fce7f3",color:"#9d174d",padding:"1px 5px",borderRadius:10,fontSize:10}}>Án tử hình</span>}
+                            </div>
                             <div><b>Số BA:</b> {r.soBA} &nbsp; <b>Ngày:</b> {r.ngayBA}</div>
                             <div style={{ color: MUTED, marginTop: 2, fontSize: 11 }}><b>Tại:</b> {r.toaBA}</div>
+                            <div style={{marginTop:3,fontSize:11}}><b>Thời hiệu:</b> 3 năm <span style={{color:"#dc2626",fontWeight:700}}>• còn 24 ngày</span></div>
+                            {r.capXetXu && (
+                              <div style={{ marginTop: 4 }}><span style={{ background: "#fef3c7", color: "#d97706", border: "1px solid #fde68a", padding: "1px 6px", borderRadius: 3, fontSize: 10, fontWeight: 700 }}>Cấp xét xử: {r.capXetXu}</span></div>
+                            )}
+                            <div style={{ marginTop: 4, fontSize: 11 }}><b>QHPL:</b> {r.qhpl || "-"}</div>
                           </div>
                         </td>
 
                         {/* Đương sự & Người đề nghị */}
                         <td style={{ ...TD_STYLE, borderRight: `1px solid ${BORDER}`, verticalAlign: "top" }}>
                           <div style={{ fontSize: 11, lineHeight: 1.6 }}>
-                            <div><b>NĐKN:</b> {r.ndkn}</div>
-                            <div style={{ marginTop: 2 }}><b>NĐD:</b> {r.ndd}</div>
+                            <div><b>Người đứng đơn:</b> {r.ndkn}</div>
+                            <div style={{ marginTop: 2 }}><b>Bị cáo/Bị đơn:</b> {r.ndd}</div>
                           </div>
                         </td>
 
                         {/* Phân công & Thông tin trình TP */}
                         <td style={{ ...TD_STYLE, borderRight: `1px solid ${BORDER}`, verticalAlign: "top" }}>
                           <div style={{ fontSize: 11, lineHeight: 1.6 }}>
-                            <div><b>TTV:</b> {r.ttv}</div>
-                            <div><b>LĐV:</b> {r.ldv}</div>
-                            <div><b>TP:</b> {r.tp}</div>
+                            <div><b>TTV:</b> {r.ttv || "TTV"}</div>
+                            <div><b>LĐV:</b> {r.ldv || "LĐV"}</div>
+                            <div><b>TP:</b> {r.tp || "TP"}</div>
                             <div style={{ color: MUTED, marginTop: 2 }}>Số lần trình TPB3: <b>{r.soLanTrinhTPB3}</b></div>
                             <div style={{ color: MUTED }}>Số lần trình: <b>{r.soLanTrinh}</b></div>
+                            <button onClick={()=>setShowViewToTrinhModal(r)} style={{border:0,background:"none",padding:0,color:"#2563eb",fontSize:11,textDecoration:"underline",cursor:"pointer"}}>Xem tờ trình giải quyết</button>
                           </div>
                         </td>
 
@@ -745,6 +783,7 @@ export function PhanCongTPTCView() {
                             <div><b>Số tờ trình:</b> {r.soToTrinh}</div>
                             <div><b>Ngày tờ trình:</b> {r.ngayToTrinh}</div>
                             <div style={{ fontWeight: 600, color: TEXT, marginTop: 2 }}>{r.nguoiTrinh}</div>
+                            <div style={{fontSize:11,color:MUTED}}>Ngày ký: {r.trangThaiKy.includes("Đã") ? r.ngayToTrinh : "-"}</div>
                             <div style={{ marginTop: 4 }}>
                               <span
                                 style={{
@@ -765,20 +804,10 @@ export function PhanCongTPTCView() {
 
                         {/* Tờ trình icon */}
                         <td style={{ ...TD_STYLE, textAlign: "center", borderRight: "none", verticalAlign: "middle" }}>
-                          <button
-                            onClick={() => setShowViewToTrinhModal(r)}
-                            style={{
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              color: "#374151",
-                              padding: 6,
-                              borderRadius: 4,
-                            }}
-                            title="Xem tờ trình"
-                          >
-                            <FileText size={18} color="#4b5563" />
-                          </button>
+                          <div style={{ display:"flex", justifyContent:"center", gap:4 }}>
+                            <button onClick={() => setShowViewToTrinhModal(r)} style={{ background:"none",border:"none",cursor:"pointer",padding:5 }} title="Xem / sửa thông tin tờ trình"><Eye size={17} color="#2563eb" /></button>
+                            <button onClick={() => alert(r.trangThaiKy === "Chờ ký" || r.trangThaiKy === "Đã tạo tờ trình" ? "Mở tờ trình dạng Word để chỉnh sửa" : "Mở tờ trình dạng PDF") } style={{ background:"none",border:"none",cursor:"pointer",padding:5 }} title="Xem tờ trình Word/PDF"><FileText size={18} color="#4b5563" /></button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -823,7 +852,7 @@ export function PhanCongTPTCView() {
 
             <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
               <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", padding: "10px 14px", borderRadius: 6, fontSize: 12, color: "#1e40af" }}>
-                Đang tạo tờ trình cho <b>{selectedIds.length}</b> vụ án đã chọn.
+                Đang tạo tờ trình cho <b>01</b> vụ án đã chọn.
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
@@ -850,24 +879,41 @@ export function PhanCongTPTCView() {
                 </div>
               </div>
 
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: TEXT, display: "block", marginBottom: 6 }}>
-                  Người trình ký (*)
-                </label>
-                <select
-                  value={inputNguoiTrinh}
-                  onChange={(e) => setInputNguoiTrinh(e.target.value)}
-                  style={inputStyle}
-                >
-                  <option value="Nguyễn Văn A - Phó CA">Nguyễn Văn A - Phó Chánh án</option>
-                  <option value="Lê Thị Thu Hiền - Thẩm phán">Lê Thị Thu Hiền - Thẩm phán</option>
-                  <option value="Nguyễn Như Thắng - Vụ trưởng">Nguyễn Như Thắng - Vụ trưởng</option>
-                </select>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+                <div><label style={{ fontSize:12,fontWeight:600,color:TEXT,display:"block",marginBottom:6 }}>Người ký ban hành (*)</label>
+                  <select value={inputNguoiKyBanHanh} onChange={e=>setInputNguoiKyBanHanh(e.target.value)} style={inputStyle}><option>Nguyễn Như Thắng - Vụ trưởng</option><option>Nguyễn Văn Hiền - Vụ trưởng</option></select>
+                </div>
+                <div><label style={{ fontSize:12,fontWeight:600,color:TEXT,display:"block",marginBottom:6 }}>Kính gửi (*)</label>
+                  <select value={inputNguoiTrinh} onChange={e=>setInputNguoiTrinh(e.target.value)} style={inputStyle}><option value="Nguyễn Văn A - Phó CA">Nguyễn Văn A - Phó Chánh án</option><option value="Lê Văn B - Phó CA">Lê Văn B - Phó Chánh án</option></select>
+                </div>
               </div>
 
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+                <div><label style={labelStyle}>Ngày trình tờ trình (*)</label><input value={inputNgayTrinh} onChange={e=>setInputNgayTrinh(e.target.value)} style={inputStyle}/></div>
+                <div><label style={labelStyle}>Cấp trình gần nhất (*)</label><input value={inputCapTrinh} onChange={e=>setInputCapTrinh(e.target.value)} style={inputStyle}/></div>
+                <div><label style={labelStyle}>Người đã trình gần nhất (*)</label><input value={inputNguoiDaTrinh} onChange={e=>setInputNguoiDaTrinh(e.target.value)} style={inputStyle}/></div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <div><label style={labelStyle}>Thẩm phán tối cao đề xuất (*)</label><select value={inputTPTCDeXuat} onChange={e=>setInputTPTCDeXuat(e.target.value)} style={inputStyle}><option>Hoàng Ngọc Chiêu - TPTC</option><option>Nguyễn Văn Cường - TPTC</option></select></div>
+                <div><label style={labelStyle}>Căn cứ quyết định (*)</label><input value={inputCanCu} onChange={e=>setInputCanCu(e.target.value)} style={inputStyle}/></div>
+              </div>
+              <div>
+                <label style={labelStyle}>Nguồn / lý do đề xuất TPTC (*)</label>
+                <select value={inputNguonDeXuat} onChange={e=>setInputNguonDeXuat(e.target.value)} style={inputStyle}>
+                  <option>Phân công TPTC lần đầu</option>
+                  <option>Phân công lại TPTC do TPB3 không đồng quan điểm với Vụ trưởng</option>
+                  <option>Phân công lại TPTC theo ý kiến Phó Chánh án</option>
+                  <option>Phân công lại TPTC sau phiên họp Tổ Thẩm phán</option>
+                </select>
+                {inputNguonDeXuat.includes("Phân công lại") && (
+                  <div style={{marginTop:6,padding:"7px 10px",border:"1px solid #fde68a",background:"#fffbeb",borderRadius:5,fontSize:11,color:"#92400e"}}>
+                    Theo Draw.io 2.9/2.14: đây là tờ trình <b>phân công lại TPTC</b>; sau khi Vụ trưởng và Phó Chánh án ký, Phó Chánh án thực hiện phân công và hồ sơ được chuyển cho TPTC mới.
+                  </div>
+                )}
+              </div>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: TEXT, display: "block", marginBottom: 6 }}>
-                  Nội dung ý kiến tờ trình
+                  Nội dung tờ trình
                 </label>
                 <textarea
                   rows={4}
@@ -878,6 +924,11 @@ export function PhanCongTPTCView() {
               </div>
             </div>
 
+            <div style={{padding:"0 20px 14px"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}><b style={{fontSize:12}}>Nơi nhận</b><button onClick={()=>setNoiNhanTT(v=>[...v,{id:Date.now(),noiNhan:"Khác",chiTiet:"",ghiChu:""}])}>+ Thêm</button></div>
+              <table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr>{["Nơi nhận","Nơi nhận chi tiết","Ghi chú",""].map(h=><th key={h} style={TH_STYLE}>{h}</th>)}</tr></thead><tbody>{noiNhanTT.map(row=><tr key={row.id}><td style={TD_STYLE}><select value={row.noiNhan} onChange={e=>setNoiNhanTT(v=>v.map(x=>x.id===row.id?{...x,noiNhan:e.target.value}:x))}><option>Tòa án nhân dân</option><option>Khác</option></select></td><td style={TD_STYLE}><input value={row.chiTiet} onChange={e=>setNoiNhanTT(v=>v.map(x=>x.id===row.id?{...x,chiTiet:e.target.value}:x))}/></td><td style={TD_STYLE}><input value={row.ghiChu} onChange={e=>setNoiNhanTT(v=>v.map(x=>x.id===row.id?{...x,ghiChu:e.target.value}:x))}/></td><td style={TD_STYLE}><button onClick={()=>setNoiNhanTT(v=>v.filter(x=>x.id!==row.id))}>Xóa</button></td></tr>)}</tbody></table>
+            </div>
+            <div style={{padding:"0 20px 12px",display:"flex",gap:8}}><button onClick={()=>{if(daLaySo){setDaLaySo(false);setInputSoTT("");}else{setDaLaySo(true);setInputSoTT("36/TB-TA");}}}>{daLaySo?"Hủy lấy số":"Lấy số"}</button></div>
             <div style={{ padding: "12px 20px", background: "#f8fafc", borderTop: `1px solid ${BORDER}`, display: "flex", justifyContent: "flex-end", gap: 10 }}>
               <button
                 onClick={() => setShowThemToTrinhModal(false)}
@@ -948,7 +999,8 @@ export function PhanCongTPTCView() {
               <div style={{ textAlign: "center", borderBottom: `1px dashed ${BORDER}`, paddingBottom: 14 }}>
                 <div style={{ fontWeight: 700, fontSize: 13, textTransform: "uppercase" }}>TÒA ÁN NHÂN DÂN TỐI CAO</div>
                 <div style={{ fontWeight: 600, color: RED, marginTop: 4, fontSize: 14 }}>TỜ TRÌNH PHÂN CÔNG THẨM PHÁN TỐI CAO</div>
-                <div style={{ color: MUTED, fontSize: 11, marginTop: 2 }}>Số: {showViewToTrinhModal.soToTrinh !== "-" ? showViewToTrinhModal.soToTrinh : "35/TT-TA"} &nbsp;•&nbsp; Ngày: {showViewToTrinhModal.ngayToTrinh !== "-" ? showViewToTrinhModal.ngayToTrinh : "09/08/2026"}</div>
+                <div style={{ color: MUTED, fontSize: 11, marginTop: 2 }}>Số: {showViewToTrinhModal.soToTrinh !== "-" ? showViewToTrinhModal.soToTrinh : "Chưa lấy số"} &nbsp;•&nbsp; Ngày: {showViewToTrinhModal.ngayToTrinh !== "-" ? showViewToTrinhModal.ngayToTrinh : "-"}</div>
+                <div style={{marginTop:4,fontSize:11,color:showViewToTrinhModal.trangThaiKy.includes("Đã")?"#7c3aed":"#2563eb"}}>{showViewToTrinhModal.trangThaiKy.includes("Đã") ? "Chế độ PDF - chỉ xem" : "Chế độ Word - cho phép sửa"}</div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "150px 1fr", gap: 8 }}>

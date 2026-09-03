@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FileText, Calendar, X } from "lucide-react";
 import { F, RED, BORDER, TEXT, MUTED, TH_STYLE, TD_STYLE } from "./shared";
 import { TrinhKyModal } from "./TrinhKyModal";
@@ -328,7 +328,8 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
     // SRS [Thấp]: cảnh báo khi thiếu thông tin bắt buộc trước khi lưu
     const thieuThongTinBatBuoc =
       (showNoiNhan && !noiDung.trim()) ||
-      (isKhieuNai && !ketQuaXacDinhThamQuyen);
+      (isKhieuNai && !ketQuaXacDinhThamQuyen) ||
+      (isKhangNghi && (!thamQuyenXetXu || !noiDungVuAn.trim() || !xetThay.trim() || !quyetDinhKN));
     if (thieuThongTinBatBuoc) {
       alert("Bổ sung các thông tin bắt buộc để tiếp tục thao tác");
       return;
@@ -396,6 +397,25 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
   const xoaDongCanCuDieuLuat = (id: number) => setCanCuDieuLuatRows(prev => prev.filter(r => r.id !== id));
   const [noiDungVuAn, setNoiDungVuAn] = useState("");
   const [xetThay, setXetThay] = useState("");
+  const [noiDungThongBao, setNoiDungThongBao] = useState("");
+  const [cauKetLuan, setCauKetLuan] = useState("");
+  const handleLayNoiDungTuQD = () => {
+    const mauNoiDung: Record<string, string> = {
+      "chap-nhan": "Căn cứ nội dung Quyết định giải quyết khiếu nại, Tòa án nhân dân tối cao thông báo: Chấp nhận nội dung đơn khiếu nại.",
+      "khong-chap-nhan": "Căn cứ nội dung Quyết định giải quyết khiếu nại, Tòa án nhân dân tối cao thông báo: Không chấp nhận nội dung đơn khiếu nại.",
+      "xep-don": "Căn cứ nội dung Quyết định giải quyết khiếu nại, Tòa án nhân dân tối cao thông báo: Xếp đơn do không đủ căn cứ giải quyết.",
+    };
+    setNoiDungThongBao(mauNoiDung[ketQua] ?? "");
+  };
+  useEffect(() => {
+    const mauKetLuan: Record<string, string> = {
+      "chap-nhan": "Chấp nhận đơn khiếu nại.",
+      "khong-chap-nhan": "Không chấp nhận đơn khiếu nại, giữ nguyên nội dung đã giải quyết.",
+      "xep-don": "Xếp đơn, không có căn cứ để giải quyết.",
+    };
+    if (isKhieuNai) setCauKetLuan(mauKetLuan[ketQua] ?? "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ketQua]);
   const [quyetDinhKN, setQuyetDinhKN] = useState("");
   const [congVanVKS, setCongVanVKS] = useState<Array<{ id: number; hinhThuc: string; ten: string; so: string; ngay: string; donVi: string }>>([]);
 
@@ -403,6 +423,7 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
   const isKhangNghi = ketQua === "khang-nghi";
   const isXepDon = ketQua === "xep-don";
   const isVks = ketQua === "vks";
+  const isHinhSu = String(detail?.loaiAn || detail?.type || "").toLowerCase().includes("hình sự") || !detail?.loaiAn;
   const showNoiNhan = isTraLoi || isVks || isKhangNghi || ketQua === "chap-nhan" || ketQua === "khong-chap-nhan";
   const VKS_OPTIONS = ["VKSND Tối cao", "VKSND cấp cao tại Hà Nội", "VKSND cấp cao tại TP. HCM", "VKSND cấp cao tại Đà Nẵng"];
 
@@ -743,6 +764,34 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
                 </div>
               </div>
 
+              {isKhieuNai && (
+                <div style={{ marginTop: 4 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <label style={lblSt}>Nội dung thông báo</label>
+                    <button
+                      type="button"
+                      onClick={handleLayNoiDungTuQD}
+                      style={{ background: "none", border: "none", color: "#800000", fontSize: 12, fontFamily: F, cursor: "pointer", textDecoration: "underline", padding: 0 }}
+                    >
+                      Lấy nội dung từ QĐ GQKN
+                    </button>
+                  </div>
+                  <textarea
+                    value={noiDungThongBao}
+                    onChange={e => setNoiDungThongBao(e.target.value)}
+                    placeholder="Nhập nội dung thông báo hoặc bấm 'Lấy nội dung từ QĐ GQKN'"
+                    style={{ ...inSt, minHeight: 64, resize: "vertical" }}
+                  />
+
+                  <label style={{ ...lblSt, marginTop: 10, display: "block" }}>Câu kết luận (tự sinh)</label>
+                  <textarea
+                    value={cauKetLuan}
+                    onChange={e => setCauKetLuan(e.target.value)}
+                    style={{ ...inSt, minHeight: 44, resize: "vertical", background: "#f9fafb" }}
+                  />
+                </div>
+              )}
+
               {isKhangNghi && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 4 }}>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
@@ -886,7 +935,8 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
                         {VKS_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
                       </select>
 
-                      {/* TH-084: thông tin quyết định / công văn của VKS */}
+                      {/* TH-084: chỉ án Hình sự có danh sách công văn/quyết định đi kèm */}
+                      {isHinhSu && (
                       <div style={{ marginTop: 12, maxWidth: "100%" }}>
                         <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
                           <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", flex: 1 }}>Thông tin quyết định / công văn</span>
@@ -931,6 +981,7 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
                           </tbody>
                         </table>
                       </div>
+                      )}
                     </div>
                   )}
 
