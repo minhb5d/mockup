@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { RotateCcw, MoreVertical, ChevronDown, ChevronUp, X, Eye, Users, FileText, ChevronLeft, ChevronRight, Search, Calendar, Check, Printer, Download } from "lucide-react";
-import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge, TaiKhoanPhanQuyenBar, type UserRoleType } from "./shared";
+import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge, type UserRoleType } from "./shared";
 import { formatSoBA } from "./AppHelpers";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
@@ -715,7 +715,7 @@ const QD_ROWS = [
 
 // ── Lịch xét xử modal ────────────────────────────────────────────────────────
 
-type CalEvent = { label: string; color: string; bg: string; loai: "GĐT/TT" | "ST" | "PT" | "THA"; phong?: string; gio?: string; caNgay?: boolean; nguoiTao?: string; hinhThuc?: string; daTaoThuMoiVks?: boolean; daGuiThanhVien?: boolean; daBoTriPhong?: boolean };
+type CalEvent = { label: string; color: string; bg: string; loai: "GĐT/TT" | "ST" | "PT" | "THA"; phong?: string; gio?: string; caNgay?: boolean; nguoiTao?: string };
 // THIẾU [TB]: bổ sung loại "Thi hành án" cho thanh thống kê Lịch xét xử — SRS Lên lịch mục 2
 const LOAI_STYLE: Record<"GĐT/TT" | "ST" | "PT" | "THA", { color: string; bg: string }> = {
   "GĐT/TT": { color: "#991b1b", bg: "#fee2e2" },
@@ -760,7 +760,7 @@ const FULL_CAL_ROWS = (() => {
   return rows;
 })();
 
-export function LichXetXuModal({ onClose, onSelectDate, embedded = false }: { onClose: () => void; onSelectDate?: (dateStr: string) => void; embedded?: boolean }) {
+export function LichXetXuModal({ onClose, onSelectDate }: { onClose: () => void; onSelectDate?: (dateStr: string) => void }) {
   const [calView, setCalView] = useState<"thang" | "tuan" | "ngay">("thang");
   const [events, setEvents] = useState<Record<string, CalEvent[]>>(INIT_EVENTS);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
@@ -773,7 +773,6 @@ export function LichXetXuModal({ onClose, onSelectDate, embedded = false }: { on
   const [fCalNgay, setFCalNgay] = useState(false);
   const [fSoDS, setFSoDS] = useState("");
   const [fNgayTao, setFNgayTao] = useState("18/03/2026");
-  const [fLoaiLich, setFLoaiLich] = useState<CalEvent["loai"]>("GĐT/TT");
   const [fHinhThuc, setFHinhThuc] = useState("");
   const [fNguoiNhan, setFNguoiNhan] = useState("");
   // THIẾU [Cao]: Phòng xét xử là trường bắt buộc (SRS Lên lịch mục 3, 9)
@@ -809,14 +808,12 @@ export function LichXetXuModal({ onClose, onSelectDate, embedded = false }: { on
 
   const buildEvent = (): CalEvent | null => {
     if (!selectedDay) return null;
-    const loai: CalEvent["loai"] = fLoaiLich;
+    const loai: CalEvent["loai"] =
+      fHinhThuc === "Sơ thẩm" ? "ST" : fHinhThuc === "Phúc thẩm" ? "PT" : "GĐT/TT";
     const st = LOAI_STYLE[loai];
     return {
       label: fTitle || `Lịch ${loai}`, color: st.color, bg: st.bg, loai,
-      phong: fPhongXX, gio: `${fGioFrom}-${fGioTo}`, caNgay: fCalNgay, hinhThuc: fHinhThuc,
-      daTaoThuMoiVks: loai === "GĐT/TT" ? false : undefined,
-      daGuiThanhVien: loai === "GĐT/TT" ? false : undefined,
-      daBoTriPhong: loai === "GĐT/TT" ? false : undefined,
+      phong: fPhongXX, gio: `${fGioFrom}-${fGioTo}`, caNgay: fCalNgay,
     };
   };
 
@@ -871,15 +868,6 @@ export function LichXetXuModal({ onClose, onSelectDate, embedded = false }: { on
     });
     setConfirmXoaLich(false);
     setSelectedDay(null);
-  };
-
-  const markChuanBiPhienToa = (eventIndex: number, field: "daTaoThuMoiVks" | "daGuiThanhVien" | "daBoTriPhong") => {
-    if (!selectedDay) return;
-    const key = dateKey(selectedDay);
-    setEvents(prev => ({
-      ...prev,
-      [key]: (prev[key] || []).map((ev, idx) => idx === eventIndex ? { ...ev, [field]: !ev[field] } : ev),
-    }));
   };
 
   // render a single calendar cell
@@ -940,8 +928,8 @@ export function LichXetXuModal({ onClose, onSelectDate, embedded = false }: { on
   const req = <span style={{ color: RED }}> *</span>;
 
   return (
-    <div style={{ position: embedded ? "relative" : "fixed", inset: embedded ? undefined : 0, width: "100%", height: "100%", background: embedded ? "#f8fafc" : "rgba(0,0,0,0.45)", zIndex: embedded ? "auto" : 1200, display: "flex", alignItems: "center", justifyContent: "center", padding: embedded ? 12 : 0, boxSizing: "border-box" }}>
-      <div style={{ background: "#fff", borderRadius: embedded ? 6 : 10, width: embedded ? "100%" : 1060, maxWidth: embedded ? 1320 : undefined, height: embedded ? "100%" : undefined, maxHeight: embedded ? "100%" : "92vh", display: "flex", flexDirection: "column" as const, boxShadow: embedded ? "none" : "0 12px 48px rgba(0,0,0,0.2)", border: embedded ? `1px solid ${BORDER}` : undefined, overflow: "hidden", fontFamily: F }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 1200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ background: "#fff", borderRadius: 10, width: 1060, maxHeight: "92vh", display: "flex", flexDirection: "column" as const, boxShadow: "0 12px 48px rgba(0,0,0,0.2)", overflow: "hidden", fontFamily: F }}>
         <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
           {/* ── Left sidebar ── */}
@@ -1157,16 +1145,6 @@ export function LichXetXuModal({ onClose, onSelectDate, embedded = false }: { on
                 </label>
               </div>
 
-              <div>
-                <label style={lbl}>Loại lịch xét xử{req}</label>
-                <select value={fLoaiLich} onChange={e=>setFLoaiLich(e.target.value as CalEvent["loai"])} style={{...inp,appearance:"none",cursor:"pointer"}}>
-                  <option value="GĐT/TT">Giám đốc thẩm / Tái thẩm</option>
-                  <option value="ST">Sơ thẩm</option>
-                  <option value="PT">Phúc thẩm</option>
-                  <option value="THA">Thi hành án</option>
-                </select>
-              </div>
-
               {/* Hình thức + Người nhận thông báo */}
               <div style={{ display: "flex", gap: 12 }}>
                 <div style={{ flex: 1 }}>
@@ -1212,20 +1190,6 @@ export function LichXetXuModal({ onClose, onSelectDate, embedded = false }: { on
               {loiLich && (
                 <div style={{ padding: "8px 10px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 4, fontSize: 12, color: "#991b1b", fontFamily: F }}>
                   ⚠ {loiLich}
-                </div>
-              )}
-
-              {(events[dateKey(selectedDay)] || []).some(ev=>ev.loai==="GĐT/TT") && (
-                <div style={{border:"1px solid #c4b5fd",background:"#f5f3ff",borderRadius:6,padding:12}}>
-                  <div style={{fontSize:12,fontWeight:700,color:"#5b21b6",marginBottom:8}}>Chuẩn bị phiên tòa theo Drawio 2.16</div>
-                  {(events[dateKey(selectedDay)] || []).map((ev,ei)=>ev.loai==="GĐT/TT" ? <div key={ei} style={{borderTop:ei?"1px solid #ddd6fe":"none",paddingTop:ei?8:0,marginTop:ei?8:0}}>
-                    <div style={{fontSize:11,fontWeight:600,color:TEXT,marginBottom:6}}>{ev.label} · {ev.phong || "Chưa chọn phòng"}</div>
-                    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
-                      <button onClick={()=>markChuanBiPhienToa(ei,"daTaoThuMoiVks")} style={{padding:"6px 7px",fontSize:10,border:"1px solid #c4b5fd",background:ev.daTaoThuMoiVks?"#dcfce7":"#fff",borderRadius:4,cursor:"pointer"}}>{ev.daTaoThuMoiVks?"✓ ":""}1. Tạo giấy mời/TB cho VKSNDTC</button>
-                      <button onClick={()=>markChuanBiPhienToa(ei,"daGuiThanhVien")} style={{padding:"6px 7px",fontSize:10,border:"1px solid #c4b5fd",background:ev.daGuiThanhVien?"#dcfce7":"#fff",borderRadius:4,cursor:"pointer"}}>{ev.daGuiThanhVien?"✓ ":""}2. Gửi HĐXX + VKS + Vụ, sao CA/PCA</button>
-                      <button onClick={()=>{if(!ev.phong){alert("Phải có Phòng xét xử trước khi xác nhận bố trí điều kiện phiên tòa");return;}markChuanBiPhienToa(ei,"daBoTriPhong")}} style={{padding:"6px 7px",fontSize:10,border:"1px solid #c4b5fd",background:ev.daBoTriPhong?"#dcfce7":"#fff",borderRadius:4,cursor:"pointer"}}>{ev.daBoTriPhong?"✓ ":""}3. Bố trí phòng & điều kiện xét xử</button>
-                    </div>
-                  </div> : null)}
                 </div>
               )}
             </div>
@@ -4844,7 +4808,6 @@ export default function PhanCongHDXXView({
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
           <h1 style={{ fontSize: 21, fontWeight: 700, color: TEXT, fontFamily: F, margin: 0 }}>Phân công Hội đồng xét xử</h1>
-          <TaiKhoanPhanQuyenBar userRole={userRole} setUserRole={setUserRole} />
         </div>
 
         <div style={{ display: "flex", borderBottom: `1px solid ${BORDER}`, marginBottom: 16 }}>

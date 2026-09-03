@@ -328,8 +328,7 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
     // SRS [Thấp]: cảnh báo khi thiếu thông tin bắt buộc trước khi lưu
     const thieuThongTinBatBuoc =
       (showNoiNhan && !noiDung.trim()) ||
-      (isKhieuNai && !ketQuaXacDinhThamQuyen) ||
-      (isKhangNghi && (!thamQuyenXetXu || !noiDungVuAn.trim() || !xetThay.trim() || !quyetDinhKN));
+      (isKhieuNai && !ketQuaXacDinhThamQuyen);
     if (thieuThongTinBatBuoc) {
       alert("Bổ sung các thông tin bắt buộc để tiếp tục thao tác");
       return;
@@ -404,7 +403,6 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
   const isKhangNghi = ketQua === "khang-nghi";
   const isXepDon = ketQua === "xep-don";
   const isVks = ketQua === "vks";
-  const isHinhSu = String(detail?.loaiAn || detail?.type || "").toLowerCase().includes("hình sự") || !detail?.loaiAn;
   const showNoiNhan = isTraLoi || isVks || isKhangNghi || ketQua === "chap-nhan" || ketQua === "khong-chap-nhan";
   const VKS_OPTIONS = ["VKSND Tối cao", "VKSND cấp cao tại Hà Nội", "VKSND cấp cao tại TP. HCM", "VKSND cấp cao tại Đà Nẵng"];
 
@@ -888,8 +886,7 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
                         {VKS_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
                       </select>
 
-                      {/* TH-084: chỉ án Hình sự có danh sách công văn/quyết định đi kèm */}
-                      {isHinhSu && (
+                      {/* TH-084: thông tin quyết định / công văn của VKS */}
                       <div style={{ marginTop: 12, maxWidth: "100%" }}>
                         <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
                           <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", flex: 1 }}>Thông tin quyết định / công văn</span>
@@ -934,7 +931,6 @@ export function ThemKetQuaModal({ onClose, detail }: { onClose: () => void; deta
                           </tbody>
                         </table>
                       </div>
-                      )}
                     </div>
                   )}
 

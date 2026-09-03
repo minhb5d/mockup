@@ -750,8 +750,6 @@ export function TabThongTin({ detail, userRole, onRequiredChange }: { detail?: V
   }, [selectedLoaiAn]);
 
   // Merge dữ liệu thực từ detail nếu có
-  const displayMaVuAn = detail ? `${detail.maVuAn}: ${detail.tenVuAn}` : mock.thongTinChung.maVuAn;
-  const displayLoaiBanAn = detail?.loaiBienAn || mock.thongTinChung.loaiBanAn;
   const displayThuTuc = detail?.namGiaiQuyet || mock.thongTinChung.thuTucGiaiQuyet;
   const [thuTucGiaiQuyet, setThuTucGiaiQuyet] = useState(displayThuTuc);
   const [soNgayBA, setSoNgayBA] = useState("");
@@ -797,7 +795,6 @@ export function TabThongTin({ detail, userRole, onRequiredChange }: { detail?: V
             <col style={{ width: "34%" }} />
           </colgroup>
           <tbody>
-            {/* row 1: Mã vụ án + Loại bản án đã bỏ theo đối chiếu 27.08 */}
             {/* row 2 */}
             <tr>
               <td style={{ ...TD_STYLE, background: BG, fontWeight: 600, fontSize: 11, color: MUTED, borderRight: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>Thủ tục giải quyết</td>
@@ -858,9 +855,9 @@ export function TabThongTin({ detail, userRole, onRequiredChange }: { detail?: V
         </div>
         <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
           <colgroup>
-            <col style={{ width: 50 }} />
-            <col style={{ width: "55%" }} />
-            <col style={{ width: "40%" }} />
+            <col style={{ width: 40 }} />
+            <col style={{ width: "58%" }} />
+            <col style={{ width: "34%" }} />
           </colgroup>
           <thead>
             <tr>

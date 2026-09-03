@@ -831,12 +831,6 @@ export function TabToTrinh({ detail, userRole }: { detail?: VuAnDetailData; user
     setVanBanList(prev => [newRow, ...prev.map((r, i) => ({ ...r, stt: i + 2 }))]);
   };
 
-  const handleDeleteVanBan = (stt: number) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa mục này không?")) {
-      setVanBanList(prev => prev.filter(r => r.stt !== stt));
-    }
-  };
-
   const handleTrinhVanBanClick = () => {
     const hasMissingHoSo = vanBanList.some(r => r.vanBan.includes("Tờ trình") && (!r.daDinhKemHoSo || r.soHoSo === 0));
     if (hasMissingHoSo) {
@@ -933,7 +927,7 @@ export function TabToTrinh({ detail, userRole }: { detail?: VuAnDetailData; user
             </colgroup>
             <thead>
               <tr>
-                {["STT", "TÊN VĂN BẢN", !isVu234(userRole, detail?.loaiAn) ? "ĐƠN / VỤ ÁN" : "VỤ ÁN", "NGÀY TẠO", "NGƯỜI KÝ", "TRẠNG THÁI", "THAO TÁC"].map(h => (
+                {["STT", "TÊN VĂN BẢN", !isVu234(userRole, detail?.loaiAn) ? "ĐƠN / VỤ ÁN" : "VỤ ÁN", "NGƯỜI KÝ", "TRẠNG THÁI", "THAO TÁC"].map(h => (
                   <th key={h} style={TH}>{h}</th>
                 ))}
               </tr>
@@ -953,7 +947,6 @@ export function TabToTrinh({ detail, userRole }: { detail?: VuAnDetailData; user
                       ) : null}
                     </td>
                     <td style={{ ...TD, whiteSpace: "pre-line" as const }}>{r.don}</td>
-                    <td style={TD}>{r.ngayTao}</td>
                     <td style={TD}>{r.nguoiKy}</td>
                     <td style={TD}>
                       {isToTrinh ? (
@@ -974,16 +967,6 @@ export function TabToTrinh({ detail, userRole }: { detail?: VuAnDetailData; user
                         {isToTrinh && (
                           <button onClick={() => setShowTaoTT(true)} title="Trình lại tờ trình" style={{ background: "none", border: "none", cursor: "pointer", padding: 3, display: "inline-flex", alignItems: "center" }}>
                             <RotateCcw size={14} color="#1d4ed8" />
-                          </button>
-                        )}
-                        {isToTrinh && (
-                          <button onClick={() => handleDeleteVanBan(r.stt)} title="Xóa tờ trình" style={{ background: "none", border: "none", cursor: "pointer", padding: 3 }}>
-                            <Trash2 size={14} color="#dc2626" />
-                          </button>
-                        )}
-                        {!isToTrinh && (r.trangThai === "Chưa ký số" || r.trangThai === "Chờ ký số") && (
-                          <button onClick={() => handleDeleteVanBan(r.stt)} title="Xóa dự thảo" style={{ background: "none", border: "none", cursor: "pointer", padding: 3 }}>
-                            <Trash2 size={14} color="#dc2626" />
                           </button>
                         )}
                         <button onClick={() => { if (isToTrinh) setShowTaoTT(true); else setShowTaoDuThao(true); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 3 }} title={isToTrinh ? "Xem chi tiết tờ trình" : "Xem chi tiết dự thảo"}>
@@ -1028,7 +1011,7 @@ export function TabToTrinh({ detail, userRole }: { detail?: VuAnDetailData; user
               <col style={{ width: 90 }} />
             </colgroup>
             <thead>
-              <tr>{["STT", "NGÀY TRÌNH", "LÃNH ĐẠO ĐƯỢC TRÌNH", "CẤP TRÌNH", "VĂN BẢN", "Ý KIẾN/ĐƠN", "NGÀY DUYỆT", "TRẠNG THÁI", "THAO TÁC"].map(h => <th key={h} style={TH}>{h}</th>)}</tr>
+              <tr>{["STT", "NGÀY TRÌNH", "LÃNH ĐẠO ĐƯỢC TRÌNH", "VĂN BẢN", "Ý KIẾN/ĐƠN", "NGÀY DUYỆT", "TRẠNG THÁI", "THAO TÁC"].map(h => <th key={h} style={TH}>{h}</th>)}</tr>
             </thead>
             <tbody>
               {filteredLichSu.map((r) => {
@@ -1038,8 +1021,7 @@ export function TabToTrinh({ detail, userRole }: { detail?: VuAnDetailData; user
                     <tr style={{ background: "#fff" }}>
                       <td style={{ ...TD, textAlign: "center", color: MUTED }}>{realIdx + 1}</td>
                       <td style={TD}>{r.ngayTrinh}</td>
-                      <td style={TD}>{r.lanh}</td>
-                      <td style={TD}>{r.capTrinh}</td>
+                      <td style={{ ...TD, whiteSpace: "pre-line" }}><b>{r.capTrinh}</b>{"\n"}{r.lanh}</td>
                       <td style={{ ...TD, color: "#2563eb" }}>{r.vanBan}</td>
                       <td style={{ ...TD, fontSize: 11, whiteSpace: "pre-line" }} title={r.yKien}>
                         {formatYKienLichSu(r, detail)}
@@ -1049,7 +1031,7 @@ export function TabToTrinh({ detail, userRole }: { detail?: VuAnDetailData; user
                         {r.trangThai === "cho-duyet"
                           ? <Badge color="#92400e" bg="#fef3c7">Chờ duyệt</Badge>
                           : r.trangThai === "tu-choi"
-                            ? <Badge color="#991b1b" bg="#fee2e2">Từ chối</Badge>
+                            ? <Badge color="#991b1b" bg="#fee2e2">Trả lại</Badge>
                             : <Badge color="#065f46" bg="#d1fae5">Đã duyệt</Badge>}
                       </td>
                       <td style={{ ...TD, textAlign: "center" }}>
@@ -1064,13 +1046,9 @@ export function TabToTrinh({ detail, userRole }: { detail?: VuAnDetailData; user
                               </svg>
                             </button>
                           )}
-                          {r.trangThai === "tu-choi" ? (
+                          {r.trangThai === "tu-choi" && (
                             <button title="Trình lại tờ trình" onClick={() => setShowTaoTT(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2, display: "inline-flex", alignItems: "center" }}>
                               <RotateCcw size={13} color="#1d4ed8" />
-                            </button>
-                          ) : (
-                            <button title="Trình ký" onClick={() => setShowTrinhKy(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2, display: "inline-flex", alignItems: "center" }}>
-                              <Send size={13} color={RED} />
                             </button>
                           )}
                         </div>

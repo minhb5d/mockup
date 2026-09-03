@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Search, Eye, X, Printer, FileText, Pencil, Send, Paperclip, Trash2, RotateCw } from "lucide-react";
-import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge, TaiKhoanPhanQuyenBar, type UserRoleType } from "./shared";
+import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge, type UserRoleType } from "./shared";
 import { TaoToTrinhModal, ThuHoiConfirmDialog } from "./AppHelpers";
 import { TrinhKyModal, HoSoToTrinhModal } from "./TrinhKyModal";
 import { TaoDuThaoModal, TaoDuThaoCongVanModal } from "./TaoDuThaoModal";
@@ -24,8 +24,6 @@ type CVRow = {
   phanHoi: string;
   phanCong: string;
   coKQGG: boolean;
-  daTrinhKy?: boolean;
-  donViNhanList?: string[];
 };
 
 export const CV_ROWS: CVRow[] = [
@@ -60,8 +58,6 @@ export const CV_ROWS: CVRow[] = [
     phanHoi: "–",
     phanCong: "TTV: Lê Thị Bình",
     coKQGG: false,
-    daTrinhKy: true,
-    donViNhanList: ["VKSND Tối cao", "TAND tỉnh Hà Nam", "Cục THADS tỉnh Hà Nam"],
   },
   {
     stt: "03",
@@ -525,18 +521,13 @@ export function XemBieuMauCongVanModal({ onClose }: { onClose: () => void }) {
 
 // ── TaoCongVanModal ───────────────────────────────────────────────────────────
 
-const NOI_NHAN_OPTIONS: Record<"toa-an" | "vien-kiem-sat", string[]> = {
-  "toa-an": ["Tòa án nhân dân tối cao", "Tòa án nhân dân cấp cao tại Hà Nội", "Tòa án nhân dân cấp cao tại Đà Nẵng", "Tòa án nhân dân cấp cao tại TP. Hồ Chí Minh", "Tòa án nhân dân tỉnh Tuyên Quang", "Tòa án nhân dân TP. Hà Nội"],
-  "vien-kiem-sat": ["Viện kiểm sát nhân dân tối cao", "Viện kiểm sát nhân dân cấp cao tại Hà Nội", "Viện kiểm sát nhân dân cấp cao tại Đà Nẵng", "Viện kiểm sát nhân dân cấp cao tại TP. Hồ Chí Minh"],
-};
-
 export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
-  const [loaiCV, setLoaiCV] = useState<"den" | "di">("di");
+  const [loaiCV, setLoaiCV] = useState<"den" | "di">("den");
   const [noiGuiLoai, setNoiGuiLoai] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
-  const [noiNhanList, setNoiNhanList] = useState<Array<{ id: number; phanLoai: string; donVi: string; ghiChu: string; soBan: string }>>([
-    { id: 1, phanLoai: "vien-kiem-sat", donVi: "Viện kiểm sát nhân dân tối cao", ghiChu: "Kính gửi Lãnh đạo VKSNDTC", soBan: "02" },
-    { id: 2, phanLoai: "toa-an", donVi: "Tòa án nhân dân tỉnh Hà Nam", ghiChu: "Như kính gửi; Lưu VP", soBan: "01" },
+  const [noiNhanList, setNoiNhanList] = useState<Array<{ id: number; phanLoai: string; donVi: string; kinhGui: string }>>([
+    { id: 1, phanLoai: "vien-kiem-sat", donVi: "Viện kiểm sát nhân dân tối cao", kinhGui: "Kính gửi Lãnh đạo VKSNDTC" },
+    { id: 2, phanLoai: "toa-an", donVi: "Tòa án nhân dân tỉnh Hà Nam", kinhGui: "Như kính gửi; Lưu VP" },
   ]);
   const [traLoiSoCV, setTraLoiSoCV] = useState("");
   const [traLoiNgayCV, setTraLoiNgayCV] = useState("");
@@ -544,8 +535,6 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
   const [daCapSo, setDaCapSo] = useState(false);
   const [showTrinhKy, setShowTrinhKy] = useState(false);
   const [showBieuMau, setShowBieuMau] = useState(false);
-  const [baSo,setBaSo]=useState(""); const [baNgay,setBaNgay]=useState(""); const [baToa,setBaToa]=useState(""); const [baStatus,setBaStatus]=useState("");
-  const [replyResults,setReplyResults]=useState<Array<{so:string;ngay:string;donVi:string}>>([]); const [selectedReply,setSelectedReply]=useState("");
 
   const inSt: React.CSSProperties = {
     width: "100%", border: `1px solid ${BORDER}`, borderRadius: 5,
@@ -609,11 +598,7 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
             </div>
             <div>
               <label style={lblSt}>Người ký</label>
-              {loaiCV === "di" ? (
-                <select style={inSt} defaultValue=""><option value="">Chọn người ký</option><option>Vụ trưởng - Vụ trưởng</option><option>Phó Vụ trưởng - Phó Vụ trưởng</option><option>Thẩm phán TAND tối cao - TPTC</option><option>Thẩm phán bậc 3 - TPB3</option></select>
-              ) : (
-                <input placeholder="Nhập người ký công văn đến" style={inSt} />
-              )}
+              <input placeholder="Chọn người ký" style={inSt} />
             </div>
           </div>
 
@@ -649,9 +634,7 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
                 </div>
                 <div>
                   <label style={lblSt}>Tên đơn vị nhận</label>
-                  {noiGuiLoai === "khac" ? <input placeholder="Nhập đơn vị nhận" style={inSt} /> : (
-                    <select style={inSt} defaultValue=""><option value="">Chọn đơn vị nhận</option>{(NOI_NHAN_OPTIONS[noiGuiLoai as "toa-an" | "vien-kiem-sat"] || []).map(x => <option key={x}>{x}</option>)}</select>
-                  )}
+                  <input placeholder="Chọn nơi nhận trước" style={inSt} />
                 </div>
               </div>
             </div>
@@ -660,24 +643,13 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
           {/* Hàng 3: Nội dung công văn */}
           <div>
             <label style={lblSt}>Nội dung công văn</label>
-            <textarea maxLength={2000} placeholder="Nhập nội dung công văn (tối đa 2.000 ký tự)" style={{ ...inSt, minHeight: 80, resize: "vertical" }} />
+            <textarea placeholder="Nhập nội dung công văn" style={{ ...inSt, minHeight: 80, resize: "vertical" }} />
           </div>
 
           {/* Hàng 4: Ghi chú */}
           <div>
             <label style={lblSt}>Ghi chú</label>
-            <textarea maxLength={2000} placeholder="Nhập ghi chú (tối đa 2.000 ký tự)" style={{ ...inSt, minHeight: 70, resize: "vertical" }} />
-          </div>
-
-          <div style={{border:`1px solid ${BORDER}`,borderRadius:6,padding:16}}>
-            <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>Tra cứu bản án/quyết định</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr auto",gap:10,alignItems:"end"}}>
-              <div><label style={lblSt}>Số BA/QĐ</label><input value={baSo} onChange={e=>setBaSo(e.target.value)} style={inSt}/></div>
-              <div><label style={lblSt}>Ngày BA/QĐ</label><input type="date" value={baNgay} onChange={e=>setBaNgay(e.target.value)} style={inSt}/></div>
-              <div><label style={lblSt}>Tòa xét xử</label><input value={baToa} onChange={e=>setBaToa(e.target.value)} style={inSt}/></div>
-              <button onClick={()=>{if(baSo.trim()){setBaNgay(baNgay||"2026-07-20");setBaToa(baToa||"Tòa án nhân dân TP Hà Nội");setBaStatus("Đã tìm thấy thông tin bản án");}else setBaStatus("Không tìm thấy thông tin bản án");}} style={{height:34}}>Tìm kiếm</button>
-            </div>
-            {baStatus&&<div style={{marginTop:8,fontSize:12,color:baStatus.startsWith("Đã")?"#047857":"#b91c1c"}}>{baStatus}</div>}
+            <textarea placeholder="Nhập ghi chú" style={{ ...inSt, minHeight: 70, resize: "vertical" }} />
           </div>
 
           {/* Khung: Trả lời cho công văn */}
@@ -692,7 +664,7 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
                     display: "flex", alignItems: "center", gap: 6, padding: "6px 16px",
                     background: "#7f1d1d", color: "#fff", border: "none", borderRadius: 4,
                     cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F, marginTop: 10,
-                  }} onClick={()=>setReplyResults([{so:traLoiSoCV||"25/CV-TA",ngay:traLoiNgayCV||"20/07/2026",donVi:"Tòa án nhân dân tỉnh Bắc Ninh"},{so:"18/CV-VKS",ngay:"15/07/2026",donVi:"VKSND tối cao"}])}>
+                  }}>
                   <Search size={13} /> Tìm kiếm
                 </button>
               </div>
@@ -721,19 +693,15 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          {replyResults.length>0&&<div style={{border:`1px solid ${BORDER}`,borderRadius:5,padding:10}}><b style={{fontSize:12}}>Kết quả công văn được trả lời</b><table style={{width:"100%",borderCollapse:"collapse",marginTop:8}}><tbody>{replyResults.map(r=><tr key={r.so}><td style={TD_STYLE}><input type="radio" name="reply" checked={selectedReply===r.so} onChange={()=>setSelectedReply(r.so)}/></td><td style={TD_STYLE}>{r.so}</td><td style={TD_STYLE}>{r.ngay}</td><td style={TD_STYLE}>{r.donVi}</td></tr>)}</tbody></table>{selectedReply&&<div style={{fontSize:11,color:"#047857"}}>Đã liên kết trả lời cho công văn {selectedReply}</div>}</div>}
-
           {/* Phần Đính kèm tệp (Công văn đến) hoặc Cấu hình nơi nhận (Công văn đi) */}
           {loaiCV === "di" ? (
-            <div style={{display:"flex",flexDirection:"column",gap:12}}>
-            <div style={{border:`1px solid ${BORDER}`,borderRadius:6,padding:16}}><div style={{fontSize:13,fontWeight:700,marginBottom:8}}>Đính kèm tệp công văn đi</div><input type="file" multiple onChange={e=>{const fs=Array.from(e.target.files??[]); if(fs.length)setAttachments(v=>[...v,...fs]);}}/>{attachments.map((f,i)=><div key={i} style={{fontSize:11,marginTop:4}}>📎 {f.name}</div>)}</div>
             <div style={{ border: `1px solid ${BORDER}`, borderRadius: 6, padding: 16, background: "#fff" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, fontFamily: F }}>
                   Cấu hình nơi nhận công văn đi
                 </div>
                 <button
-                  onClick={() => setNoiNhanList(prev => [...prev, { id: Date.now(), phanLoai: "toa-an", donVi: "", ghiChu: "", soBan: "01" }])}
+                  onClick={() => setNoiNhanList(prev => [...prev, { id: Date.now(), phanLoai: "toa-an", donVi: "", kinhGui: "" }])}
                   style={{
                     padding: "6px 14px",
                     background: RED,
@@ -759,13 +727,12 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
                     <col style={{ width: 40 }} />
                     <col style={{ width: "22%" }} />
                     <col style={{ width: "32%" }} />
-                    <col style={{ width: "28%" }} />
-                    <col style={{ width: "10%" }} />
+                    <col style={{ width: "38%" }} />
                     <col style={{ width: 45 }} />
                   </colgroup>
                   <thead>
                     <tr style={{ background: "#f8fafc" }}>
-                      {["STT", "Phân loại nơi nhận", "Đơn vị nhận chi tiết", "Ghi chú", "Số bản", ""].map((h, i) => (
+                      {["STT", "Phân loại nơi nhận", "Đơn vị nhận chi tiết", "Trích yếu / Kính gửi", ""].map((h, i) => (
                         <th key={i} style={{ ...TH_STYLE, fontSize: 11, padding: "8px 10px", borderRight: `1px solid ${BORDER}` }}>{h}</th>
                       ))}
                     </tr>
@@ -782,8 +749,6 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
                           >
                             <option value="toa-an">Tòa án</option>
                             <option value="vien-kiem-sat">Viện kiểm sát</option>
-                            <option value="cong-an">Cơ quan Công an</option>
-                            <option value="bo-tu-phap">Bộ Tư Pháp</option>
                             <option value="khac">Khác</option>
                           </select>
                         </td>
@@ -797,19 +762,10 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
                         </td>
                         <td style={{ ...TD_STYLE, padding: "6px 8px", borderRight: `1px solid ${BORDER}` }}>
                           <input
-                            placeholder="Nhập ghi chú"
-                            value={row.ghiChu}
-                            onChange={e => setNoiNhanList(prev => prev.map(x => x.id === row.id ? { ...x, ghiChu: e.target.value } : x))}
+                            placeholder="Kính gửi / Nội dung lưu"
+                            value={row.kinhGui}
+                            onChange={e => setNoiNhanList(prev => prev.map(x => x.id === row.id ? { ...x, kinhGui: e.target.value } : x))}
                             style={{ ...inSt, padding: "4px 6px", fontSize: 11 }}
-                          />
-                        </td>
-                        <td style={{ ...TD_STYLE, padding: "6px 8px", borderRight: `1px solid ${BORDER}` }}>
-                          <input
-                            type="number"
-                            min={1}
-                            value={row.soBan}
-                            onChange={e => setNoiNhanList(prev => prev.map(x => x.id === row.id ? { ...x, soBan: e.target.value } : x))}
-                            style={{ ...inSt, padding: "4px 6px", fontSize: 11, textAlign: "center" }}
                           />
                         </td>
                         <td style={{ ...TD_STYLE, textAlign: "center" }}>
@@ -826,7 +782,6 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
                   </tbody>
                 </table>
               </div>
-            </div>
             </div>
           ) : (
             <div>
@@ -884,7 +839,7 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
             >
               Lưu
             </button>
-          ) : loaiCV === "di" ? (
+          ) : (
             <>
               <button
                 onClick={() => setDaCapSo(!daCapSo)}
@@ -898,7 +853,6 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
                 {daCapSo ? "Hủy cấp số" : "Lấy số"}
               </button>
 
-              <button onClick={() => alert("Đã trình duyệt công văn") } style={{padding:"7px 20px",background:"#fff",color:RED,border:`1px solid ${RED}`,borderRadius:4,cursor:"pointer",fontSize:12,fontWeight:700}}>Trình duyệt</button>
               <button
                 onClick={() => setShowTrinhKy(true)}
                 style={{ padding: "7px 20px", background: "#7f1d1d", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F }}>
@@ -911,7 +865,7 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
                 Xem biểu mẫu
               </button>
             </>
-          ) : null}
+          )}
         </div>
       </div>
     </div>
@@ -921,18 +875,13 @@ export function TaoCongVanModal({ onClose }: { onClose: () => void }) {
 // ── XemChiTietCongVanModal ────────────────────────────────────────────────────
 
 export function XemChiTietCongVanModal({ row, onClose }: { row: CVRow; onClose: () => void }) {
-  const [soCV, setSoCV] = useState(row.soCV);
-  const [ngayCV, setNgayCV] = useState(row.ngayCV);
-  const [donViGui, setDonViGui] = useState(row.donViGui);
-  const [donViNhan, setDonViNhan] = useState(row.donViNhan);
-  const editSt: React.CSSProperties = { width:"100%", padding:"6px 8px", fontSize:12, border:`1px solid ${BORDER}`, borderRadius:4, fontFamily:F };
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1350, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ background: "#fff", borderRadius: 8, width: 780, maxWidth: "95vw", maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 8px 36px rgba(0,0,0,0.2)" }}>
         {/* Header */}
         <div style={{ background: RED, padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span style={{ color: "#fff", fontWeight: 700, fontSize: 15, fontFamily: F }}>
-            Chỉnh sửa công văn: {row.soCV}
+            Chi tiết công văn: {row.soCV}
           </span>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#fff" }}><X size={18} /></button>
         </div>
@@ -946,11 +895,11 @@ export function XemChiTietCongVanModal({ row, onClose }: { row: CVRow; onClose: 
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 12, fontFamily: F }}>
               <div><span style={{ color: MUTED }}>Loại công văn:</span> <strong>{row.loai === "den" ? "Công văn đến" : "Công văn đi"}</strong></div>
-              <label><span style={{ color: MUTED }}>Số công văn:</span><input value={soCV} onChange={e=>setSoCV(e.target.value)} style={editSt}/></label>
-              <label><span style={{ color: MUTED }}>Ngày công văn:</span><input value={ngayCV} onChange={e=>setNgayCV(e.target.value)} style={editSt}/></label>
+              <div><span style={{ color: MUTED }}>Số công văn:</span> <strong>{row.soCV}</strong></div>
+              <div><span style={{ color: MUTED }}>Ngày công văn:</span> {row.ngayCV}</div>
               <div><span style={{ color: MUTED }}>Người ký / Người duyệt:</span> Nguyễn Văn Bình</div>
-              <label><span style={{ color: MUTED }}>Đơn vị gửi:</span><input value={donViGui} onChange={e=>setDonViGui(e.target.value)} style={editSt}/></label>
-              <label><span style={{ color: MUTED }}>Đơn vị nhận:</span><input value={donViNhan} onChange={e=>setDonViNhan(e.target.value)} style={editSt}/></label>
+              <div><span style={{ color: MUTED }}>Đơn vị gửi:</span> <strong>{row.donViGui}</strong></div>
+              <div><span style={{ color: MUTED }}>Đơn vị nhận:</span> <strong>{row.donViNhan || "Tòa án nhân dân tối cao"}</strong></div>
             </div>
           </div>
 
@@ -1000,8 +949,9 @@ export function XemChiTietCongVanModal({ row, onClose }: { row: CVRow; onClose: 
           <button onClick={onClose} style={{ padding: "7px 24px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F, color: TEXT }}>
             Đóng
           </button>
-          <button onClick={() => { alert("Đã lưu chỉnh sửa công văn"); onClose(); }} style={{ padding: "7px 24px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F }}>Lưu thay đổi</button>
-          <button onClick={() => window.print()} style={{ padding: "7px 24px", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F }}>In công văn</button>
+          <button onClick={() => window.print()} style={{ padding: "7px 24px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F }}>
+            In công văn
+          </button>
         </div>
       </div>
     </div>
@@ -1198,7 +1148,6 @@ function TabToTrinhCV() {
                         <Trash2 size={14} color="#dc2626" />
                       </button>
                     )}
-                    <button onClick={()=>alert("Đã mở tờ trình kế thừa để trình lại") } style={{background:"none",border:"none",cursor:"pointer",padding:3,color:RED,fontSize:11}} title="Trình lại">Trình lại</button>
                     <button style={{ background: "none", border: "none", cursor: "pointer", padding: 3 }} title="Xem văn bản"><Eye size={14} color="#0e7490" /></button>
                   </div>
                 </td>
@@ -1281,7 +1230,7 @@ function TabToTrinhCV() {
                             </svg>
                           </button>
                         )}
-                        <button title="Trình tiếp" onClick={() => setShowTrinhKy(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}>
+                        <button title="Trình ký" onClick={() => setShowTrinhKy(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}>
                           <Send size={13} color={RED} />
                         </button>
                       </div>
@@ -1315,7 +1264,6 @@ function ThemKetQuaGQModal({ onClose }: { onClose: () => void }) {
   const [noiDung, setNoiDung] = useState("");
   const [ghiChu, setGhiChu] = useState("");
   const [showTrinhKy, setShowTrinhKy] = useState(false);
-  const [daCapSoKQ,setDaCapSoKQ]=useState(false);
 
   const [noiNhanList, setNoiNhanList] = useState([
     {
@@ -1580,7 +1528,13 @@ function ThemKetQuaGQModal({ onClose }: { onClose: () => void }) {
 
                 <div>
                   <label style={lblSt}>Đơn vị nhận</label>
-                  {noiNhan === "Khác" ? <input placeholder="Nhập đơn vị nhận" value={donViNhan} onChange={e=>setDonViNhan(e.target.value)} style={inSt}/> : <select value={donViNhan} onChange={e=>setDonViNhan(e.target.value)} style={inSt}><option value="">Chọn đơn vị nhận</option>{(noiNhan === "Tòa án nhân dân" ? ["Tòa đăng nhập","Tòa xét xử BA bị GĐT","Đ/c Chánh án","Đ/c PCA phụ trách"] : noiNhan === "Viện kiểm sát" ? ["VKSND tối cao","VKS ngang cấp"] : ["Cơ quan điều tra Bộ Công an"]).map(x=><option key={x}>{x}</option>)}</select>}
+                  <input
+                    type="text"
+                    placeholder="Chọn nơi nhận trước"
+                    value={donViNhan}
+                    onChange={e => setDonViNhan(e.target.value)}
+                    style={inSt}
+                  />
                 </div>
               </div>
             </>
@@ -1609,11 +1563,11 @@ function ThemKetQuaGQModal({ onClose }: { onClose: () => void }) {
             <textarea
               placeholder="Nhập nội dung ý kiến"
               value={noiDung}
-              onChange={e => setNoiDung(e.target.value.slice(0, 2000))}
+              onChange={e => setNoiDung(e.target.value.slice(0, 1000))}
               style={{ ...inSt, minHeight: 90, resize: "vertical" }}
             />
             <div style={{ textAlign: "right", fontSize: 11, color: MUTED, marginTop: 3 }}>
-              {noiDung.length} / 2000
+              {noiDung.length} / 1000
             </div>
           </div>
 
@@ -1623,11 +1577,11 @@ function ThemKetQuaGQModal({ onClose }: { onClose: () => void }) {
             <textarea
               placeholder="Nhập ghi chú"
               value={ghiChu}
-              onChange={e => setGhiChu(e.target.value.slice(0, 2000))}
+              onChange={e => setGhiChu(e.target.value.slice(0, 1000))}
               style={{ ...inSt, minHeight: 90, resize: "vertical" }}
             />
             <div style={{ textAlign: "right", fontSize: 11, color: MUTED, marginTop: 3 }}>
-              {ghiChu.length} / 2000
+              {ghiChu.length} / 1000
             </div>
           </div>
 
@@ -1803,8 +1757,6 @@ function ThemKetQuaGQModal({ onClose }: { onClose: () => void }) {
                 >
                   Xem biểu mẫu
                 </button>
-                <button onClick={()=>setDaCapSoKQ(v=>!v)} style={{padding:"7px 18px",background:"#fff",border:`1px solid ${BORDER}`,borderRadius:4,cursor:"pointer"}}>{daCapSoKQ?"Hủy cấp số":"Lấy số"}</button>
-                <button onClick={()=>alert("Đã trình duyệt kết quả giải quyết") } style={{padding:"7px 18px",background:"#fff",border:`1px solid ${RED}`,color:RED,borderRadius:4,cursor:"pointer"}}>Trình duyệt</button>
                 <button
                   onClick={() => setShowTrinhKy(true)}
                   style={{
@@ -1991,7 +1943,7 @@ function ChiTietCongVanView({ row, onBack }: { row: CVRow; onBack: () => void })
                         Tòa ra BA: {row.toaRaBA || "TAND tỉnh Bắc Ninh"}
                       </div>
                     </td>
-                    <td style={TD}>{row.loai === "den" ? row.donViGui : row.donViNhan}</td>
+                    <td style={TD}>{row.donViGui}</td>
                     <td style={TD}>Nguyễn Văn Bình</td>
                     <td style={{ ...TD, color: MUTED, fontSize: 11, fontFamily: F }}>
                       Công văn xin ý kiến giải quyết vướng mắc án kinh doanh thương mại
@@ -2000,7 +1952,7 @@ function ChiTietCongVanView({ row, onBack }: { row: CVRow; onBack: () => void })
                       <button
                         onClick={() => setShowChiTietPopup(true)}
                         style={{ background: "none", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4, color: RED, fontSize: 12, fontFamily: F, fontWeight: 600 }}>
-                        <Pencil size={13} color={RED} /> Chỉnh sửa công văn
+                        <Eye size={13} color={RED} /> Xem chi tiết
                       </button>
                     </td>
                   </tr>
@@ -2071,8 +2023,6 @@ function ChiTietCongVanView({ row, onBack }: { row: CVRow; onBack: () => void })
               </table>
             </div>
 
-            <div style={{background:"#fff",border:`1px solid ${BORDER}`,borderRadius:8,padding:14,marginBottom:16}}><b style={{fontSize:12}}>Phân công Thẩm tra viên</b><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginTop:8}}><select style={inSt} defaultValue="Vũ Diệu Thúy - Thẩm tra viên"><option>Vũ Diệu Thúy - Thẩm tra viên</option><option>Võ Thị Thùy Giang - Thẩm tra viên</option></select><input type="date" defaultValue="2026-07-20" style={inSt}/></div></div>
-
             {/* 2. Card: Lịch sử phân công Thẩm phán */}
             <div style={{ background: "#fff", borderRadius: 8, border: `1px solid ${BORDER}`, padding: 18 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
@@ -2093,7 +2043,7 @@ function ChiTietCongVanView({ row, onBack }: { row: CVRow; onBack: () => void })
                 </colgroup>
                 <thead>
                   <tr>
-                    {["STT", "GIAI ĐOẠN", "HỌ VÀ TÊN THẨM PHÁN", "CHỨC DANH", "NGÀY PHÂN CÔNG", "NGƯỜI THAO TÁC", "GHI CHÚ"].map(h => (
+                    {["STT", "HỌ VÀ TÊN THẨM PHÁN", "CHỨC DANH", "NGÀY PHÂN CÔNG", "NGƯỜI THAO TÁC", "GHI CHÚ"].map(h => (
                       <th key={h} style={TH}>{h}</th>
                     ))}
                   </tr>
@@ -2139,7 +2089,7 @@ function ChiTietCongVanView({ row, onBack }: { row: CVRow; onBack: () => void })
                 </colgroup>
                 <thead>
                   <tr>
-                    {["STT", "GIAI ĐOẠN", "HỌ VÀ TÊN TTV", "CHỨC DANH TTV", "NGÀY PHÂN CÔNG TTV", "HỌ VÀ TÊN LĐ", "TÊN CHỨC VỤ LĐ", "NGÀY PHÂN CÔNG LĐ"].map(h => (
+                    {["STT", "HỌ VÀ TÊN TTV", "CHỨC DANH TTV", "NGÀY PHÂN CÔNG TTV", "HỌ VÀ TÊN LĐ", "TÊN CHỨC VỤ LĐ", "NGÀY PHÂN CÔNG LĐ"].map(h => (
                       <th key={h} style={TH}>{h}</th>
                     ))}
                   </tr>
@@ -2230,7 +2180,8 @@ export default function CongVanTraoDoiView({
     if (donViGuiFilter && !r.donViGui.toLowerCase().includes(donViGuiFilter.toLowerCase())) return false;
     if (ttvFilter && !r.phanCong.toLowerCase().includes(ttvFilter.toLowerCase())) return false;
     if (search && !r.soCV.toLowerCase().includes(search.toLowerCase()) &&
-      !`${r.donViGui} ${r.donViNhan}`.toLowerCase().includes(search.toLowerCase())) return false;
+      !r.donViGui.toLowerCase().includes(search.toLowerCase()) &&
+      !r.donViNhan.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
@@ -2259,7 +2210,6 @@ export default function CongVanTraoDoiView({
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: TEXT, fontFamily: F, margin: 0 }}>Công văn trao đổi</h1>
-          <TaiKhoanPhanQuyenBar userRole={userRole} setUserRole={setUserRole} />
         </div>
 
         <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${BORDER}`, marginBottom: 20 }}>
@@ -2304,7 +2254,7 @@ export default function CongVanTraoDoiView({
             </div>
             <div>
               <span style={labelStyle}>Thẩm tra viên</span>
-              <select value={ttvFilter} onChange={e => setTtvFilter(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}><option value="">Vui lòng chọn</option><option key="Nguyễn Văn An">Nguyễn Văn An</option><option key="Lê Thị Bình">Lê Thị Bình</option><option key="Trần Minh Đức">Trần Minh Đức</option></select>
+              <input value={ttvFilter} onChange={e => setTtvFilter(e.target.value)} placeholder="Nhập thẩm tra viên" style={inputStyle} />
             </div>
           </div>
 
@@ -2324,7 +2274,7 @@ export default function CongVanTraoDoiView({
                 </div>
                 <div>
                   <span style={labelStyle}>Đơn vị nhận</span>
-                  <select value={donViNhanFilter} onChange={e => setDonViNhanFilter(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}><option value="">Vui lòng chọn</option><option key="Tòa án nhân dân tối cao">Tòa án nhân dân tối cao</option><option key="VKSND Tối cao">VKSND Tối cao</option><option key="TAND TP. Hà Nội">TAND TP. Hà Nội</option><option key="TAND tỉnh Hà Nam">TAND tỉnh Hà Nam</option><option key="TAND tỉnh Tuyên Quang">TAND tỉnh Tuyên Quang</option></select>
+                  <input value={donViNhanFilter} onChange={e => setDonViNhanFilter(e.target.value)} placeholder="Nhập đơn vị nhận" style={inputStyle} />
                 </div>
                 <div>
                   <span style={labelStyle}>Nơi gửi</span>
@@ -2337,11 +2287,11 @@ export default function CongVanTraoDoiView({
                 </div>
                 <div>
                   <span style={labelStyle}>Đơn vị gửi</span>
-                  <select value={donViGuiFilter} onChange={e => setDonViGuiFilter(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}><option value="">Vui lòng chọn</option><option key="Tòa án nhân dân tối cao">Tòa án nhân dân tối cao</option><option key="VKSND Tối cao">VKSND Tối cao</option><option key="TAND TP. Hà Nội">TAND TP. Hà Nội</option><option key="TAND tỉnh Hà Nam">TAND tỉnh Hà Nam</option><option key="TAND tỉnh Tuyên Quang">TAND tỉnh Tuyên Quang</option></select>
+                  <input value={donViGuiFilter} onChange={e => setDonViGuiFilter(e.target.value)} placeholder="Nhập đơn vị gửi" style={inputStyle} />
                 </div>
                 <div>
                   <span style={labelStyle}>Thẩm phán</span>
-                  <select value={thamPhanFilter} onChange={e => setThamPhanFilter(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}><option value="">Vui lòng chọn</option><option key="Phạm Thị Bích Ngọc">Phạm Thị Bích Ngọc</option><option key="Lê Thị Thu Hiền">Lê Thị Thu Hiền</option><option key="Hoàng Ngọc Chiêu">Hoàng Ngọc Chiêu</option></select>
+                  <input value={thamPhanFilter} onChange={e => setThamPhanFilter(e.target.value)} placeholder="Nhập thẩm phán" style={inputStyle} />
                 </div>
               </div>
 
@@ -2349,7 +2299,7 @@ export default function CongVanTraoDoiView({
               <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 14, marginBottom: 14 }}>
                 <div>
                   <span style={labelStyle}>Lãnh đạo</span>
-                  <select value={lanhDaoFilter} onChange={e => setLanhDaoFilter(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}><option value="">Vui lòng chọn</option><option key="Nguyễn Văn Hiền">Nguyễn Văn Hiền</option><option key="Trần Quốc Hành">Trần Quốc Hành</option><option key="Nguyễn Tiến Mạnh">Nguyễn Tiến Mạnh</option></select>
+                  <input value={lanhDaoFilter} onChange={e => setLanhDaoFilter(e.target.value)} placeholder="Nhập lãnh đạo" style={inputStyle} />
                 </div>
               </div>
             </>
@@ -2402,9 +2352,8 @@ export default function CongVanTraoDoiView({
           <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
             <colgroup>
               <col style={{ width: 36 }} />
+              <col style={{ width: "15%" }} />
               <col style={{ width: "13%" }} />
-              <col style={{ width: "13%" }} />
-              <col style={{ width: "11%" }} />
               <col style={{ width: "13%" }} />
               <col style={{ width: "13%" }} />
               <col style={{ width: "11%" }} />
@@ -2414,7 +2363,7 @@ export default function CongVanTraoDoiView({
             </colgroup>
             <thead>
               <tr>
-                {["STT", "THÔNG TIN CÔNG VĂN", "THÔNG TIN BA/QĐ", "THÔNG TIN THỤ LÝ", "ĐƠN VỊ GỬI", "ĐƠN VỊ NHẬN", "CÔNG VĂN PHẢN HỒI", "PHÂN CÔNG", "TRẠNG THÁI", "THAO TÁC"].map(h => (
+                {["STT", "THÔNG TIN CÔNG VĂN", "THÔNG TIN THỤ LÝ", "ĐƠN VỊ GỬI", "ĐƠN VỊ NHẬN", "CÔNG VĂN PHẢN HỒI", "PHÂN CÔNG", "TRẠNG THÁI", "THAO TÁC"].map(h => (
                   <th key={h} style={TH}>{h}</th>
                 ))}
               </tr>
@@ -2435,25 +2384,11 @@ export default function CongVanTraoDoiView({
                     </span>
                   </td>
                   <td style={TD}>
-                    <div style={{ fontSize: 11, fontFamily: F, color: TEXT }}>
-                      <span style={{ color: MUTED }}>Số BA/QĐ: </span>
-                      <span style={{ color: "#2563eb", fontWeight: 600 }}>{r.soBA}</span>
-                    </div>
-                    <div style={{ fontSize: 11, fontFamily: F, color: TEXT, marginTop: 2 }}>
-                      <span style={{ color: MUTED }}>Ngày BA: </span>
-                      <span>{r.ngayBA}</span>
-                    </div>
-                    <div style={{ fontSize: 11, fontFamily: F, color: TEXT, marginTop: 2 }}>
-                      <span style={{ color: MUTED }}>Tòa ra BA: </span>
-                      <span>{r.toaRaBA}</span>
-                    </div>
-                  </td>
-                  <td style={TD}>
                     <div style={{ color: TEXT, fontFamily: F }}>Số thụ lý: {r.soThuLy}</div>
                     <div style={{ color: MUTED, fontFamily: F }}>Ngày thụ lý: {r.ngayThuLy}</div>
                   </td>
-                  <td style={TD}><span style={{ color: TEXT, fontFamily: F }}>{r.donViGui}</span></td>
-                  <td style={TD}><span title={(r.donViNhanList || [r.donViNhan]).join("; ")} style={{ color: TEXT, fontFamily: F }}>{r.donViNhanList && r.donViNhanList.length > 1 ? `${r.donViNhanList[0]} +${r.donViNhanList.length - 1} nơi khác` : r.donViNhan}</span></td>
+                  <td style={TD}><span style={{ color: TEXT, fontFamily: F }}>{r.loai === "di" ? "Tòa án nhân dân tối cao" : r.donViGui}</span></td>
+                  <td style={TD}><span style={{ color: TEXT, fontFamily: F }}>{r.loai === "den" ? "Tòa án nhân dân tối cao" : r.donViNhan}</span></td>
                   <td style={TD}>
                     {r.phanHoi === "–" ? (
                       <span style={{ color: MUTED }}>–</span>
@@ -2476,7 +2411,7 @@ export default function CongVanTraoDoiView({
                       <button onClick={() => setSelectedCV(r)} style={{ background: "none", border: "none", cursor: "pointer", padding: 3 }} title="Xem">
                         <Eye size={15} color="#6b7280" />
                       </button>
-                      {!(r.loai === "di" && r.daTrinhKy) && (
+                      {!r.coKQGG && (
                         <button style={{ background: "none", border: "none", cursor: "pointer", padding: 3 }} title="Xóa">
                           <span style={{ fontSize: 15, color: "#ef4444" }}>🗑</span>
                         </button>

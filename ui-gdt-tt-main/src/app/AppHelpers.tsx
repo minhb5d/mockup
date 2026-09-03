@@ -59,13 +59,11 @@ export function formatSoBA(raw?: string | null, loaiAn?: string): string {
 export function TaoToTrinhModal({
   onClose,
   onSave,
-  onKySo,
-  detail: _detail
+  onKySo
 }: {
   onClose: () => void;
   onSave?: (data: { daDinhKemHoSo: boolean; countHoSo: number }) => void;
   onKySo?: () => void;
-  detail?: unknown;
 }) {
   const [ngayLap, setNgayLap] = useState("");
   const [dienBien, setDienBien] = useState("");
@@ -392,5 +390,4 @@ export function getQuanHePhapLuat(c: { quanHePhapLuat?: string; tenVuAn?: string
 }
 
 // ── Đương sự cell ────────────────────────────────────────────────────────────
-
 

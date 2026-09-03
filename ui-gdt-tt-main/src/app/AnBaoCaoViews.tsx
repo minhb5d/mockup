@@ -9,23 +9,9 @@ import {
   ZoomOut,
   Search,
   Printer,
-  Download,
   Hand,
-  Grid,
-  Edit3,
-  Save,
-  Plus,
-  Trash2,
-  Check,
 } from "lucide-react";
 import { F, RED, BORDER, TEXT, MUTED, BG } from "./shared";
-
-const CURRENT_COURT = "TÒA ÁN NHÂN DÂN TỐI CAO";
-const CURRENT_UNIT = "VỤ GIÁM ĐỐC KIỂM TRA VỀ HÌNH SỰ";
-const LD_OPTIONS=["Nguyễn Như Thắng - Phó Vụ trưởng","Phạm Thị Bích Ngọc - Phó Vụ trưởng"];
-const TTV_OPTIONS=["Vũ Diệu Thúy - Thẩm tra viên","Võ Thị Thùy Giang - Thẩm tra viên","Đỗ Thị Thúy Hằng - Thẩm tra viên"];
-const TP_OPTIONS=["Hoàng Ngọc Chiêu - TPTC","Lê Thị Thu Hiền - TPB3"];
-const LOAI_AN=["Hình sự","Dân sự","Hành chính","Kinh doanh thương mại","Lao động","Hôn nhân và gia đình","Phá sản","Sở hữu trí tuệ"];
 
 // Common Form Controls Styling
 const inputStyle: React.CSSProperties = {
@@ -106,15 +92,13 @@ function FormInput({ label, value, defaultValue, placeholder, onChange }: {
   );
 }
 
-function FormDate({ label, placeholder = "Chọn ngày", value, onChange }: { label: string; placeholder?: string; value?: string; onChange?: (val:string)=>void }) {
+function FormDate({ label, placeholder = "Chọn ngày" }: { label: string; placeholder?: string }) {
   return (
     <div style={{ flex: 1, minWidth: 140 }}>
       <label style={labelStyle}>{label}</label>
       <div style={{ position: "relative" }}>
         <input
-          type="date"
-          value={value || ""}
-          onChange={e=>onChange?.(e.target.value)}
+          type="text"
           placeholder={placeholder}
           style={{ ...inputStyle, paddingRight: 28 }}
         />
@@ -124,180 +108,26 @@ function FormDate({ label, placeholder = "Chọn ngày", value, onChange }: { la
   );
 }
 
-// ── Word Ribbon Toolbar Component ─────────────────────────────────────────────
-function WordToolbar({
-  isEditing,
-  onToggleEdit,
-  onAddRow,
-  onSave,
-  totalPages = 2,
-}: {
-  isEditing: boolean;
-  onToggleEdit: () => void;
-  onAddRow?: () => void;
-  onSave?: () => void;
-  totalPages?: number;
-}) {
-  const formatDoc = (cmd: string, value: string | undefined = undefined) => {
-    document.execCommand(cmd, false, value);
-  };
-
+// ── Thanh xem trước báo cáo ──────────────────────────────────────────────────
+function ReportPreviewToolbar({ totalPages = 2 }: { totalPages?: number }) {
   return (
     <div style={{ border: `1px solid ${BORDER}`, borderRadius: "4px 4px 0 0", background: "#f8fafc", overflow: "hidden", fontFamily: F }}>
-      {/* Top Bar Controls & Mode Toggle */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "#f1f5f9", borderBottom: `1px solid ${BORDER}`, fontSize: 12, flexWrap: "wrap" }}>
-        <button style={{ border: "none", background: "none", cursor: "pointer", padding: 2 }} title="Side panel">
-          <Grid size={14} color={MUTED} />
-        </button>
-        <div style={{ width: 1, height: 16, background: BORDER, margin: "0 2px" }} />
-        <button style={{ border: "none", background: "none", cursor: "pointer", padding: 2 }}>
-          <ChevronUp size={14} color={MUTED} />
-        </button>
-        <button style={{ border: "none", background: "none", cursor: "pointer", padding: 2 }}>
-          <ChevronDown size={14} color={MUTED} />
-        </button>
-        <input
-          type="text"
-          defaultValue="1"
-          style={{ width: 28, height: 22, textAlign: "center", fontSize: 12, border: `1px solid ${BORDER}`, borderRadius: 2 }}
-        />
+        <button style={{ border: "none", background: "none", cursor: "pointer", padding: 2 }}><ChevronUp size={14} color={MUTED} /></button>
+        <button style={{ border: "none", background: "none", cursor: "pointer", padding: 2 }}><ChevronDown size={14} color={MUTED} /></button>
+        <input type="text" defaultValue="1" readOnly style={{ width: 28, height: 22, textAlign: "center", fontSize: 12, border: `1px solid ${BORDER}`, borderRadius: 2, background: "#fff" }} />
         <span style={{ color: MUTED }}>/{totalPages}</span>
-        <button style={{ border: "none", background: "none", cursor: "pointer", padding: 2 }}>
-          <ChevronDown size={12} color={MUTED} />
-        </button>
-
         <div style={{ width: 1, height: 16, background: BORDER, margin: "0 4px" }} />
-        <button style={{ border: "none", background: "none", cursor: "pointer", padding: 2 }}>
-          <ZoomOut size={14} color={MUTED} />
+        <button style={{ border: "none", background: "none", cursor: "pointer", padding: 2 }}><ZoomOut size={14} color={MUTED} /></button>
+        <span>100%</span>
+        <button style={{ border: "none", background: "none", cursor: "pointer", padding: 2 }}><ZoomIn size={14} color={MUTED} /></button>
+        <button style={{ border: "none", background: "none", cursor: "pointer", padding: 2 }} title="Tìm trong báo cáo"><Search size={14} color={MUTED} /></button>
+        <button style={{ border: "none", background: "none", cursor: "pointer", padding: 2 }} title="Di chuyển trang"><Hand size={14} color={MUTED} /></button>
+        <div style={{ marginLeft: "auto" }} />
+        <button onClick={() => window.print()} style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", border: `1px solid ${BORDER}`, borderRadius: 4, background: "#fff", cursor: "pointer", fontSize: 11, fontFamily: F }} title="In báo cáo">
+          <Printer size={14} color={MUTED} /> In báo cáo
         </button>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}>
-          <span>100%</span>
-          <ChevronDown size={12} color={MUTED} />
-        </div>
-        <button style={{ border: "none", background: "none", cursor: "pointer", padding: 2 }}>
-          <ZoomIn size={14} color={MUTED} />
-        </button>
-        <button style={{ border: "none", background: "none", cursor: "pointer", padding: 2 }}>
-          <Search size={14} color={MUTED} />
-        </button>
-        <button style={{ border: "none", background: "none", cursor: "pointer", padding: 2 }}>
-          <Hand size={14} color={MUTED} />
-        </button>
-
-        <div style={{ width: 1, height: 16, background: BORDER, margin: "0 4px" }} />
-        <button style={{ border: "none", background: "none", cursor: "pointer", padding: 2 }} title="Tải xuống">
-          <Download size={14} color={MUTED} />
-        </button>
-        <button style={{ border: "none", background: "none", cursor: "pointer", padding: 2 }} title="In báo cáo">
-          <Printer size={14} color={MUTED} />
-        </button>
-
-        {/* Word Mode Toggle Button */}
-        <div style={{ marginLeft: "auto", display: "flex", gap: 6, alignItems: "center" }}>
-          {isEditing ? (
-            <>
-              {onAddRow && (
-                <button
-                  onClick={onAddRow}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 4,
-                    padding: "3px 10px", background: "#e0f2fe", color: "#0369a1",
-                    border: "1px solid #7dd3fc", borderRadius: 4, cursor: "pointer",
-                    fontSize: 11, fontWeight: 600, fontFamily: F,
-                  }}
-                >
-                  <Plus size={13} /> Thêm hàng
-                </button>
-              )}
-              <button
-                onClick={onSave || onToggleEdit}
-                style={{
-                  display: "flex", alignItems: "center", gap: 4,
-                  padding: "3px 12px", background: "#16a34a", color: "#fff",
-                  border: "none", borderRadius: 4, cursor: "pointer",
-                  fontSize: 11, fontWeight: 600, fontFamily: F,
-                }}
-              >
-                <Save size={13} /> Lưu văn bản
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={onToggleEdit}
-              style={{
-                display: "flex", alignItems: "center", gap: 4,
-                padding: "3px 12px", background: "#2563eb", color: "#fff",
-                border: "none", borderRadius: 4, cursor: "pointer",
-                fontSize: 11, fontWeight: 600, fontFamily: F,
-              }}
-            >
-              <Edit3 size={13} /> Chỉnh sửa như Word
-            </button>
-          )}
-        </div>
       </div>
-
-      {/* Word Format Bar (Visible when in Edit Mode) */}
-      {isEditing && (
-        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", background: "#fff", borderBottom: `1px solid ${BORDER}`, fontSize: 12, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: RED, marginRight: 6 }}>Biên tập Word:</span>
-          
-          <select
-            onChange={(e) => formatDoc("fontName", e.target.value)}
-            style={{ fontSize: 11, border: `1px solid ${BORDER}`, borderRadius: 3, padding: "2px 4px", fontFamily: F }}
-            defaultValue="Times New Roman"
-          >
-            <option value="Times New Roman">Times New Roman</option>
-            <option value="Be Vietnam Pro">Be Vietnam Pro</option>
-            <option value="Arial">Arial</option>
-            <option value="Courier New">Courier New</option>
-          </select>
-
-          <select
-            onChange={(e) => formatDoc("fontSize", e.target.value)}
-            style={{ fontSize: 11, border: `1px solid ${BORDER}`, borderRadius: 3, padding: "2px 4px", width: 48 }}
-            defaultValue="3"
-          >
-            <option value="2">11pt</option>
-            <option value="3">12pt</option>
-            <option value="4">14pt</option>
-            <option value="5">16pt</option>
-          </select>
-
-          <div style={{ width: 1, height: 16, background: BORDER, margin: "0 2px" }} />
-
-          <button onClick={() => formatDoc("bold")} style={{ padding: "2px 8px", border: `1px solid ${BORDER}`, borderRadius: 3, background: "#fff", fontWeight: 700, cursor: "pointer" }} title="In đậm (Ctrl+B)">
-            B
-          </button>
-          <button onClick={() => formatDoc("italic")} style={{ padding: "2px 8px", border: `1px solid ${BORDER}`, borderRadius: 3, background: "#fff", fontStyle: "italic", cursor: "pointer" }} title="In nghiêng (Ctrl+I)">
-            I
-          </button>
-          <button onClick={() => formatDoc("underline")} style={{ padding: "2px 8px", border: `1px solid ${BORDER}`, borderRadius: 3, background: "#fff", textDecoration: "underline", cursor: "pointer" }} title="Gạch chân (Ctrl+U)">
-            U
-          </button>
-          <button onClick={() => formatDoc("strikeThrough")} style={{ padding: "2px 8px", border: `1px solid ${BORDER}`, borderRadius: 3, background: "#fff", textDecoration: "line-through", cursor: "pointer" }} title="Gạch ngang">
-            S
-          </button>
-
-          <div style={{ width: 1, height: 16, background: BORDER, margin: "0 2px" }} />
-
-          <button onClick={() => formatDoc("justifyLeft")} style={{ padding: "2px 6px", border: `1px solid ${BORDER}`, borderRadius: 3, background: "#fff", cursor: "pointer" }} title="Căn trái">
-            ≡
-          </button>
-          <button onClick={() => formatDoc("justifyCenter")} style={{ padding: "2px 6px", border: `1px solid ${BORDER}`, borderRadius: 3, background: "#fff", cursor: "pointer" }} title="Căn giữa">
-            equiv;
-          </button>
-          <button onClick={() => formatDoc("justifyRight")} style={{ padding: "2px 6px", border: `1px solid ${BORDER}`, borderRadius: 3, background: "#fff", cursor: "pointer" }} title="Căn phải">
-            ≡
-          </button>
-
-          <div style={{ width: 1, height: 16, background: BORDER, margin: "0 2px" }} />
-
-          <span style={{ fontSize: 11, color: "#16a34a", fontStyle: "italic" }}>
-            ✓ Đang bật chế độ chỉnh sửa trực tiếp (Word editable mode)
-          </span>
-        </div>
-      )}
     </div>
   );
 }
@@ -305,14 +135,8 @@ function WordToolbar({
 // ── 1. MÀN ÁN QUỐC HỘI ────────────────────────────────────────────────────────
 export function AnQuocHoiView() {
   const [tieuDe, setTieuDe] = useState("Danh sách các vụ án quốc hội");
-  const [isEditing, setIsEditing] = useState(false);
-  const [savedSuccess, setSavedSuccess] = useState(false);
-  const [fLD,setFLD]=useState(""); const [fTTV,setFTTV]=useState(""); const [fLoaiCV,setFLoaiCV]=useState(""); const [fKQ,setFKQ]=useState(""); const [fLoaiAn,setFLoaiAn]=useState(""); const [fTP,setFTP]=useState(""); const [fromDate,setFromDate]=useState(""); const [toDate,setToDate]=useState("");
-  const buildTitle=()=>`Danh sách vụ án Quốc hội${fLoaiAn?` (${fLoaiAn})`:""}${fTP?` (do ${fTP})`:""}${fLD?` (${fLD}) phụ trách`:""}${fKQ?` (${fKQ})`:""}`;
-  const doSearch=()=>{ setTieuDe(buildTitle()); };
-  const reset=()=>{setFLD("");setFTTV("");setFLoaiCV("");setFKQ("");setFLoaiAn("");setFTP("");setFromDate("");setToDate("");setTieuDe("Danh sách các vụ án quốc hội");};
 
-  const [rows, setRows] = useState([
+  const [rows] = useState([
     {
       tt: 1,
       soBA: "HKTT_HS_2307_01\n23/07/2026",
@@ -414,30 +238,6 @@ export function AnQuocHoiView() {
     },
   ]);
 
-  const handleAddRow = () => {
-    const newId = rows.length + 1;
-    setRows([
-      ...rows,
-      {
-        tt: newId,
-        soBA: "Mới / 2026",
-        qhpl: "",
-        toa: "Tòa án nhân dân tối cao",
-        nguyenDon: "",
-        biDon: "Người bị khiếu nại mới",
-        ttvLd: "Thẩm tra viên (TTV)",
-        tinhTrang: "Chưa phân công",
-        tenCoQuan: "",
-      },
-    ]);
-  };
-
-  const handleSave = () => {
-    setIsEditing(false);
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
-  };
-
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", fontFamily: F, background: "#f8fafc", overflowY: "auto" }}>
       {/* Breadcrumb */}
@@ -448,11 +248,6 @@ export function AnQuocHoiView() {
       {/* Header */}
       <div style={{ padding: "0 20px 12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <h1 style={{ fontSize: 18, fontWeight: 700, color: TEXT, margin: 0 }}>Án quốc hội</h1>
-        {savedSuccess && (
-          <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#16a34a", fontSize: 12, fontWeight: 600, background: "#dcfce7", padding: "4px 12px", borderRadius: 4 }}>
-            <Check size={14} /> Đã lưu thay đổi văn bản thành công!
-          </div>
-        )}
       </div>
 
       {/* Filters Area */}
@@ -460,30 +255,30 @@ export function AnQuocHoiView() {
         <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 6, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
           {/* Row 1 */}
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <FormInput label="Tiêu đề báo cáo" value={tieuDe} />
-            <div style={{ display: "flex", flexDirection: "column", minWidth: 260 }}>
-              <span style={{ fontSize: 11, color: MUTED, marginBottom: 4 }}>Giải quyết từ ngày - đến ngày</span>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <input type="date" value={fromDate} onChange={e=>setFromDate(e.target.value)} style={{ width: 118, height: 34, border: `1px solid ${BORDER}`, borderRadius: 4, padding: "0 6px", fontFamily: F, fontSize: 11 }} />
-                <span>–</span>
-                <input type="date" value={toDate} onChange={e=>setToDate(e.target.value)} style={{ width: 118, height: 34, border: `1px solid ${BORDER}`, borderRadius: 4, padding: "0 6px", fontFamily: F, fontSize: 11 }} />
-              </div>
-            </div>
-            <FormSelect label="Lãnh đạo phụ trách" value={fLD} onChange={setFLD} options={LD_OPTIONS} />
-            <FormSelect label="Thẩm tra viên giải quyết đơn" value={fTTV} onChange={setFTTV} options={TTV_OPTIONS} />
-            <FormSelect label="Loại công văn" value={fLoaiCV} onChange={setFLoaiCV} options={["Công văn đến","Công văn đi"]} />
+            <FormDate label="Giải quyết từ ngày" />
+            <FormDate label="Giải quyết đến ngày" />
+            <FormSelect label="Lãnh đạo phụ trách" />
+            <FormSelect label="Thẩm tra viên giải quyết đơn" />
+            <FormSelect label="Loại công văn" />
           </div>
 
           {/* Row 2 */}
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
-            <FormSelect label="Kết quả thụ lý" value={fKQ} onChange={setFKQ} options={["Chưa có kết quả","Đã có kết quả","Kháng nghị","Trả lời đơn","Thụ lý xét xử GĐT,TT"]} />
-            <FormSelect label="Loại án" value={fLoaiAn} onChange={setFLoaiAn} options={LOAI_AN} />
-            <FormSelect label="Thẩm phán" value={fTP} onChange={setFTP} options={TP_OPTIONS} />
+            <FormSelect label="Kết quả thụ lý" />
+            <FormSelect label="Loại án" />
+            <FormSelect label="Thẩm phán" />
             <FormInput label="Thông tin cơ quan chuyển đơn" placeholder="Nhập thông tin cơ quan chuyển đơn" />
             <div style={{ display: "flex", gap: 8, marginLeft: "auto", flexShrink: 0, marginTop: 4 }}>
-              <button onClick={doSearch} style={{display:"flex",alignItems:"center",gap:6,padding:"0 16px",height:34,background:RED,color:"#fff",border:"none",borderRadius:4,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:F}}><Search size={14}/> Tìm kiếm</button>
-              <button onClick={doSearch} style={{display:"flex",alignItems:"center",gap:6,padding:"0 16px",height:34,background:"#7f1d1d",color:"#fff",border:"none",borderRadius:4,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:F}}><FileText size={14}/> Xem Báo cáo</button>
-              <button onClick={reset}
+              <button
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "0 16px", height: 34, background: RED, color: "#fff",
+                  border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F,
+                }}
+              >
+                <FileText size={14} /> Xem Báo cáo
+              </button>
+              <button
                 style={{
                   display: "flex", alignItems: "center", gap: 6,
                   padding: "0 16px", height: 34, background: "#fff", color: TEXT,
@@ -499,19 +294,11 @@ export function AnQuocHoiView() {
 
       {/* PDF Document / Word Editor Viewer Container */}
       <div style={{ padding: "0 20px 24px 20px", flex: 1, display: "flex", flexDirection: "column" }}>
-        <WordToolbar
-          isEditing={isEditing}
-          onToggleEdit={() => setIsEditing(!isEditing)}
-          onAddRow={handleAddRow}
-          onSave={handleSave}
-          totalPages={2}
-        />
+        <ReportPreviewToolbar totalPages={2} />
 
         {/* Paper Sheet Preview Area */}
         <div style={{ background: "#6b7280", padding: "24px 16px", flex: 1, overflowX: "auto", display: "flex", justifyContent: "center", borderRadius: "0 0 4px 4px" }}>
           <div
-            contentEditable={isEditing}
-            suppressContentEditableWarning={true}
             style={{
               background: "#fff",
               width: "100%",
@@ -521,17 +308,15 @@ export function AnQuocHoiView() {
               boxSizing: "border-box",
               fontFamily: F,
               fontSize: 11,
-              outline: isEditing ? `2px dashed ${RED}` : "none",
-              cursor: isEditing ? "text" : "default",
             }}
           >
             {/* Header document */}
             <div style={{ textAlign: "center", marginBottom: 20 }}>
-              <div style={{ fontWeight: 700, fontSize: 12, color: TEXT }}>{CURRENT_COURT}</div>
-              <div style={{ fontWeight: 700, fontSize: 12, color: TEXT, marginBottom: 12 }}>{CURRENT_UNIT}</div>
+              <div style={{ fontWeight: 700, fontSize: 12, color: TEXT }}>TÒA ÁN NHÂN DÂN TỐI CAO</div>
+              <div style={{ fontWeight: 700, fontSize: 12, color: TEXT, marginBottom: 12 }}>VỤ GIÁM ĐỐC KIỂM TRA VỀ HÌNH SỰ</div>
 
-              <div style={{ fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase" }}>{tieuDe}</div>
-              <div style={{ fontSize: 11, fontStyle: "italic", color: TEXT, marginTop: 2 }}>(Tính đến ngày {toDate ? toDate.split("-").reverse().join("/") : new Date().toLocaleDateString("vi-VN")})</div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase" }}>DANH SÁCH CÁC VỤ ÁN QUỐC HỘI</div>
+              <div style={{ fontSize: 11, fontStyle: "italic", color: TEXT, marginTop: 2 }}>(Tính đến ngày 09/08/2026)</div>
 
               <div style={{ textAlign: "left", fontWeight: 700, marginTop: 14, fontSize: 11 }}>Tổng: {rows.length} vụ án</div>
             </div>
@@ -545,7 +330,7 @@ export function AnQuocHoiView() {
                   <th style={{ border: "1px solid #000", padding: "6px 6px", textAlign: "center", width: 90 }}>Quan hệ pháp luật</th>
                   <th style={{ border: "1px solid #000", padding: "6px 6px", textAlign: "center", width: 120 }}>Tòa xét xử</th>
                   <th style={{ border: "1px solid #000", padding: "6px 6px", textAlign: "center", width: 110 }}>Nguyên đơn/Người khiếu nại</th>
-                  <th style={{ border: "1px solid #000", padding: "6px 6px", textAlign: "center", width: 110 }}>Bị đơn</th>
+                  <th style={{ border: "1px solid #000", padding: "6px 6px", textAlign: "center", width: 110 }}>Bị đơn/Người được khiếu nại</th>
                   <th style={{ border: "1px solid #000", padding: "6px 6px", textAlign: "center", width: 110 }}>TTV/LĐ Vụ</th>
                   <th style={{ border: "1px solid #000", padding: "6px 6px", textAlign: "center", width: 100 }}>Tình trạng</th>
                   <th style={{ border: "1px solid #000", padding: "6px 6px", textAlign: "center", width: 90 }}>Tên cơ quan</th>
@@ -577,14 +362,8 @@ export function AnQuocHoiView() {
 // ── 2. MÀN ÁN THỜI HIỆU ───────────────────────────────────────────────────────
 export function AnThoiHieuView() {
   const [tieuDe, setTieuDe] = useState("Danh sách các vụ án thời hiệu");
-  const [isEditing, setIsEditing] = useState(false);
-  const [savedSuccess, setSavedSuccess] = useState(false);
-  const [fLoaiAn,setFLoaiAn]=useState(""); const [fThoiHan,setFThoiHan]=useState(""); const [fLD,setFLD]=useState(""); const [fTTV,setFTTV]=useState(""); const [fTP,setFTP]=useState(""); const [fTinhTrang,setFTinhTrang]=useState(""); const [toDate,setToDate]=useState("");
-  const buildTitle=()=>`Danh sách vụ án thời hiệu${fLoaiAn?` (${fLoaiAn})`:""}${fTP?` (do ${fTP})`:""}${fLD?` (${fLD}) phụ trách`:""}${fThoiHan?` (có thời hiệu dưới ${fThoiHan})`:""}`;
-  const doSearch=()=>setTieuDe(buildTitle());
-  const reset=()=>{setFLoaiAn("");setFThoiHan("");setFLD("");setFTTV("");setFTP("");setFTinhTrang("");setToDate("");setTieuDe("Danh sách các vụ án thời hiệu");};
 
-  const [rows, setRows] = useState([
+  const [rows] = useState([
     {
       tt: 1,
       soBA: "13\n07/08/2026",
@@ -697,30 +476,6 @@ export function AnThoiHieuView() {
     },
   ]);
 
-  const handleAddRow = () => {
-    const newId = rows.length + 1;
-    setRows([
-      ...rows,
-      {
-        tt: newId,
-        soBA: "Mới / 2026",
-        qhpl: "",
-        toa: "Tòa án nhân dân tối cao",
-        nguyenDon: "",
-        biDon: "Bị đơn mới",
-        ttvLd: "Thẩm tra viên (TTV)",
-        tinhTrang: "Chưa phân công",
-        ghiChu: "",
-      },
-    ]);
-  };
-
-  const handleSave = () => {
-    setIsEditing(false);
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
-  };
-
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", fontFamily: F, background: "#f8fafc", overflowY: "auto" }}>
       {/* Breadcrumb */}
@@ -731,11 +486,6 @@ export function AnThoiHieuView() {
       {/* Header */}
       <div style={{ padding: "0 20px 12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <h1 style={{ fontSize: 18, fontWeight: 700, color: TEXT, margin: 0 }}>Án thời hiệu</h1>
-        {savedSuccess && (
-          <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#16a34a", fontSize: 12, fontWeight: 600, background: "#dcfce7", padding: "4px 12px", borderRadius: 4 }}>
-            <Check size={14} /> Đã lưu thay đổi văn bản thành công!
-          </div>
-        )}
       </div>
 
       {/* Filters Area */}
@@ -743,22 +493,28 @@ export function AnThoiHieuView() {
         <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 6, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
           {/* Row 1 */}
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <FormInput label="Tiêu đề báo cáo" value={tieuDe} />
-            <FormSelect label="Loại án" value={fLoaiAn} onChange={setFLoaiAn} options={LOAI_AN} />
-            <FormDate label="Đến ngày" value={toDate} onChange={setToDate} />
-            <FormSelect label="Thời hạn giải quyết" value={fThoiHan} onChange={setFThoiHan} options={["1 tháng","3 tháng","6 tháng","12 tháng"]} />
-            <FormSelect label="Lãnh đạo phụ trách" value={fLD} onChange={setFLD} options={LD_OPTIONS} />
-            <FormSelect label="Thẩm tra viên giải quyết đơn" value={fTTV} onChange={setFTTV} options={TTV_OPTIONS} />
+            <FormSelect label="Loại án" />
+            <FormDate label="Đến ngày" />
+            <FormSelect label="Thời hạn giải quyết" />
+            <FormSelect label="Lãnh đạo phụ trách" />
+            <FormSelect label="Thẩm tra viên giải quyết đơn" />
           </div>
 
           {/* Row 2 */}
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
-            <FormSelect label="Thẩm phán" value={fTP} onChange={setFTP} options={TP_OPTIONS} />
-            <FormSelect label="Tình trạng giải quyết" value={fTinhTrang} onChange={setFTinhTrang} options={["Chưa có kết quả","Đã phân công TTV","Đang trình","Kháng nghị","Trả lời đơn","Thụ lý xét xử GĐT,TT"]} />
+            <FormSelect label="Thẩm phán" />
+            <FormSelect label="Tình trạng giải quyết" />
             <div style={{ display: "flex", gap: 8, marginLeft: "auto", flexShrink: 0, marginTop: 4 }}>
-              <button onClick={doSearch} style={{display:"flex",alignItems:"center",gap:6,padding:"0 16px",height:34,background:RED,color:"#fff",border:"none",borderRadius:4,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:F}}><Search size={14}/> Tìm kiếm</button>
-              <button onClick={doSearch} style={{display:"flex",alignItems:"center",gap:6,padding:"0 16px",height:34,background:"#7f1d1d",color:"#fff",border:"none",borderRadius:4,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:F}}><FileText size={14}/> Xem Báo cáo</button>
-              <button onClick={reset}
+              <button
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "0 16px", height: 34, background: RED, color: "#fff",
+                  border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F,
+                }}
+              >
+                <FileText size={14} /> Xem Báo cáo
+              </button>
+              <button
                 style={{
                   display: "flex", alignItems: "center", gap: 6,
                   padding: "0 16px", height: 34, background: "#fff", color: TEXT,
@@ -774,19 +530,11 @@ export function AnThoiHieuView() {
 
       {/* PDF Document / Word Editor Viewer Container */}
       <div style={{ padding: "0 20px 24px 20px", flex: 1, display: "flex", flexDirection: "column" }}>
-        <WordToolbar
-          isEditing={isEditing}
-          onToggleEdit={() => setIsEditing(!isEditing)}
-          onAddRow={handleAddRow}
-          onSave={handleSave}
-          totalPages={35}
-        />
+        <ReportPreviewToolbar totalPages={35} />
 
         {/* Paper Sheet Preview Area */}
         <div style={{ background: "#6b7280", padding: "24px 16px", flex: 1, overflowX: "auto", display: "flex", justifyContent: "center", borderRadius: "0 0 4px 4px" }}>
           <div
-            contentEditable={isEditing}
-            suppressContentEditableWarning={true}
             style={{
               background: "#fff",
               width: "100%",
@@ -796,19 +544,17 @@ export function AnThoiHieuView() {
               boxSizing: "border-box",
               fontFamily: F,
               fontSize: 11,
-              outline: isEditing ? `2px dashed ${RED}` : "none",
-              cursor: isEditing ? "text" : "default",
             }}
           >
             {/* Header document */}
             <div style={{ textAlign: "center", marginBottom: 20 }}>
-              <div style={{ fontWeight: 700, fontSize: 12, color: TEXT }}>{CURRENT_COURT}</div>
-              <div style={{ fontWeight: 700, fontSize: 12, color: TEXT, marginBottom: 12 }}>{CURRENT_UNIT}</div>
+              <div style={{ fontWeight: 700, fontSize: 12, color: TEXT }}>TÒA ÁN NHÂN DÂN TỐI CAO</div>
+              <div style={{ fontWeight: 700, fontSize: 12, color: TEXT, marginBottom: 12 }}>VỤ GIÁM ĐỐC KIỂM TRA VỀ HÌNH SỰ</div>
 
-              <div style={{ fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase" }}>{tieuDe}</div>
-              <div style={{ fontSize: 11, fontStyle: "italic", color: TEXT, marginTop: 2 }}>(Tính đến ngày {toDate ? toDate.split("-").reverse().join("/") : new Date().toLocaleDateString("vi-VN")})</div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase" }}>DANH SÁCH CÁC VỤ ÁN THỜI HIỆU</div>
+              <div style={{ fontSize: 11, fontStyle: "italic", color: TEXT, marginTop: 2 }}>(Tính đến ngày 09/08/2026)</div>
 
-              <div style={{ textAlign: "left", fontWeight: 700, marginTop: 14, fontSize: 11 }}>Tổng: {rows.length} vụ án</div>
+              <div style={{ textAlign: "left", fontWeight: 700, marginTop: 14, fontSize: 11 }}>Tổng: 449 vụ án</div>
             </div>
 
             {/* Document Table */}
@@ -820,7 +566,7 @@ export function AnThoiHieuView() {
                   <th style={{ border: "1px solid #000", padding: "6px 6px", textAlign: "center", width: 90 }}>Quan hệ pháp luật</th>
                   <th style={{ border: "1px solid #000", padding: "6px 6px", textAlign: "center", width: 120 }}>Tòa xét xử</th>
                   <th style={{ border: "1px solid #000", padding: "6px 6px", textAlign: "center", width: 110 }}>Nguyên đơn/Người khiếu nại</th>
-                  <th style={{ border: "1px solid #000", padding: "6px 6px", textAlign: "center", width: 110 }}>Bị đơn/Bị cáo</th>
+                  <th style={{ border: "1px solid #000", padding: "6px 6px", textAlign: "center", width: 110 }}>Bị đơn/Người được khiếu nại</th>
                   <th style={{ border: "1px solid #000", padding: "6px 6px", textAlign: "center", width: 110 }}>TTV/LĐ Vụ</th>
                   <th style={{ border: "1px solid #000", padding: "6px 6px", textAlign: "center", width: 100 }}>Tình trạng</th>
                   <th style={{ border: "1px solid #000", padding: "6px 6px", textAlign: "center", width: 90 }}>Ghi chú</th>

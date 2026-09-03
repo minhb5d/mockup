@@ -2,17 +2,13 @@ import { useState } from "react";
 import { Home, FileText, Scale, Users, ChevronDown, ChevronRight } from "lucide-react";
 
 export type View =
-  | "dashboard-gdkt"
-  | "ho-so-tong-hop"
   | "don-cho-phe-duyet"
-  | "luu-so-van-ban"
   | "cho-y-kien"
   | "da-co-vu-an"
   | "ho-so-khang-nghi"
   | "ho-so-tu-hinh"
   | "don-xin-an-giam"
   | "giao-tieu-ho-so"
-  | "them-ho-so"
   | "phan-cong-ttv"
   | "phan-cong-tham-phan"
   | "cau-hinh-ttv"
@@ -20,7 +16,6 @@ export type View =
   | "quan-ly-khieu-nai"
   | "cong-van-trao-doi"
   | "phan-cong-hdxx"
-  | "lich-xet-xu"
   | "quan-ly-vu-xet-xu"
   | "phe-duyet-de-xuat"
   | "an-quoc-hoi"
@@ -159,7 +154,6 @@ export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
     "cho-y-kien",
     "da-co-vu-an",
     "giao-tieu-ho-so",
-    "them-ho-so",
   ].includes(currentView);
 
   return (
@@ -219,7 +213,7 @@ export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
       <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", paddingTop: 6, paddingBottom: 16 }}>
         {/* Trang chủ */}
         <button
-          onClick={() => onNavigate("dashboard-gdkt")}
+          onClick={() => onNavigate("don-cho-phe-duyet")}
           style={{
             display: "flex", alignItems: "center", gap: 10,
             width: "100%", padding: "10px 20px",
@@ -242,7 +236,6 @@ export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
         >
           <NavLink label="Tiếp nhận đơn" onClick={() => onNavigate("don-cho-phe-duyet")} sub />
           <NavLink label="Danh sách đơn" onClick={() => onNavigate("don-cho-phe-duyet")} sub />
-          <NavLink label="Lưu số văn bản & In báo cáo" active={currentView === "luu-so-van-ban"} onClick={() => onNavigate("luu-so-van-ban")} sub />
           <NavLink
             label="Phân công thẩm phán (4)"
             active={currentView === "phan-cong-tham-phan"}
@@ -258,18 +251,6 @@ export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
           open={qlaOpen}
           onToggle={() => setQlaOpen((v) => !v)}
         >
-          <NavLink
-            label="Dashboard Vụ GĐ,KT"
-            active={currentView === "dashboard-gdkt"}
-            onClick={() => onNavigate("dashboard-gdkt")}
-            sub
-          />
-          <NavLink
-            label="Hồ sơ tổng hợp vụ án"
-            active={currentView === "ho-so-tong-hop"}
-            onClick={() => onNavigate("ho-so-tong-hop")}
-            sub
-          />
           <NavLink
             label="Nhận đơn và TL vụ án"
             active={inList}
@@ -299,12 +280,6 @@ export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
             label="Phân công Hội đồng xét xử"
             active={currentView === "phan-cong-hdxx"}
             onClick={() => onNavigate("phan-cong-hdxx")}
-            sub
-          />
-          <NavLink
-            label="Lịch xét xử"
-            active={currentView === "lich-xet-xu"}
-            onClick={() => onNavigate("lich-xet-xu")}
             sub
           />
           <NavLink

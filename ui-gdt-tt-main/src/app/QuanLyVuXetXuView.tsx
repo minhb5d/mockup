@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { PrintReportModal, BIEU_MAU_VU_XET_XU } from "./PrintReportModal";
 import { Search, RotateCcw, ChevronDown, ChevronUp, MoreVertical, X, Eye, Pencil, Printer, FileText, Trash2, Calendar, Save, Send } from "lucide-react";
-import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge, TaiKhoanPhanQuyenBar, type UserRoleType } from "./shared";
+import { F, RED, BORDER, TEXT, MUTED, BG, TH_STYLE, TD_STYLE, Badge, type UserRoleType } from "./shared";
 import { formatSoBA } from "./AppHelpers";
 import { TaoDuThaoModal } from "./TaoDuThaoModal";
 import { TrinhKyModal, HoSoToTrinhModal } from "./TrinhKyModal";
@@ -20,7 +20,6 @@ type TrangThai =
   | "chua-xx-chua-ds"       // Chưa xét xử – chưa có danh sách
   | "chua-xx-da-ds"         // Chưa xét xử – đã có danh sách
   | "chua-thu-ly"           // Chưa thụ lý xét xử
-  | "hoan-xet-xu"           // Hoãn xét xử (SRS tách trạng thái riêng)
   | "rut-khang-nghi"        // Rút kháng nghị
   | "da-xx"                 // Đã xét xử
   | "chuyen-tham-quyen";    // Chuyển thẩm quyền xét xử
@@ -353,7 +352,7 @@ const ROWS: VuXetXuRow[] = [
     capXetXu: "Sơ thẩm", thoiHieu: "3 năm", tag: "an-chi-dao",
     ndkn: "Đỗ Thành Công", ndd: "Ủy ban nhân dân tỉnh Bắc Ninh",
     ttv: "Trịnh Thị Minh Trang", ldv: "Nguyễn Như Thắng", tp: "Lê Thị Thu Hiển",
-    trangThai: "hoan-xet-xu",
+    trangThai: "chua-xx-chua-ds",
     soNgayBAQD: "18/2026/HC-ST – 08/07/2026", toaRABAQD: "Tòa án nhân dân cấp cao tại Hà Nội",
     nguoiKhangNghi: "Viện trưởng Viện kiểm sát nhân dân tối cao",
     soNgayKhangNghi: "QDKN_2613 – 09/07/2026", soNgayThuLy: "54682613 – 10/07/2026",
@@ -471,13 +470,6 @@ function TrangThaiCell({ row }: { row: VuXetXuRow }) {
       return (
         <div>
           <span style={{ display: "inline-block", padding: "3px 10px", border: `1px solid ${RED}`, borderRadius: 4, fontSize: 11, fontWeight: 600, fontFamily: F, color: RED, background: "#fff" }}>Chưa thụ lý xét xử</span>
-        </div>
-      );
-    case "hoan-xet-xu":
-      return (
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <span style={{ display: "inline-block", padding: "3px 10px", border: "1px solid #d97706", borderRadius: 4, fontSize: 11, fontWeight: 600, fontFamily: F, color: "#b45309", background: "#fffbeb" }}>Hoãn xét xử</span>
-          <span style={{ fontSize: 11, color: MUTED, fontFamily: F }}>Lịch cũ được gỡ; lập lịch mới khi có thời gian/địa điểm theo quyết định hoãn</span>
         </div>
       );
     case "rut-khang-nghi":
@@ -2512,7 +2504,7 @@ export function TaoQuyetDinhHoanHDXXModal({
                   <tbody>
                     {biCaoList.length === 0 ? (
                       <tr>
-                        <td colSpan={10} style={{ padding: "24px 0", textAlign: "center", color: MUTED, fontSize: 12 }}>
+                        <td colSpan={9} style={{ padding: "24px 0", textAlign: "center", color: MUTED, fontSize: 12 }}>
                           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
                             <span style={{ fontSize: 24, color: "#d1d5db" }}>📦</span>
                             <span>Trống</span>
@@ -3729,7 +3721,6 @@ function TabQuyetDinhVuAn({ row, userRole }: { row: VuXetXuRow; userRole?: UserR
     "Quyết định đình chỉ trước phiên tòa của Chánh án",
     "Quyết định đình chỉ tại phiên tòa của HĐXX",
     "Quyết định hoãn phiên tòa của HĐXX",
-    "Quyết định hoãn phiên tòa của Chánh án",
     "Quyết định thay đổi/bổ sung/rút kháng nghị GĐT",
     "Biên bản phiên tòa hình sự GĐT",
   ];
@@ -5045,7 +5036,7 @@ function TabKetQua({ row }: { row: VuXetXuRow }) {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: BG }}>
-              {["STT", "Tên vật chứng, đồ vật, tài liệu", "Số lượng", "Tình trạng", "Thuộc sở hữu của", "Mô tả", "Nơi lưu giữ", "Hình thức xử lý", "Trả lại cho", "Thao tác"].map(h => (
+              {["STT", "Tên vật chứng, đồ vật, tài liệu", "Số lượng", "Tình trạng", "Thuộc sở hữu của", "Mô tả", "Hình thức xử lý", "Trả lại cho", "Thao tác"].map(h => (
                 <th key={h} style={{ ...TH, borderRight: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
               ))}
             </tr>
@@ -6357,13 +6348,8 @@ export default function QuanLyVuXetXuView({
 
   const listTabs = [
     { id: "tat-ca", label: "Tất cả", count: filteredByRole.length },
-    { id: "chua-xx-chua-ds", label: "Chưa có DS xét xử", count: filteredByRole.filter(r => r.trangThai === "chua-xx-chua-ds").length },
-    { id: "chua-xx-da-ds", label: "Đã có DS xét xử", count: filteredByRole.filter(r => r.trangThai === "chua-xx-da-ds").length },
-    { id: "chua-thu-ly", label: "Chưa thụ lý xét xử", count: filteredByRole.filter(r => r.trangThai === "chua-thu-ly").length },
-    { id: "hoan-xet-xu", label: "Hoãn xét xử", count: filteredByRole.filter(r => r.trangThai === "hoan-xet-xu").length },
-    { id: "rut-khang-nghi", label: "Rút kháng nghị", count: filteredByRole.filter(r => r.trangThai === "rut-khang-nghi").length },
-    { id: "da-xx", label: "Đã xét xử", count: filteredByRole.filter(r => r.trangThai === "da-xx").length },
-    { id: "chuyen-tham-quyen", label: "Chuyển thẩm quyền", count: filteredByRole.filter(r => r.trangThai === "chuyen-tham-quyen").length },
+    { id: "chua-xx-chua-ds", label: "Chưa có danh sách xét xử", count: filteredByRole.filter(r => r.trangThai === "chua-xx-chua-ds").length },
+    { id: "chua-xx-da-ds", label: "Đã có danh sách xét xử", count: filteredByRole.filter(r => r.trangThai === "chua-xx-da-ds").length },
   ];
 
   const filtered = filteredByRole.filter(r => {
@@ -6403,8 +6389,6 @@ export default function QuanLyVuXetXuView({
         <div style={{ background: "#fff", padding: "14px 20px 0", flexShrink: 0, borderBottom: `1px solid ${BORDER}` }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
             <h2 style={{ fontSize: 20, fontWeight: 700, color: TEXT, fontFamily: F, margin: 0 }}>Danh sách vụ xét xử GĐT</h2>
-
-            <TaiKhoanPhanQuyenBar userRole={userRole} setUserRole={setUserRole} />
           </div>
           <div style={{ display: "flex", flexWrap: "wrap" as const, overflowX: "auto" as const }}>
             {listTabs.map(t => {
@@ -6683,10 +6667,6 @@ export default function QuanLyVuXetXuView({
           {/* THIẾU [Cao]: In báo cáo (2 biểu mẫu + hộp tiêu chí in + tiêu đề BC tự sinh) */}
           <button onClick={() => setShowInBaoCao(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
             <Printer size={13} /> In báo cáo
-          </button>
-          {/* THỪA so với SRS – giữ lại, chờ Lead xác nhận */}
-          <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "#fff", color: "#374151", border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
-            <Printer size={13} /> Xuất Excel
           </button>
         </div>
 
