@@ -6269,10 +6269,12 @@ export default function QuanLyVuXetXuView({
   userRole: propUserRole,
   setUserRole: propSetUserRole,
   onGoToThamMuu,
+  onOpenDanhSachThamMuu,
 }: {
   userRole?: UserRoleType;
   setUserRole?: (role: UserRoleType) => void;
   onGoToThamMuu?: () => void;
+  onOpenDanhSachThamMuu?: () => void;
 } = {}) {
   const [internalRole, setInternalRole] = useState<UserRoleType>("vu-1");
   const userRole = propUserRole ?? internalRole;
@@ -6649,7 +6651,7 @@ export default function QuanLyVuXetXuView({
         {/* Action bar */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 20px", background: "#fff", borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
           <div style={{ flex: 1 }} />
-          <button onClick={() => alert("Danh sách tham mưu")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F }}>
+          <button onClick={() => onOpenDanhSachThamMuu ? onOpenDanhSachThamMuu() : alert("Danh sách tham mưu")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F }}>
             Danh sách tham mưu
           </button>
           <button onClick={() => setShowThemModal(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F }}>

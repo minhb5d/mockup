@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, FileText, Scale, Users, ChevronDown, ChevronRight } from "lucide-react";
+import { FileText, Scale, Users, ChevronDown, ChevronRight } from "lucide-react";
 
 export type View =
   | "dashboard-gdkt"
@@ -218,22 +218,6 @@ export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
 
       {/* Nav */}
       <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", paddingTop: 6, paddingBottom: 16 }}>
-        {/* Trang chủ */}
-        <button
-          onClick={() => onNavigate("dashboard-gdkt")}
-          style={{
-            display: "flex", alignItems: "center", gap: 10,
-            width: "100%", padding: "10px 20px",
-            background: "none", border: "none", cursor: "pointer",
-            textAlign: "left", fontFamily: F,
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "#f9fafb")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
-        >
-          <Home size={ICON_SIZE} color={ICON_COLOR} />
-          <span style={{ fontSize: 14, color: "#374151" }}>Trang chủ</span>
-        </button>
-
         {/* Quản lý đơn */}
         <NavGroup
           icon={<FileText size={ICON_SIZE} color={ICON_COLOR} />}
@@ -253,6 +237,12 @@ export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
           open={qlaOpen}
           onToggle={() => setQlaOpen((v) => !v)}
         >
+          <NavLink
+            label="Dashboard Vụ GĐ,KT"
+            active={currentView === "dashboard-gdkt"}
+            onClick={() => onNavigate("dashboard-gdkt")}
+            sub
+          />
           <NavLink
             label="Nhận đơn và TL vụ án"
             active={inList}

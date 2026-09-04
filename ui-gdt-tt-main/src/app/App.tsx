@@ -21,6 +21,7 @@ import { ThemKetQuaModal, ThemQuyetDinhHoanModal } from "./ThemKetQuaModal";
 import PhanCongHDXXView, { LichXetXuModal } from "./PhanCongHDXXView";
 import CongVanTraoDoiView, { XemBieuMauCongVanModal } from "./CongVanTraoDoiView";
 import QuanLyVuXetXuView from "./QuanLyVuXetXuView";
+import DanhSachThamMuuXetXuView from "./DanhSachThamMuuXetXuView";
 import PheDuyetDeXuatView, { XemBieuMauScreen } from "./PheDuyetDeXuatView";
 import HoSoTuHinhView from "./HoSoTuHinhView";
 import { SearchFilterPanel } from "./SearchFilterPanel";
@@ -616,9 +617,11 @@ const paginBtn: React.CSSProperties = {
 function TopBar({
   userRole,
   setUserRole,
+  showPermissionSelector = true,
 }: {
   userRole?: UserRoleType;
   setUserRole?: (role: UserRoleType) => void;
+  showPermissionSelector?: boolean;
 }) {
   return (
     <div
@@ -629,7 +632,7 @@ function TopBar({
       }}
     >
       <div>
-        {userRole && setUserRole && (
+        {showPermissionSelector && userRole && setUserRole && (
           <TaiKhoanPhanQuyenBar userRole={userRole} setUserRole={setUserRole} />
         )}
       </div>
@@ -929,23 +932,56 @@ function ToNhomConfigView() {
 
 // ── Cấu hình phân công Thẩm phán ─────────────────────────────────────────────
 
-const CHTP_HO = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ", "Đặng", "Bùi", "Đỗ", "Ngô", "Dương", "Lý"];
+type ChtpJudge = {
+  id: number; hoTen: string; chucDanh: string; chucVu: string; donViCongTac: string;
+  nhanPhanCong: boolean; daNhanNam: number; daNhanTong: number; tinhTrang: string; soVuDangCam: number;
+};
+
+const CHTP_CHUC_DANH_OPTIONS = ["Thẩm phán TANDTC", "Thẩm phán Tòa án nhân dân cấp cao"];
+const CHTP_CHUC_VU_OPTIONS = ["Chánh án", "Phó Chánh án", "Vụ trưởng", "Phó Vụ trưởng", "Thẩm phán"];
+const CHTP_DON_VI_OPTIONS = ["Tòa án nhân dân tối cao", "Vụ Giám đốc kiểm tra về hình sự", "Vụ Giám đốc kiểm tra về dân sự", "Vụ Giám đốc, kiểm tra về kinh doanh, thương mại, phá sản, lao động, gia đình và người chưa thành niên", "Vụ Giám đốc, kiểm tra về hành chính"];
+const CHTP_TINH_TRANG_OPTIONS = ["Đang làm việc", "Đang nghỉ"];
+const CHTP_KY_PHAN_CONG = "01/12/2025 – 30/11/2026";
+
+// 10 dòng đầu khớp đúng dữ liệu trên STG (ảnh chụp màn hình "Cấu hình phân công Thẩm phán")
+const CHTP_JUDGES_FIXED: Omit<ChtpJudge, "id" | "soVuDangCam">[] = [
+  { hoTen: "Nguyễn Biên Thùy", chucDanh: "Thẩm phán TANDTC", chucVu: "Phó Chánh án", donViCongTac: "Tòa án nhân dân tối cao", nhanPhanCong: true, daNhanNam: 10, daNhanTong: 10, tinhTrang: "Đang làm việc" },
+  { hoTen: "Nguyễn Biên Thùy", chucDanh: "Thẩm phán TAND tối cao", chucVu: "Phó Chánh án", donViCongTac: "Tòa án nhân dân tối cao", nhanPhanCong: true, daNhanNam: 0, daNhanTong: 0, tinhTrang: "Đang làm việc" },
+  { hoTen: "Nguyễn Hải Trâm", chucDanh: "Thẩm phán TANDTC", chucVu: "Phó Chánh án", donViCongTac: "Tòa án nhân dân tối cao", nhanPhanCong: true, daNhanNam: 10, daNhanTong: 10, tinhTrang: "Đang làm việc" },
+  { hoTen: "Nguyễn Văn Quảng", chucDanh: "Thẩm phán TANDTC", chucVu: "Chánh án", donViCongTac: "Tòa án nhân dân tối cao", nhanPhanCong: true, daNhanNam: 8, daNhanTong: 8, tinhTrang: "Đang làm việc" },
+  { hoTen: "Nguyễn Văn Tiến", chucDanh: "Thẩm phán TANDTC", chucVu: "Phó Chánh án", donViCongTac: "Tòa án nhân dân tối cao", nhanPhanCong: true, daNhanNam: 9, daNhanTong: 9, tinhTrang: "Đang làm việc" },
+  { hoTen: "Phạm Quốc Hưng", chucDanh: "Thẩm phán TANDTC", chucVu: "Phó Chánh án", donViCongTac: "Tòa án nhân dân tối cao", nhanPhanCong: true, daNhanNam: 10, daNhanTong: 10, tinhTrang: "Đang làm việc" },
+  { hoTen: "Lê Thị Thu Hiền", chucDanh: "Thẩm phán Tòa án nhân dân cấp cao", chucVu: "Phó Vụ trưởng", donViCongTac: "Vụ Giám đốc kiểm tra về hình sự", nhanPhanCong: true, daNhanNam: 79, daNhanTong: 79, tinhTrang: "Đang làm việc" },
+  { hoTen: "Nguyễn Như Thắng", chucDanh: "Thẩm phán Tòa án nhân dân cấp cao", chucVu: "Phó Vụ trưởng", donViCongTac: "Vụ Giám đốc kiểm tra về hình sự", nhanPhanCong: true, daNhanNam: 73, daNhanTong: 73, tinhTrang: "Đang làm việc" },
+  { hoTen: "Nguyễn Thị Bình", chucDanh: "Thẩm phán Tòa án nhân dân cấp cao", chucVu: "Vụ trưởng", donViCongTac: "Vụ Giám đốc kiểm tra về hình sự", nhanPhanCong: true, daNhanNam: 61, daNhanTong: 61, tinhTrang: "Đang làm việc" },
+  { hoTen: "Phạm Thị Bích Ngọc", chucDanh: "Thẩm phán Tòa án nhân dân cấp cao", chucVu: "Phó Vụ trưởng", donViCongTac: "Vụ Giám đốc kiểm tra về hình sự", nhanPhanCong: true, daNhanNam: 61, daNhanTong: 61, tinhTrang: "Đang làm việc" },
+];
+
+const CHTP_HO = ["Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ", "Đặng", "Bùi", "Đỗ", "Ngô", "Dương", "Lý", "Nguyễn"];
 const CHTP_DEM = ["Văn", "Thị", "Hữu", "Đức", "Minh", "Quốc", "Ngọc", "Xuân", "Thanh", "Tiến"];
 const CHTP_TEN = ["Tiến", "Hải", "Hùng", "Mạnh", "Hiền", "Trang", "Anh", "Bình", "Cường", "Dũng", "Giang", "Hà", "Khánh", "Linh", "Nam", "Phúc", "Quang", "Sơn", "Thắng", "Vinh", "Yến"];
-const CHTP_DONVI = ["Vụ Giám đốc kiểm tra I", "Vụ Giám đốc kiểm tra II", "Vụ Giám đốc kiểm tra III", "Hội đồng Thẩm phán TANDTC", "Tòa hình sự TAND cấp cao"];
-const CHTP_CAP = ["Thẩm phán TAND tối cao", "Thẩm phán cao cấp", "Thẩm phán trung cấp"];
-function chtpBuildJudges(n: number) {
-  const rows: { id: number; ten: string; cap: string; donVi: string; soVuDangCam: number }[] = [];
+
+function chtpBuildJudges(n: number): ChtpJudge[] {
+  const rows: ChtpJudge[] = CHTP_JUDGES_FIXED.map((j, idx) => ({ id: idx + 1, ...j, soVuDangCam: j.daNhanTong }));
   let i = 0;
-  for (let h = 0; h < CHTP_HO.length && rows.length < n; h++) {
-    for (let d = 0; d < CHTP_DEM.length && rows.length < n; d++) {
-      const ten = `${CHTP_HO[h]} ${CHTP_DEM[d]} ${CHTP_TEN[i % CHTP_TEN.length]}`;
+  outer: for (let h = 0; h < CHTP_HO.length; h++) {
+    for (let d = 0; d < CHTP_DEM.length; d++) {
+      if (rows.length >= n) break outer;
+      const hoTen = `${CHTP_HO[h]} ${CHTP_DEM[d]} ${CHTP_TEN[i % CHTP_TEN.length]}`;
+      const donViCongTac = CHTP_DON_VI_OPTIONS[(rows.length + 1) % CHTP_DON_VI_OPTIONS.length];
+      const isTANDTC = donViCongTac === "Tòa án nhân dân tối cao";
+      const soVu = 3 + (rows.length * 7) % 40;
       rows.push({
         id: rows.length + 1,
-        ten,
-        cap: CHTP_CAP[rows.length % CHTP_CAP.length],
-        donVi: CHTP_DONVI[rows.length % CHTP_DONVI.length],
-        soVuDangCam: 3 + (rows.length * 7) % 22,
+        hoTen,
+        chucDanh: isTANDTC ? "Thẩm phán TANDTC" : "Thẩm phán Tòa án nhân dân cấp cao",
+        chucVu: "Thẩm phán",
+        donViCongTac,
+        nhanPhanCong: true,
+        daNhanNam: soVu,
+        daNhanTong: soVu,
+        tinhTrang: "Đang làm việc",
+        soVuDangCam: soVu,
       });
       i++;
     }
@@ -989,7 +1025,7 @@ function NghiPhepModal({ initial, onClose, onSave }: { initial: Partial<NghiPhep
             <label style={labelSt}><span style={{ color: RED }}>*</span> Thẩm phán</label>
             <select value={thamPhan} onChange={e => setThamPhan(e.target.value)} style={{ ...inputSt, background: "#fff" }}>
               <option value="">Chọn thẩm phán</option>
-              {CHTP_JUDGES.map(j => <option key={j.id} value={j.ten}>{j.ten}</option>)}
+              {CHTP_JUDGES.map(j => <option key={j.id} value={j.hoTen}>{j.hoTen}</option>)}
             </select>
           </div>
           <div>
@@ -1017,8 +1053,74 @@ function NghiPhepModal({ initial, onClose, onSave }: { initial: Partial<NghiPhep
   );
 }
 
+function TamDungNhanPhanCongModal({ hoTen, onClose, onConfirm }: { hoTen: string; onClose: () => void; onConfirm: (lyDo: string) => void }) {
+  const [lyDo, setLyDo] = useState("");
+  return (
+    <div style={modalOverlay}>
+      <div style={{ ...modalCard, maxWidth: 460 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: TEXT, fontFamily: F }}>Tạm dừng nhận phân công</div>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}><X size={18} /></button>
+        </div>
+        <div style={{ fontSize: 12.5, color: TEXT, fontFamily: F, marginBottom: 8 }}>
+          Thẩm phán <b>{hoTen}</b> sẽ không được đưa vào danh sách phân công ngẫu nhiên và danh sách chỉ định.
+        </div>
+        <div style={{ fontSize: 11.5, color: MUTED, fontFamily: F, marginBottom: 10 }}>
+          Cấu hình này chỉ chặn giao thêm việc mới, không thu hồi các vụ thẩm phán đang giải quyết.
+        </div>
+        <textarea
+          value={lyDo}
+          onChange={e => setLyDo(e.target.value.slice(0, 500))}
+          placeholder="Nhập lý do, ví dụ: đang bị tạm đình chỉ, điều động dài hạn, theo yêu cầu lãnh đạo"
+          rows={3}
+          style={{ width: "100%", padding: "8px 10px", fontSize: 12, border: `1px solid ${BORDER}`, borderRadius: 4, fontFamily: F, outline: "none", resize: "vertical", boxSizing: "border-box" }}
+        />
+        <div style={{ textAlign: "right", fontSize: 10.5, color: MUTED, fontFamily: F, marginTop: 2 }}>{lyDo.length}/500</div>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 14 }}>
+          <button onClick={onClose} style={{ padding: "7px 16px", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>Hủy</button>
+          <button onClick={() => onConfirm(lyDo)} style={{ padding: "7px 16px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F }}>Xác nhận</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CauHinhPhanCongTPView() {
   const [tab, setTab] = useState<"info" | "nghi">("info");
+  const [judges, setJudges] = useState<ChtpJudge[]>(CHTP_JUDGES);
+  const [fHoTen, setFHoTen] = useState("");
+  const [fChucDanh, setFChucDanh] = useState("");
+  const [fChucVu, setFChucVu] = useState("");
+  const [fDonVi, setFDonVi] = useState("");
+  const [fNhanPC, setFNhanPC] = useState("");
+  const [fTinhTrang, setFTinhTrang] = useState("");
+  const [applied, setApplied] = useState({ hoTen: "", chucDanh: "", chucVu: "", donVi: "", nhanPC: "", tinhTrang: "" });
+  const [tamDungTarget, setTamDungTarget] = useState<ChtpJudge | null>(null);
+
+  const visibleJudges = judges.filter(j =>
+    (!applied.hoTen || j.hoTen.toLowerCase().includes(applied.hoTen.toLowerCase())) &&
+    (!applied.chucDanh || j.chucDanh === applied.chucDanh) &&
+    (!applied.chucVu || j.chucVu === applied.chucVu) &&
+    (!applied.donVi || j.donViCongTac === applied.donVi) &&
+    (!applied.nhanPC || (applied.nhanPC === "co" ? j.nhanPhanCong : !j.nhanPhanCong)) &&
+    (!applied.tinhTrang || j.tinhTrang === applied.tinhTrang)
+  );
+
+  const timKiem = () => setApplied({ hoTen: fHoTen, chucDanh: fChucDanh, chucVu: fChucVu, donVi: fDonVi, nhanPC: fNhanPC, tinhTrang: fTinhTrang });
+  const xoaBoLoc = () => {
+    setFHoTen(""); setFChucDanh(""); setFChucVu(""); setFDonVi(""); setFNhanPC(""); setFTinhTrang("");
+    setApplied({ hoTen: "", chucDanh: "", chucVu: "", donVi: "", nhanPC: "", tinhTrang: "" });
+  };
+
+  const toggleNhanPhanCong = (j: ChtpJudge) => {
+    if (j.nhanPhanCong) { setTamDungTarget(j); return; }
+    setJudges(prev => prev.map(x => x.id === j.id ? { ...x, nhanPhanCong: true } : x));
+  };
+  const confirmTamDung = (_lyDo: string) => {
+    if (!tamDungTarget) return;
+    setJudges(prev => prev.map(x => x.id === tamDungTarget.id ? { ...x, nhanPhanCong: false } : x));
+    setTamDungTarget(null);
+  };
   const [nghiRows, setNghiRows] = useState<NghiPhepRow[]>([
     { id: 1, thamPhan: "Lê Tiến", loaiNghi: "Phép năm", tuNgay: "30/08/2026", denNgay: "03/09/2026", vuDangCam: 8 },
   ]);
@@ -1028,7 +1130,7 @@ function CauHinhPhanCongTPView() {
     if (modal?.mode === "edit") {
       setNghiRows(prev => prev.map(x => x.id === modal.row.id ? { ...x, ...r } : x));
     } else {
-      const judge = CHTP_JUDGES.find(j => j.ten === r.thamPhan);
+      const judge = CHTP_JUDGES.find(j => j.hoTen === r.thamPhan);
       setNghiRows(prev => [...prev, { id: Date.now(), ...r, vuDangCam: judge?.soVuDangCam ?? 0 }]);
     }
     setModal(null);
@@ -1051,35 +1153,119 @@ function CauHinhPhanCongTPView() {
       <div style={{ padding: "0 20px", flexShrink: 0 }}>
         <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, fontFamily: F, margin: "14px 0 4px" }}>Cấu hình phân công Thẩm phán</div>
         <div style={{ display: "flex", gap: 20, borderBottom: `1px solid ${BORDER}` }}>
-          <button style={tabBtnSt(tab === "info")} onClick={() => setTab("info")}>Thông tin thẩm phán ({CHTP_JUDGES.length})</button>
+          <button style={tabBtnSt(tab === "info")} onClick={() => setTab("info")}>Thông tin thẩm phán ({judges.length})</button>
           <button style={tabBtnSt(tab === "nghi")} onClick={() => setTab("nghi")}>Nghỉ phép/vắng mặt ({nghiRows.length})</button>
         </div>
       </div>
 
       {tab === "info" ? (
-        <div style={{ flex: 1, overflow: "auto", padding: "14px 20px" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th style={TH_STYLE}>STT</th>
-                <th style={TH_STYLE}>Thẩm phán</th>
-                <th style={TH_STYLE}>Cấp thẩm phán</th>
-                <th style={TH_STYLE}>Đơn vị</th>
-                <th style={TH_STYLE}>Vụ đang cầm</th>
-              </tr>
-            </thead>
-            <tbody>
-              {CHTP_JUDGES.map((r, idx) => (
-                <tr key={r.id} style={{ background: idx % 2 === 0 ? "#fff" : "#fafafa" }}>
-                  <td style={{ ...TD_STYLE, textAlign: "center", color: MUTED, fontSize: 12 }}>{r.id}</td>
-                  <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT, fontWeight: 500 }}>{r.ten}</td>
-                  <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT }}>{r.cap}</td>
-                  <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT }}>{r.donVi}</td>
-                  <td style={{ ...TD_STYLE, textAlign: "center", fontSize: 12, color: TEXT }}>{r.soVuDangCam}</td>
+        <div style={{ flex: 1, overflow: "auto" }}>
+          {/* Bộ lọc */}
+          <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, padding: "14px 20px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "10px 14px", marginBottom: 10 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <span style={{ fontSize: 11, color: MUTED, fontFamily: F }}>Họ và tên</span>
+                <input value={fHoTen} onChange={e => setFHoTen(e.target.value)} placeholder="Nhập họ và tên thẩm phán" style={{ padding: "6px 8px", fontSize: 12, border: `1px solid ${BORDER}`, borderRadius: 4, fontFamily: F, outline: "none" }} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <span style={{ fontSize: 11, color: MUTED, fontFamily: F }}>Chức danh</span>
+                <select value={fChucDanh} onChange={e => setFChucDanh(e.target.value)} style={{ padding: "6px 8px", fontSize: 12, border: `1px solid ${BORDER}`, borderRadius: 4, fontFamily: F, background: "#fff" }}>
+                  <option value="">- Tất cả -</option>
+                  {CHTP_CHUC_DANH_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <span style={{ fontSize: 11, color: MUTED, fontFamily: F }}>Chức vụ</span>
+                <select value={fChucVu} onChange={e => setFChucVu(e.target.value)} style={{ padding: "6px 8px", fontSize: 12, border: `1px solid ${BORDER}`, borderRadius: 4, fontFamily: F, background: "#fff" }}>
+                  <option value="">- Tất cả -</option>
+                  {CHTP_CHUC_VU_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <span style={{ fontSize: 11, color: MUTED, fontFamily: F }}>Đơn vị công tác</span>
+                <select value={fDonVi} onChange={e => setFDonVi(e.target.value)} style={{ padding: "6px 8px", fontSize: 12, border: `1px solid ${BORDER}`, borderRadius: 4, fontFamily: F, background: "#fff" }}>
+                  <option value="">- Tất cả -</option>
+                  {CHTP_DON_VI_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <span style={{ fontSize: 11, color: MUTED, fontFamily: F }}>Nhận phân công</span>
+                <select value={fNhanPC} onChange={e => setFNhanPC(e.target.value)} style={{ padding: "6px 8px", fontSize: 12, border: `1px solid ${BORDER}`, borderRadius: 4, fontFamily: F, background: "#fff" }}>
+                  <option value="">- Tất cả -</option>
+                  <option value="co">Có</option>
+                  <option value="khong">Không</option>
+                </select>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <span style={{ fontSize: 11, color: MUTED, fontFamily: F }}>Tình trạng</span>
+                <select value={fTinhTrang} onChange={e => setFTinhTrang(e.target.value)} style={{ padding: "6px 8px", fontSize: 12, border: `1px solid ${BORDER}`, borderRadius: 4, fontFamily: F, background: "#fff" }}>
+                  <option value="">- Tất cả -</option>
+                  {CHTP_TINH_TRANG_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button onClick={timKiem} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 16px", background: RED, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: F }}>
+                <Search size={13} /> Tìm kiếm
+              </button>
+              <button onClick={xoaBoLoc} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "#fff", color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", fontSize: 12, fontFamily: F }}>
+                <RotateCcw size={13} /> Xóa bộ lọc
+              </button>
+            </div>
+          </div>
+
+          <div style={{ padding: "14px 20px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  <th style={TH_STYLE}>STT</th>
+                  <th style={TH_STYLE}>Họ và tên</th>
+                  <th style={TH_STYLE}>Chức danh</th>
+                  <th style={TH_STYLE}>Chức vụ</th>
+                  <th style={TH_STYLE}>Đơn vị công tác</th>
+                  <th style={{ ...TH_STYLE, textAlign: "center" }}>Nhận phân công</th>
+                  <th style={TH_STYLE}>Đã nhận (năm/tổng)<div style={{ fontWeight: 400, fontSize: 10, color: MUTED, marginTop: 2 }}>Kỳ {CHTP_KY_PHAN_CONG}</div></th>
+                  <th style={TH_STYLE}>Tình trạng</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {visibleJudges.map((r, idx) => (
+                  <tr key={r.id} style={{ background: idx % 2 === 0 ? "#fff" : "#fafafa" }}>
+                    <td style={{ ...TD_STYLE, textAlign: "center", color: MUTED, fontSize: 12 }}>{idx + 1}</td>
+                    <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT, fontWeight: 500 }}>{r.hoTen}</td>
+                    <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT }}>{r.chucDanh}</td>
+                    <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT }}>{r.chucVu}</td>
+                    <td style={{ ...TD_STYLE, fontSize: 12, color: TEXT }}>{r.donViCongTac}</td>
+                    <td style={{ ...TD_STYLE, textAlign: "center" }}>
+                      <input type="checkbox" checked={r.nhanPhanCong} onChange={() => toggleNhanPhanCong(r)} />
+                    </td>
+                    <td style={{ ...TD_STYLE, textAlign: "center", fontSize: 12, color: TEXT }}>{r.daNhanNam} / {r.daNhanTong} vụ</td>
+                    <td style={TD_STYLE}>
+                      <span style={{ padding: "3px 10px", background: r.tinhTrang === "Đang làm việc" ? "#d1fae5" : "#f3f4f6", color: r.tinhTrang === "Đang làm việc" ? "#065f46" : "#4b5563", borderRadius: 12, fontSize: 11, fontWeight: 500, fontFamily: F }}>{r.tinhTrang}</span>
+                    </td>
+                  </tr>
+                ))}
+                {visibleJudges.length === 0 && (
+                  <tr><td colSpan={8} style={{ ...TD_STYLE, textAlign: "center", color: MUTED, padding: 24 }}>Không có dữ liệu</td></tr>
+                )}
+              </tbody>
+            </table>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 0", fontSize: 12, color: MUTED, fontFamily: F }}>
+              <span>Hiển thị 1–{Math.min(10, visibleJudges.length)} trong tổng {visibleJudges.length} bản ghi</span>
+              <div style={{ flex: 1 }} />
+              <button style={paginBtn} disabled>‹</button>
+              <button style={{ ...paginBtn, background: RED, color: "#fff", border: `1px solid ${RED}` }}>1</button>
+              <button style={paginBtn}>›</button>
+              <select style={{ padding: "3px 8px", border: `1px solid ${BORDER}`, borderRadius: 4, fontFamily: F, fontSize: 12 }}>
+                <option>10 / trang</option>
+              </select>
+            </div>
+          </div>
+
+          {tamDungTarget && (
+            <TamDungNhanPhanCongModal hoTen={tamDungTarget.hoTen} onClose={() => setTamDungTarget(null)} onConfirm={confirmTamDung} />
+          )}
         </div>
       ) : (
         <div style={{ flex: 1, overflow: "auto", padding: "14px 20px" }}>
@@ -3023,7 +3209,7 @@ function ModalNhanHoSoKhangNghi({
 // ── Main App ──────────────────────────────────────────────────────────────────
 
 
-type AppView = "luu-so-van-ban" | "dashboard-gdkt" | "ho-so-tong-hop" | "list" | "giao-tieu-ho-so" | "phan-cong-ttv" | "phan-cong-tham-phan" | "phan-cong-tptc" | "cau-hinh-ttv" | "cau-hinh-phan-cong-tp" | "quan-ly-vu-an" | "chi-tiet-vu-an" | "cong-van-trao-doi" | "phan-cong-hdxx" | "lich-xet-xu" | "quan-ly-vu-xet-xu" | "phe-duyet-de-xuat" | "quan-ly-khieu-nai" | "chi-tiet-khieu-nai" | "ho-so-khang-nghi" | "ho-so-tu-hinh" | "don-xin-an-giam" | "tao-cong-van" | "an-quoc-hoi" | "an-thoi-hieu";
+type AppView = "luu-so-van-ban" | "dashboard-gdkt" | "ho-so-tong-hop" | "list" | "giao-tieu-ho-so" | "phan-cong-ttv" | "phan-cong-tham-phan" | "phan-cong-tptc" | "cau-hinh-ttv" | "cau-hinh-phan-cong-tp" | "quan-ly-vu-an" | "chi-tiet-vu-an" | "cong-van-trao-doi" | "phan-cong-hdxx" | "lich-xet-xu" | "quan-ly-vu-xet-xu" | "danh-sach-tham-muu-xet-xu" | "phe-duyet-de-xuat" | "quan-ly-khieu-nai" | "chi-tiet-khieu-nai" | "ho-so-khang-nghi" | "ho-so-tu-hinh" | "don-xin-an-giam" | "tao-cong-van" | "an-quoc-hoi" | "an-thoi-hieu";
 
 export default function App() {
   const [globalUserRole, setGlobalUserRole] = useState<UserRoleType>("hinh-su");
@@ -3113,7 +3299,11 @@ export default function App() {
       <Sidebar currentView={sidebarView} onNavigate={handleSidebarNav} />
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
-        <TopBar userRole={globalUserRole} setUserRole={setGlobalUserRole} />
+        <TopBar
+          userRole={globalUserRole}
+          setUserRole={setGlobalUserRole}
+          showPermissionSelector={appView !== "dashboard-gdkt"}
+        />
 
         {appView === "luu-so-van-ban" ? (
           <LuuSoVanBanView />
@@ -3157,7 +3347,10 @@ export default function App() {
             userRole={globalUserRole}
             setUserRole={setGlobalUserRole}
             onGoToThamMuu={() => { setPhanCongHdxxInitialTab("tat-ca"); setAppView("phan-cong-hdxx"); }}
+            onOpenDanhSachThamMuu={() => setAppView("danh-sach-tham-muu-xet-xu")}
           />
+        ) : appView === "danh-sach-tham-muu-xet-xu" ? (
+          <DanhSachThamMuuXetXuView onBack={() => setAppView("quan-ly-vu-xet-xu")} />
         ) : appView === "phe-duyet-de-xuat" ? (
           <PheDuyetDeXuatView userRole={globalUserRole} setUserRole={setGlobalUserRole} />
         ) : appView === "cong-van-trao-doi" ? (

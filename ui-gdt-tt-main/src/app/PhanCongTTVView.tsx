@@ -341,7 +341,7 @@ const INITIAL_DA_PHAN_CONG: CaseRow[] = [
 
 export function PhanCongTTVView() {
   const [activeTab, setActiveTab] = useState<"chua-phan-cong" | "da-phan-cong">("chua-phan-cong");
-  const [phanCongMode, setPhanCongMode] = useState<"ngau-nhien" | "chi-dinh">("ngau-nhien");
+  const phanCongMode: "chi-dinh" = "chi-dinh";
   const [filterExpanded, setFilterExpanded] = useState(true);
 
   // Form Filter states
@@ -412,30 +412,6 @@ export function PhanCongTTVView() {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
-  };
-
-  const handleExecutePhanCong = () => {
-    const idsToAssign = phanCongMode === "ngau-nhien" ? chuaPCRows.map(r => r.id) : selectedIds;
-    if (idsToAssign.length === 0) {
-      alert("Không có vụ việc được Phân công TTV/LĐ");
-      return;
-    }
-    if (phanCongMode === "ngau-nhien") {
-      const dynamicLoad: Record<string, number> = {};
-      const assignedRows = chuaPCRows.map((r) => {
-        const ttv = chooseTTVByDrawio(r, dynamicLoad);
-        dynamicLoad[ttv] = (dynamicLoad[ttv] || 0) + 1;
-        const ld = r.previousTTV === ttv && r.previousLD
-          ? r.previousLD
-          : (LD_BY_TTV[getName(ttv)] || DANH_SACH_LANH_DAO[0]);
-        return { ...r, giaiDoanPC: r.isKhieuNai ? "Giải quyết khiếu nại" : "Giai đoạn giải quyết đơn", ngayPCTTV: TODAY_ISO, ttv, ngayPCLD: TODAY_ISO, lanhDao: ld };
-      });
-      setChuaPCRows([]); setDaPCRows(prev => [...assignedRows, ...prev]); setSelectedIds([]); setDirtyIds([]);
-      try { localStorage.setItem("gdt-phan-cong-ttv", JSON.stringify(assignedRows)); } catch {}
-      alert("Phân công TTV/LĐ thành công"); setActiveTab("da-phan-cong"); return;
-    }
-    // Chỉ định: cho phép chỉnh từng dòng trước khi lưu; nếu chưa chỉnh thì mở modal hỗ trợ.
-    setShowAssignModal(true);
   };
 
   const handleConfirmChiDinh = () => {
@@ -592,31 +568,6 @@ export function PhanCongTTVView() {
           </select>
         </div>
 
-        {/* Radio Option for Tab 1 */}
-        {activeTab === "chua-phan-cong" && (
-          <div style={{ display: "flex", alignItems: "center", gap: 20, marginTop: -4 }}>
-            <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 600, color: TEXT, cursor: "pointer" }}>
-              <input
-                type="radio"
-                name="phan-cong-mode"
-                checked={phanCongMode === "ngau-nhien"}
-                onChange={() => setPhanCongMode("ngau-nhien")}
-                style={{ accentColor: RED, width: 15, height: 15, cursor: "pointer" }}
-              />
-              Phân công ngẫu nhiên
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 600, color: TEXT, cursor: "pointer" }}>
-              <input
-                type="radio"
-                name="phan-cong-mode"
-                checked={phanCongMode === "chi-dinh"}
-                onChange={() => setPhanCongMode("chi-dinh")}
-                style={{ accentColor: RED, width: 15, height: 15, cursor: "pointer" }}
-              />
-              Phân công chỉ định
-            </label>
-          </div>
-        )}
 
         {/* Search Filter Box */}
         <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: "16px 20px", boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}>
@@ -869,7 +820,7 @@ export function PhanCongTTVView() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
           {activeTab === "chua-phan-cong" ? (
             <button
-              onClick={phanCongMode === "ngau-nhien" ? handleExecutePhanCong : saveInlineAssignments}
+              onClick={saveInlineAssignments}
               style={{
                 padding: "7px 18px",
                 background: RED,
@@ -882,7 +833,7 @@ export function PhanCongTTVView() {
                 fontFamily: F,
               }}
             >
-              {phanCongMode === "ngau-nhien" ? "Phân công ngẫu nhiên" : "Lưu phân công"}
+              Lưu phân công
             </button>
           ) : (
             <button
